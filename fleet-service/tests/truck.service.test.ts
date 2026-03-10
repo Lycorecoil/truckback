@@ -9,9 +9,11 @@ const mockTruck: Truck = {
   chassis: "CHS001",
   marque: "Mercedes",
   modele: "Actros",
-  typeVehicule: "Semi-remorque",
+  typeVehicule: "BENNE",
   capaciteMax: 20000,
   statut: "AVAILABLE",
+  villeBase: "Cotonou",
+  paysBase: "Benin",
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -25,6 +27,7 @@ const mockRepo = {
   exists: jest.fn(),
   findByTenantId: jest.fn(),
   findAvailable: jest.fn(),
+  findMatching: jest.fn(),
 } as unknown as TruckRepository;
 
 const service = new TruckService(mockRepo);
@@ -40,7 +43,7 @@ describe("TruckService", () => {
     expect(mockRepo.findById).toHaveBeenCalledWith("uuid-1");
   });
 
-  it("createOne crée un camion et retourne ServiceResponse", async () => {
+  it("createOne cree un camion et retourne ServiceResponse", async () => {
     const { id, ...data } = mockTruck;
     (mockRepo.create as jest.Mock).mockResolvedValue(mockTruck);
     const result = await service.createOne(data);
@@ -62,7 +65,14 @@ describe("TruckService", () => {
     expect(mockRepo.findAvailable).toHaveBeenCalledWith("tenant-1");
   });
 
-  it("assignDriver met à jour le driverId et le statut BUSY", async () => {
+  it("findMatching retourne les camions compatibles", async () => {
+    (mockRepo.findMatching as jest.Mock).mockResolvedValue([mockTruck]);
+    const result = await service.findMatching({ poids: 5000, villeDepart: "Cotonou", paysDepart: "Benin" });
+    expect(result).toHaveLength(1);
+    expect(result[0]?.villeBase).toBe("Cotonou");
+  });
+
+  it("assignDriver met a jour le driverId et le statut BUSY", async () => {
     const updated = { ...mockTruck, driverId: "driver-1", statut: "BUSY" as const };
     (mockRepo.update as jest.Mock).mockResolvedValue(updated);
     const result = await service.assignDriver("uuid-1", "driver-1");

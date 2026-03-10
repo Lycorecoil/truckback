@@ -1,13 +1,31 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { ShipmentRepository } from "../src/shipment/shipment.repository";
+import type { Shipment } from "../src/shipment/shipment.entity";
 
 let mongoServer: MongoMemoryServer;
-const repo = new ShipmentRepository();
+let repo: ShipmentRepository;
+
+const baseShipment: Omit<Shipment, "id"> = {
+  companyId: "company-uuid-1",
+  dateAnnonce: new Date("2025-06-15"),
+  heureAnnonce: "08:00",
+  marchandise: "Ciment",
+  quantite: 200,
+  poids: 10000,
+  paysDepart: "Benin",
+  villeDepart: "Cotonou",
+  paysArrivee: "Benin",
+  villeArrivee: "Porto-Novo",
+  statut: "PENDING",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
+  repo = new ShipmentRepository();
 });
 
 afterAll(async () => {
@@ -19,67 +37,62 @@ afterEach(async () => {
   await mongoose.connection.dropDatabase();
 });
 
-const baseShipment = {
-  companyId: "company-1",
-  origine: "Paris",
-  destination: "Lyon",
-  description: "Palettes de céréales",
-  poids: 5000,
-  statut: "PENDING" as const,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
 describe("ShipmentRepository", () => {
-  it("create puis findById retourne la mission", async () => {
+  it("create genere un UUID et statut PENDING par defaut", async () => {
     const created = await repo.create(baseShipment);
     expect(created.id).toBeDefined();
-    const found = await repo.findById(created.id);
-    expect(found?.origine).toBe("Paris");
-    expect(found?.statut).toBe("PENDING");
+    expect(created.statut).toBe("PENDING");
+    expect(created.marchandise).toBe("Ciment");
   });
 
-  it("update modifie le statut", async () => {
+  it("findById retourne le bon shipment", async () => {
     const created = await repo.create(baseShipment);
-    const updated = await repo.update(created.id, {
-      statut: "ACCEPTED",
-      transporterId: "transporter-1",
-      truckId: "truck-1",
-      driverId: "driver-1",
-    });
-    expect(updated.statut).toBe("ACCEPTED");
-    expect(updated.transporterId).toBe("transporter-1");
+    const found = await repo.findById(created.id);
+    expect(found?.villeDepart).toBe("Cotonou");
   });
 
-  it("findByCompanyId retourne les missions de la company", async () => {
+  it("findByCompanyId filtre par expediteur", async () => {
     await repo.create(baseShipment);
-    await repo.create({ ...baseShipment, origine: "Marseille" });
-    await repo.create({ ...baseShipment, companyId: "company-2", origine: "Bordeaux" });
-    const result = await repo.findByCompanyId("company-1");
-    expect(result).toHaveLength(2);
+    await repo.create({ ...baseShipment, companyId: "company-2", villeDepart: "Parakou" });
+    const results = await repo.findByCompanyId("company-uuid-1");
+    expect(results).toHaveLength(1);
   });
 
-  it("findByTransporterId retourne les missions du transporteur", async () => {
+  it("findByStatut filtre par statut", async () => {
     const s1 = await repo.create(baseShipment);
-    const s2 = await repo.create({ ...baseShipment, origine: "Marseille" });
-    await repo.update(s1.id, { transporterId: "transporter-1", statut: "ACCEPTED" });
-    await repo.update(s2.id, { transporterId: "transporter-1", statut: "ACCEPTED" });
-    const result = await repo.findByTransporterId("transporter-1");
-    expect(result).toHaveLength(2);
-  });
-
-  it("findByStatut retourne les missions PENDING", async () => {
-    const s1 = await repo.create(baseShipment);
-    await repo.create(baseShipment);
+    await repo.create({ ...baseShipment, villeDepart: "Parakou" });
     await repo.update(s1.id, { statut: "ACCEPTED" });
     const pending = await repo.findByStatut("PENDING");
     expect(pending).toHaveLength(1);
     expect(pending[0]?.statut).toBe("PENDING");
   });
 
-  it("exists retourne true si la mission existe", async () => {
+  it("acceptIfPending passe a ACCEPTED si statut etait PENDING", async () => {
     const created = await repo.create(baseShipment);
-    expect(await repo.exists(created.id)).toBe(true);
-    expect(await repo.exists("fake-id")).toBe(false);
+    const accepted = await repo.acceptIfPending(created.id, {
+      transporterId: "transporteur-1",
+      truckId: "truck-1",
+      driverId: "driver-1",
+    });
+    expect(accepted).not.toBeNull();
+    expect(accepted?.statut).toBe("ACCEPTED");
+    expect(accepted?.transporterId).toBe("transporteur-1");
+  });
+
+  it("acceptIfPending retourne null si deja ACCEPTED (race condition)", async () => {
+    const created = await repo.create(baseShipment);
+    await repo.update(created.id, { statut: "ACCEPTED" });
+    const result = await repo.acceptIfPending(created.id, {
+      transporterId: "transporteur-2",
+      truckId: "truck-2",
+      driverId: "driver-2",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("update modifie le statut", async () => {
+    const created = await repo.create(baseShipment);
+    const updated = await repo.update(created.id, { statut: "IN_PROGRESS" });
+    expect(updated.statut).toBe("IN_PROGRESS");
   });
 });

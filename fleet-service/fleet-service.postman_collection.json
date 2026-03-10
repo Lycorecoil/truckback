@@ -1,0 +1,214 @@
+{
+  "info": {
+    "name": "Fleet Service",
+    "description": "Collection de tests pour le Fleet Service — Camion Uber\nBase URL : http://localhost:3003",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3003" },
+    { "key": "truckId", "value": "" },
+    { "key": "driverId", "value": "" },
+    { "key": "tenantId", "value": "transporteur-demo-001" }
+  ],
+  "item": [
+    {
+      "name": "Trucks (Camions)",
+      "item": [
+        {
+          "name": "Créer un camion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('truckId', res.id); }",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('id présent', () => pm.expect(res.id).to.be.a('string'));",
+                  "pm.test('statut = AVAILABLE', () => pm.expect(res.statut).to.eql('AVAILABLE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/trucks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"immatriculation\": \"AB-1234-C\",\n  \"chassis\": \"VIN123456789\",\n  \"marque\": \"Mercedes\",\n  \"modele\": \"Actros\",\n  \"typeVehicule\": \"BENNE\",\n  \"carrosserie\": \"Benne basculante\",\n  \"gabarit\": \"Grand\",\n  \"capaciteMax\": 10000,\n  \"villeBase\": \"Cotonou\",\n  \"paysBase\": \"Benin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Lister tous les camions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Reponse paginee', () => { const res = pm.response.json(); pm.expect(res.data).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trucks"
+          }
+        },
+        {
+          "name": "Camions d'un transporteur",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trucks?tenantId={{tenantId}}",
+              "query": [{ "key": "tenantId", "value": "{{tenantId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Camions disponibles d'un transporteur",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trucks?tenantId={{tenantId}}&available=true",
+              "query": [
+                { "key": "tenantId", "value": "{{tenantId}}" },
+                { "key": "available", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Matching — chercher camions compatibles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tableau retourne', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trucks/match?poids=5000&villeDepart=Cotonou&paysDepart=Benin&typeVehicule=BENNE",
+              "query": [
+                { "key": "poids", "value": "5000" },
+                { "key": "villeDepart", "value": "Cotonou" },
+                { "key": "paysDepart", "value": "Benin" },
+                { "key": "typeVehicule", "value": "BENNE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail d'un camion",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trucks/{{truckId}}"
+          }
+        },
+        {
+          "name": "Mettre a jour un camion",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/trucks/{{truckId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"villeBase\": \"Porto-Novo\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Assigner un chauffeur a un camion",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/trucks/assign-driver",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{driverId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Supprimer un camion (soft — MAINTENANCE)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/trucks/{{truckId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivers (Chauffeurs)",
+      "item": [
+        {
+          "name": "Creer un chauffeur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('driverId', res.id); }",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('statut = AVAILABLE', () => pm.expect(res.statut).to.eql('AVAILABLE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/drivers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"nom\": \"Kpossou\",\n  \"prenom\": \"Emile\",\n  \"email\": \"emile.kpossou@transport.bj\",\n  \"telephone\": \"+22961234567\",\n  \"numeroPermis\": \"PERM-2024-00123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Lister les chauffeurs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drivers"
+          }
+        },
+        {
+          "name": "Detail d'un chauffeur",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drivers/{{driverId}}"
+          }
+        },
+        {
+          "name": "Mettre a jour un chauffeur",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/drivers/{{driverId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"+22969999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Suspendre un chauffeur (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/drivers/{{driverId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

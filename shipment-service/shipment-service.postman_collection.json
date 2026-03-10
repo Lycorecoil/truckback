@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Shipment Service",
+    "description": "Collection de tests pour le Shipment Service — Camion Uber\nBase URL : http://localhost:3002",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3002" },
+    { "key": "shipmentId", "value": "" },
+    { "key": "companyId", "value": "company-demo-001" },
+    { "key": "transporterId", "value": "transporteur-demo-001" },
+    { "key": "truckId", "value": "truck-demo-001" },
+    { "key": "driverId", "value": "driver-demo-001" }
+  ],
+  "item": [
+    {
+      "name": "Shipments (Annonces)",
+      "item": [
+        {
+          "name": "Creer une annonce (PENDING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('shipmentId', res.id); console.log('shipmentId :', res.id); }",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('statut = PENDING', () => pm.expect(res.statut).to.eql('PENDING'));",
+                  "pm.test('id present', () => pm.expect(res.id).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/shipments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": \"{{companyId}}\",\n  \"dateAnnonce\": \"2025-06-15\",\n  \"heureAnnonce\": \"08:00\",\n  \"marchandise\": \"Ciment en sacs\",\n  \"emballage\": \"Sacs de 50kg\",\n  \"quantite\": 200,\n  \"poids\": 10000,\n  \"paysDepart\": \"Benin\",\n  \"villeDepart\": \"Cotonou\",\n  \"paysArrivee\": \"Benin\",\n  \"villeArrivee\": \"Porto-Novo\",\n  \"prixTransport\": 150000,\n  \"commentaireGeneral\": \"Livraison urgente\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Chercher camions compatibles (via fleet-service)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tableau retourne', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/shipments/search?poids=10000&villeDepart=Cotonou&paysDepart=Benin&typeVehicule=BENNE",
+              "query": [
+                { "key": "poids", "value": "10000" },
+                { "key": "villeDepart", "value": "Cotonou" },
+                { "key": "paysDepart", "value": "Benin" },
+                { "key": "typeVehicule", "value": "BENNE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister les annonces de l'expediteur",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/shipments?companyId={{companyId}}",
+              "query": [{ "key": "companyId", "value": "{{companyId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Lister les annonces du transporteur",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/shipments?transporterId={{transporterId}}",
+              "query": [{ "key": "transporterId", "value": "{{transporterId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Lister par statut (PENDING)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/shipments?statut=PENDING",
+              "query": [{ "key": "statut", "value": "PENDING" }]
+            }
+          }
+        },
+        {
+          "name": "Detail d'une annonce",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}"
+          }
+        },
+        {
+          "name": "Transporteur accepte la mission",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('statut = ACCEPTED', () => pm.expect(pm.response.json().statut).to.eql('ACCEPTED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/accept",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transporterId\": \"{{transporterId}}\",\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{driverId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Chauffeur demarre la mission",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('statut = IN_PROGRESS', () => pm.expect(pm.response.json().statut).to.eql('IN_PROGRESS'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/start"
+          }
+        },
+        {
+          "name": "Livraison terminee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('statut = DELIVERED', () => pm.expect(pm.response.json().statut).to.eql('DELIVERED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/deliver"
+          }
+        },
+        {
+          "name": "Annuler une annonce (soft delete — CANCELLED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('statut = CANCELLED', () => pm.expect(pm.response.json().statut).to.eql('CANCELLED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
