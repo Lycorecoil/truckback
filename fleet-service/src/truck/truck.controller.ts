@@ -1,0 +1,103 @@
+import { Router } from "express";
+import type { TruckService } from "./truck.service";
+
+export function createTruckRouter(service: TruckService): Router {
+  const router = Router();
+
+  // POST /trucks/assign-driver — AVANT /:id pour éviter le conflit Express
+  router.post("/assign-driver", async (req, res, next) => {
+    try {
+      const { truckId, driverId } = req.body as { truckId: string; driverId: string };
+      const truck = await service.assignDriver(truckId, driverId);
+      res.json(truck);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // GET /trucks/match?poids=3000&typeVehicule=BENNE&villeDepart=Cotonou&paysDepart=Bénin
+  // AVANT /:id pour éviter le conflit Express
+  router.get("/match", async (req, res, next) => {
+    try {
+      const { poids, typeVehicule, villeDepart, paysDepart } = req.query as Record<string, string>;
+      if (!poids || !villeDepart || !paysDepart) {
+        res.status(400).json({ error: "poids, villeDepart et paysDepart sont requis" });
+        return;
+      }
+      const trucks = await service.findMatching({
+        poids: parseFloat(poids),
+        typeVehicule,
+        villeDepart,
+        paysDepart,
+      });
+      res.json(trucks);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // GET /trucks?tenantId=xxx&available=true
+  router.get("/", async (req, res, next) => {
+    try {
+      const { tenantId, available } = req.query as Record<string, string>;
+      if (available === "true" && tenantId) {
+        const trucks = await service.findAvailable(tenantId);
+        res.json(trucks);
+        return;
+      }
+      if (tenantId) {
+        const trucks = await service.findByTenantId(tenantId);
+        res.json(trucks);
+        return;
+      }
+      const page = parseInt(req.query["page"] as string) || 1;
+      const limit = parseInt(req.query["limit"] as string) || 20;
+      const result = await service.getAll({ page, limit });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // GET /trucks/:id
+  router.get("/:id", async (req, res, next) => {
+    try {
+      const result = await service.getById(req.params["id"] as string);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /trucks
+  router.post("/", async (req, res, next) => {
+    try {
+      const result = await service.createOne(req.body as Parameters<typeof service.createOne>[0]);
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // PUT /trucks/:id
+  router.put("/:id", async (req, res, next) => {
+    try {
+      const result = await service.updateOne(req.params["id"] as string, req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // DELETE /trucks/:id — soft delete (MAINTENANCE)
+  router.delete("/:id", async (req, res, next) => {
+    try {
+      const result = await service.updateOne(req.params["id"] as string, { statut: "MAINTENANCE" });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  return router;
+}

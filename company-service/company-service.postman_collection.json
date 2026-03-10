@@ -1,0 +1,315 @@
+{
+  "info": {
+    "name": "Company Service",
+    "description": "Collection de tests pour le Company Service — Camion Uber\nBase URL : http://localhost:3001\n\nVariables :\n- {{baseUrl}} = http://localhost:3001\n- {{companyId}} = UUID d'une entreprise (rempli automatiquement après création)\n- {{transporterId}} = UUID d'un transporteur (rempli automatiquement après création)\n- {{tenantId}} = UUID du tenant Auth Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "companyId", "value": "" },
+    { "key": "transporterId", "value": "" },
+    { "key": "tenantId", "value": "tenant-demo-001" }
+  ],
+  "item": [
+    {
+      "name": "🏢 Company (Expéditeur)",
+      "item": [
+        {
+          "name": "Créer une entreprise",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.id) {",
+                  "  pm.collectionVariables.set('companyId', res.data.id);",
+                  "  console.log('companyId enregistré :', res.data.id);",
+                  "}",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('id présent', () => pm.expect(res.data.id).to.be.a('string'));",
+                  "pm.test('type = COMPANY', () => pm.expect(res.data.type).to.eql('COMPANY'));",
+                  "pm.test('statut = ACTIVE', () => pm.expect(res.data.statut).to.eql('ACTIVE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/company",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\",\n  \"raisonSociale\": \"ACME Bénin Sarl\",\n  \"formeJuridique\": \"SARL\",\n  \"rccm\": \"RB/COT/24-B-12345\",\n  \"ifu\": \"3202400012345\",\n  \"secteurActivite\": \"Commerce général\",\n  \"pays\": \"Bénin\",\n  \"ville\": \"Cotonou\",\n  \"boitePostale\": \"BP 1234\",\n  \"email\": \"contact@acme-benin.bj\",\n  \"telephone\": \"+22961000001\",\n  \"nomRepresentant\": \"Adjovi\",\n  \"prenomRepresentant\": \"Kofi\",\n  \"fonctionRepresentant\": \"Directeur Général\",\n  \"emailRepresentant\": \"kofi.adjovi@acme-benin.bj\",\n  \"telephoneRepresentant\": \"+22961000002\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Lister les entreprises",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('data est un tableau', () => pm.expect(res.data.data).to.be.an('array'));",
+                  "pm.test('pagination présente', () => {",
+                  "  pm.expect(res.data.total).to.be.a('number');",
+                  "  pm.expect(res.data.page).to.eql(1);",
+                  "  pm.expect(res.data.totalPages).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/company?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["company"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Récupérer une entreprise par ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('id correspond', () => pm.expect(res.data.id).to.eql(pm.collectionVariables.get('companyId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/company/{{companyId}}"
+          }
+        },
+        {
+          "name": "Récupérer par tenantId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/company/tenant/{{tenantId}}"
+          }
+        },
+        {
+          "name": "Modifier une entreprise (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('ville mise à jour', () => pm.expect(res.data.ville).to.eql('Porto-Novo'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/company/{{companyId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ville\": \"Porto-Novo\",\n  \"telephone\": \"+22961999999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Suspendre une entreprise (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('statut = SUSPENDED', () => pm.expect(res.data.statut).to.eql('SUSPENDED'));",
+                  "pm.test('document toujours présent', () => pm.expect(res.data.id).to.eql(pm.collectionVariables.get('companyId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/company/{{companyId}}"
+          }
+        },
+        {
+          "name": "[Erreur] Récupérer ID inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404));",
+                  "pm.test('success = false', () => pm.expect(res.success).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/company/uuid-qui-nexiste-pas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚛 Transporter (Transporteur)",
+      "item": [
+        {
+          "name": "Créer un transporteur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.id) {",
+                  "  pm.collectionVariables.set('transporterId', res.data.id);",
+                  "  console.log('transporterId enregistré :', res.data.id);",
+                  "}",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('type = TRANSPORTER', () => pm.expect(res.data.type).to.eql('TRANSPORTER'));",
+                  "pm.test('statut = ACTIVE', () => pm.expect(res.data.statut).to.eql('ACTIVE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/transporter",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"tenant-transport-001\",\n  \"raisonSociale\": \"Trans Rapide Sarl\",\n  \"formeJuridique\": \"SARL\",\n  \"rccm\": \"RB/COT/24-B-99999\",\n  \"ifu\": \"3202400099999\",\n  \"secteurActivite\": \"Transport routier\",\n  \"pays\": \"Bénin\",\n  \"ville\": \"Cotonou\",\n  \"boitePostale\": \"BP 5678\",\n  \"email\": \"contact@transrapide.bj\",\n  \"telephone\": \"+22962000001\",\n  \"nomRepresentant\": \"Hounkpe\",\n  \"prenomRepresentant\": \"Yves\",\n  \"fonctionRepresentant\": \"Gérant\",\n  \"emailRepresentant\": \"yves@transrapide.bj\",\n  \"telephoneRepresentant\": \"+22962000002\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Lister les transporteurs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('data est un tableau', () => pm.expect(res.data.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transporter?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["transporter"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Récupérer un transporteur par ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transporter/{{transporterId}}"
+          }
+        },
+        {
+          "name": "Modifier un transporteur (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/transporter/{{transporterId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ville\": \"Parakou\",\n  \"telephone\": \"+22962888888\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Suspendre un transporteur (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
+                  "pm.test('statut = SUSPENDED', () => pm.expect(res.data.statut).to.eql('SUSPENDED'));",
+                  "pm.test('document toujours présent', () => pm.expect(res.data.id).to.eql(pm.collectionVariables.get('transporterId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/transporter/{{transporterId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
