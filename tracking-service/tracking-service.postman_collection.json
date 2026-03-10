@@ -1,0 +1,152 @@
+{
+  "info": {
+    "name": "Tracking Service",
+    "description": "Collection de tests pour le Tracking Service — Camion Uber\nBase URL HTTP : http://localhost:3004\nWebSocket : ws://localhost:3005",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3004" },
+    { "key": "truckId", "value": "truck-demo-001" },
+    { "key": "shipmentId", "value": "shipment-demo-001" },
+    { "key": "pointId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Tracking (GPS)",
+      "item": [
+        {
+          "name": "Envoyer une position GPS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('pointId', res.id); console.log('pointId :', res.id); }",
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201));",
+                  "pm.test('id present', () => pm.expect(res.id).to.be.a('string'));",
+                  "pm.test('latitude presente', () => pm.expect(res.latitude).to.be.a('number'));",
+                  "pm.test('longitude presente', () => pm.expect(res.longitude).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tracking",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 6.3654,\n  \"longitude\": 2.4183,\n  \"vitesse\": 65\n}"
+            }
+          }
+        },
+        {
+          "name": "Envoyer une 2e position (avancement)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tracking",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 6.4210,\n  \"longitude\": 2.4400,\n  \"vitesse\": 70\n}"
+            }
+          }
+        },
+        {
+          "name": "Derniere position d'un camion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('truckId correct', () => pm.expect(pm.response.json().truckId).to.eql(pm.collectionVariables.get('truckId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tracking/truck/{{truckId}}"
+          }
+        },
+        {
+          "name": "Historique complet d'un camion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tableau retourne', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tracking/truck/{{truckId}}/history"
+          }
+        },
+        {
+          "name": "Tous les points d'une expedition",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tableau retourne', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tracking/shipment/{{shipmentId}}"
+          }
+        },
+        {
+          "name": "Camion inconnu — 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/tracking/truck/camion-inexistant"
+          }
+        },
+        {
+          "name": "Position sans champs requis — 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tracking",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
