@@ -82,4 +82,9 @@ export class ShipmentRepository implements IRepository<Shipment> {
     const docs = await ShipmentModel.find({ statut }).sort({ createdAt: -1 });
     return docs.map((d) => d.toJSON() as Shipment);
   }
+
+  async findByDriverId(driverId: string): Promise<Shipment[]> {
+    const docs = await ShipmentModel.find({ driverId }).sort({ createdAt: -1 });
+    return docs.map((d) => d.toJSON() as Shipment);
+  }
 }

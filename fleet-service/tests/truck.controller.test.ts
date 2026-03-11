@@ -45,17 +45,42 @@ describe("TruckController — RBAC & tenant isolation", () => {
       expect(res.status).toBe(403);
     });
 
-    it("201 si rôle TRANSPORTER — tenantId injecté depuis le header JWT", async () => {
-      (mockService.createOne as jest.Mock).mockResolvedValue({
-        success: true, data: { id: "uuid-1", tenantId: "tenant-jwt", immatriculation: "AB-001" },
-      });
+    it("400 si champs requis manquants (TRANSPORTER)", async () => {
       const res = await request(app)
         .post("/fleet/trucks")
         .set("x-user-role", "TRANSPORTER")
         .set("x-tenant-id", "tenant-jwt")
-        .send({ immatriculation: "AB-001", tenantId: "tenant-forged" }); // tentative de forge
+        .send({ immatriculation: "AB-001" }); // marque, modele, etc. manquants
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/marque/);
+    });
+
+    it("400 si capaciteMax invalide", async () => {
+      const res = await request(app)
+        .post("/fleet/trucks")
+        .set("x-user-role", "TRANSPORTER")
+        .set("x-tenant-id", "tenant-jwt")
+        .send({ immatriculation: "AB-001", marque: "Mercedes", modele: "Actros",
+                typeVehicule: "BENNE", villeBase: "Cotonou", paysBase: "Benin", capaciteMax: -5 });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/capaciteMax/);
+    });
+
+    it("201 si rôle TRANSPORTER — tenantId injecté depuis le header JWT", async () => {
+      (mockService.createOne as jest.Mock).mockResolvedValue({
+        success: true, data: { id: "uuid-1", tenantId: "tenant-jwt", immatriculation: "AB-001" },
+      });
+      const validTruck = {
+        immatriculation: "AB-001", marque: "Mercedes", modele: "Actros",
+        typeVehicule: "BENNE", villeBase: "Cotonou", paysBase: "Benin",
+        capaciteMax: 15000, tenantId: "tenant-forged", // tentative de forge
+      };
+      const res = await request(app)
+        .post("/fleet/trucks")
+        .set("x-user-role", "TRANSPORTER")
+        .set("x-tenant-id", "tenant-jwt")
+        .send(validTruck);
       expect(res.status).toBe(201);
-      // Le tenantId dans l'appel doit être celui du header, pas du body
       const callArg = (mockService.createOne as jest.Mock).mock.calls[0][0] as Record<string, string>;
       expect(callArg["tenantId"]).toBe("tenant-jwt");
     });
@@ -68,7 +93,11 @@ describe("TruckController — RBAC & tenant isolation", () => {
         .post("/fleet/trucks")
         .set("x-user-role", "ADMIN")
         .set("x-tenant-id", "tenant-admin")
-        .send({ immatriculation: "AB-002", tenantId: "tenant-1" });
+        .send({
+          immatriculation: "AB-002", marque: "Volvo", modele: "FH16",
+          typeVehicule: "BENNE", villeBase: "Douala", paysBase: "Cameroun",
+          capaciteMax: 20000, tenantId: "tenant-1",
+        });
       expect(res.status).toBe(201);
     });
   });

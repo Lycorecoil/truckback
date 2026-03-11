@@ -55,6 +55,10 @@ export class ShipmentService extends GenericService<Shipment> {
     return this.shipmentRepo.findByStatut(statut);
   }
 
+  async findByDriverId(driverId: string): Promise<Shipment[]> {
+    return this.shipmentRepo.findByDriverId(driverId);
+  }
+
   // Recherche les camions compatibles dans le fleet-service
   async searchMatchingTrucks(params: {
     poids: number;

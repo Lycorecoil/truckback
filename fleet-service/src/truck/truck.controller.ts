@@ -7,6 +7,24 @@ function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
 }
 
+/** Retourne une liste d'erreurs de validation ou [] si tout est OK */
+function validateTruck(body: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  if (!body["immatriculation"])           errors.push("immatriculation est requise");
+  if (!body["marque"])                    errors.push("marque est requise");
+  if (!body["modele"])                    errors.push("modele est requis");
+  if (!body["typeVehicule"])              errors.push("typeVehicule est requis");
+  if (!body["villeBase"])                 errors.push("villeBase est requise");
+  if (!body["paysBase"])                  errors.push("paysBase est requis");
+  const cap = Number(body["capaciteMax"]);
+  if (!body["capaciteMax"] || isNaN(cap) || cap <= 0)
+    errors.push("capaciteMax doit être un nombre positif");
+  const validStatuts = ["AVAILABLE", "BUSY", "MAINTENANCE"];
+  if (body["statut"] && !validStatuts.includes(String(body["statut"])))
+    errors.push(`statut doit être parmi : ${validStatuts.join(", ")}`);
+  return errors;
+}
+
 export function createTruckRouter(service: TruckService): Router {
   const router = Router();
 
@@ -18,7 +36,11 @@ export function createTruckRouter(service: TruckService): Router {
         res.status(403).json({ error: "Seul un transporteur peut assigner un chauffeur" });
         return;
       }
-      const { truckId, driverId } = req.body as { truckId: string; driverId: string };
+      const { truckId, driverId } = req.body as { truckId?: string; driverId?: string };
+      if (!truckId || !driverId) {
+        res.status(400).json({ error: "truckId et driverId sont requis" });
+        return;
+      }
       const truck = await service.assignDriver(truckId, driverId);
       res.json(truck);
     } catch (err) {
@@ -26,8 +48,7 @@ export function createTruckRouter(service: TruckService): Router {
     }
   });
 
-  // GET /trucks/match?poids=3000&typeVehicule=BENNE&villeDepart=Cotonou&paysDepart=Bénin
-  // Route ouverte (appelée par shipment-service sans JWT utilisateur)
+  // GET /trucks/match?poids=3000&villeDepart=Cotonou&paysDepart=Bénin
   router.get("/match", async (req, res, next) => {
     try {
       const { poids, typeVehicule, villeDepart, paysDepart } = req.query as Record<string, string>;
@@ -35,26 +56,25 @@ export function createTruckRouter(service: TruckService): Router {
         res.status(400).json({ error: "poids, villeDepart et paysDepart sont requis" });
         return;
       }
-      const trucks = await service.findMatching({
-        poids: parseFloat(poids),
-        typeVehicule,
-        villeDepart,
-        paysDepart,
-      });
+      const poidsNum = parseFloat(poids);
+      if (isNaN(poidsNum) || poidsNum <= 0) {
+        res.status(400).json({ error: "poids doit être un nombre positif" });
+        return;
+      }
+      const trucks = await service.findMatching({ poids: poidsNum, typeVehicule, villeDepart, paysDepart });
       res.json(trucks);
     } catch (err) {
       next(err);
     }
   });
 
-  // GET /trucks — TRANSPORTER ne voit que ses propres camions
+  // GET /trucks — TRANSPORTER voit uniquement ses propres camions
   router.get("/", async (req, res, next) => {
     try {
       const role = getHeader(req, "x-user-role") as Role;
       const tenantId = getHeader(req, "x-tenant-id");
 
       if (role === "TRANSPORTER") {
-        // Isolation : un transporteur ne voit que sa propre flotte
         const { available } = req.query as Record<string, string>;
         if (available === "true") {
           res.json(await service.findAvailable(tenantId));
@@ -64,7 +84,6 @@ export function createTruckRouter(service: TruckService): Router {
         return;
       }
 
-      // ADMIN / COMPANY / DRIVER : peut filtrer par tenantId query param
       const { tenantId: qTenantId, available } = req.query as Record<string, string>;
       if (available === "true" && qTenantId) {
         res.json(await service.findAvailable(qTenantId));
@@ -103,13 +122,19 @@ export function createTruckRouter(service: TruckService): Router {
         return;
       }
 
-      // Pour TRANSPORTER : on force le tenantId depuis le JWT, pas depuis le body
-      const body = {
-        ...req.body,
-        tenantId: role === "ADMIN" ? (req.body.tenantId ?? tenantId) : tenantId,
+      const body = req.body as Record<string, unknown>;
+      const errors = validateTruck(body);
+      if (errors.length > 0) {
+        res.status(400).json({ error: errors.join("; ") });
+        return;
+      }
+
+      const payload = {
+        ...body,
+        tenantId: role === "ADMIN" ? (body["tenantId"] ?? tenantId) : tenantId,
       };
 
-      const result = await service.createOne(body as Parameters<typeof service.createOne>[0]);
+      const result = await service.createOne(payload as Parameters<typeof service.createOne>[0]);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -124,7 +149,12 @@ export function createTruckRouter(service: TruckService): Router {
         res.status(403).json({ error: "Seul un transporteur peut modifier un camion" });
         return;
       }
-      const result = await service.updateOne(req.params["id"] as string, req.body);
+      const body = req.body as Record<string, unknown>;
+      if (Object.keys(body).length === 0) {
+        res.status(400).json({ error: "Le corps de la requête ne peut pas être vide" });
+        return;
+      }
+      const result = await service.updateOne(req.params["id"] as string, body);
       res.json(result);
     } catch (err) {
       next(err);

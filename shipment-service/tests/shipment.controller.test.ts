@@ -25,6 +25,7 @@ const mockService = {
   findByCompanyId:      jest.fn(),
   findByTransporterId:  jest.fn(),
   findByStatut:         jest.fn(),
+  findByDriverId:       jest.fn(),
   acceptShipment:       jest.fn(),
   startMission:         jest.fn(),
   deliverMission:       jest.fn(),
@@ -68,7 +69,13 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
         .post("/shipments")
         .set("x-user-role", "COMPANY")
         .set("x-user-id", "company-from-jwt")
-        .send({ poids: 5000, villeDepart: "Douala", companyId: "forged-id" });
+        .send({
+          marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",
+          villeArrivee: "Yaounde", paysArrivee: "Cameroun",
+          dateAnnonce: "2026-04-01", heureAnnonce: "08:00",
+          poids: 5000, quantite: 10,
+          companyId: "forged-id", // tentative de forge
+        });
       expect(res.status).toBe(201);
       const callArg = (mockService.createOne as jest.Mock).mock.calls[0][0] as Record<string, string>;
       expect(callArg["companyId"]).toBe("company-from-jwt");
@@ -216,6 +223,66 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
         .set("x-user-role", "ADMIN")
         .send({ poids: 9999 });
       expect(res.status).toBe(200);
+    });
+  });
+
+  // ─── Validation des entrées ───
+  describe("POST /shipments — validation des champs requis", () => {
+    it("400 si champs requis manquants (COMPANY)", async () => {
+      const res = await request(app)
+        .post("/shipments")
+        .set("x-user-role", "COMPANY")
+        .set("x-user-id", "company-1")
+        .send({ poids: 5000 }); // marchandise, villeDepart, etc. manquants
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/marchandise/);
+    });
+
+    it("400 si poids invalide (négatif)", async () => {
+      const res = await request(app)
+        .post("/shipments")
+        .set("x-user-role", "COMPANY")
+        .set("x-user-id", "company-1")
+        .send({
+          marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",
+          villeArrivee: "Yaounde", paysArrivee: "Cameroun",
+          dateAnnonce: "2026-04-01", heureAnnonce: "08:00",
+          poids: -100, quantite: 5,
+        });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/poids/);
+    });
+
+    it("201 COMPANY avec tous les champs valides", async () => {
+      (mockService.createOne as jest.Mock).mockResolvedValue({
+        success: true, data: { ...mockShipment, companyId: "company-1" },
+      });
+      const res = await request(app)
+        .post("/shipments")
+        .set("x-user-role", "COMPANY")
+        .set("x-user-id", "company-1")
+        .send({
+          marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",
+          villeArrivee: "Yaounde", paysArrivee: "Cameroun",
+          dateAnnonce: "2026-04-01", heureAnnonce: "08:00",
+          poids: 5000, quantite: 10,
+        });
+      expect(res.status).toBe(201);
+    });
+  });
+
+  // ─── DRIVER isolation ───
+  describe("GET /shipments — DRIVER voit uniquement ses expéditions", () => {
+    it("DRIVER voit uniquement ses missions (findByDriverId avec x-user-id)", async () => {
+      (mockService.findByDriverId as jest.Mock).mockResolvedValue([mockShipment]);
+      const res = await request(app)
+        .get("/shipments")
+        .set("x-user-role", "DRIVER")
+        .set("x-user-id", "driver-jwt");
+      expect(res.status).toBe(200);
+      expect(mockService.findByDriverId).toHaveBeenCalledWith("driver-jwt");
+      expect(mockService.getAll).not.toHaveBeenCalled();
+      expect(mockService.findByCompanyId).not.toHaveBeenCalled();
     });
   });
 

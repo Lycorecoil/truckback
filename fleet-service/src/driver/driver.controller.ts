@@ -3,26 +3,39 @@ import type { DriverService } from "./driver.service";
 
 type Role = "ADMIN" | "TRANSPORTER" | "COMPANY" | "DRIVER";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
+}
+
+function validateDriver(body: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  if (!body["nom"])                                                   errors.push("nom est requis");
+  if (!body["prenom"])                                                errors.push("prenom est requis");
+  if (!body["email"] || !EMAIL_REGEX.test(String(body["email"])))    errors.push("email invalide");
+  if (!body["telephone"])                                             errors.push("telephone est requis");
+  if (!body["numeroPermis"])                                          errors.push("numeroPermis est requis");
+  const validStatuts = ["AVAILABLE", "BUSY", "SUSPENDED"];
+  if (body["statut"] && !validStatuts.includes(String(body["statut"])))
+    errors.push(`statut doit être parmi : ${validStatuts.join(", ")}`);
+  return errors;
 }
 
 export function createDriverRouter(service: DriverService): Router {
   const router = Router();
 
-  // GET /fleet/drivers — TRANSPORTER ne voit que ses propres chauffeurs
+  // GET /fleet/drivers — TRANSPORTER voit uniquement ses propres chauffeurs
   router.get("/", async (req, res, next) => {
     try {
       const role = getHeader(req, "x-user-role") as Role;
       const tenantId = getHeader(req, "x-tenant-id");
 
       if (role === "TRANSPORTER") {
-        // Isolation : un transporteur ne voit que ses chauffeurs
         res.json(await service.findByTenantId(tenantId));
         return;
       }
 
-      // ADMIN : peut filtrer par tenantId query param ou voir tous
       const { tenantId: qTenantId } = req.query as Record<string, string>;
       if (qTenantId) {
         res.json(await service.findByTenantId(qTenantId));
@@ -57,13 +70,19 @@ export function createDriverRouter(service: DriverService): Router {
         return;
       }
 
-      // Pour TRANSPORTER : on force le tenantId depuis le JWT
-      const body = {
-        ...req.body,
-        tenantId: role === "ADMIN" ? (req.body.tenantId ?? tenantId) : tenantId,
+      const body = req.body as Record<string, unknown>;
+      const errors = validateDriver(body);
+      if (errors.length > 0) {
+        res.status(400).json({ error: errors.join("; ") });
+        return;
+      }
+
+      const payload = {
+        ...body,
+        tenantId: role === "ADMIN" ? (body["tenantId"] ?? tenantId) : tenantId,
       };
 
-      const result = await service.createOne(body as Parameters<typeof service.createOne>[0]);
+      const result = await service.createOne(payload as Parameters<typeof service.createOne>[0]);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -78,7 +97,12 @@ export function createDriverRouter(service: DriverService): Router {
         res.status(403).json({ error: "Seul un transporteur peut modifier un chauffeur" });
         return;
       }
-      const result = await service.updateOne(req.params["id"] as string, req.body);
+      const body = req.body as Record<string, unknown>;
+      if (Object.keys(body).length === 0) {
+        res.status(400).json({ error: "Le corps de la requête ne peut pas être vide" });
+        return;
+      }
+      const result = await service.updateOne(req.params["id"] as string, body);
       res.json(result);
     } catch (err) {
       next(err);
