@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "Camion Uber — notification-service",
+    "description": "Collection de tests pour le service de notifications (port 3005). Les providers sont des stubs en MVP : les notifications sont loggées dans la console du serveur, aucun email/SMS/push n'est réellement envoyé.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3005", "type": "string" },
+    { "key": "recipient_id", "value": "user-uuid-1234", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service name', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "  pm.expect(json.service).to.eql('notification-service');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "POST /notification/email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"to\": \"destinataire@example.com\",\n  \"subject\": \"Votre commande est confirmée\",\n  \"message\": \"Bonjour, votre livraison a bien été prise en charge.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/email", "host": ["{{base_url}}"], "path": ["notification", "email"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Notification créée', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.channel).to.eql('EMAIL');",
+                  "  pm.expect(json.status).to.be.oneOf(['SENT', 'FAILED']);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /notification/sms",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"to\": \"+33612345678\",\n  \"message\": \"Votre chauffeur arrive dans 10 minutes.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/sms", "host": ["{{base_url}}"], "path": ["notification", "sms"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Notification créée', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.channel).to.eql('SMS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /notification/push",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"deviceToken\": \"fcm-device-token-abc123\",\n  \"title\": \"Nouvelle livraison disponible\",\n  \"message\": \"Un camion est disponible près de vous.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/push", "host": ["{{base_url}}"], "path": ["notification", "push"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Notification créée', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.channel).to.eql('PUSH');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /notification/:userId",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notification/{{recipient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["notification", "{{recipient_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Retourne un tableau', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "POST /notification/template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"bienvenue-email\",\n  \"channel\": \"EMAIL\",\n  \"subject\": \"Bienvenue sur Camion Uber\",\n  \"body\": \"Bonjour {{prenom}}, bienvenue sur notre plateforme !\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/template", "host": ["{{base_url}}"], "path": ["notification", "template"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Template créé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json.name).to.eql('bienvenue-email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

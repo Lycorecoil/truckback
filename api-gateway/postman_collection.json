@@ -1,0 +1,345 @@
+{
+  "info": {
+    "name": "Camion Uber — api-gateway",
+    "description": "Collection de tests pour l'API Gateway (port 3006). Point d'entrée unique du système. Le script de login capture automatiquement le JWT dans {{jwt_token}} pour les requêtes suivantes. Tous les services en aval doivent tourner pour que les routes proxiées fonctionnent.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3006", "type": "string" },
+    { "key": "jwt_token", "value": "", "type": "string" },
+    { "key": "tenant_id", "value": "tenant-001", "type": "string" },
+    { "key": "recipient_id", "value": "user-uuid-1234", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Gateway",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service api-gateway', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "  pm.expect(json.service).to.eql('api-gateway');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /route-inexistante — 404",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/route-inexistante", "host": ["{{base_url}}"], "path": ["route-inexistante"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth — routes publiques (via gateway)",
+      "description": "Ces routes sont proxiées vers auth-service:3000. Elles sont publiques : aucun JWT requis.",
+      "item": [
+        {
+          "name": "POST /auth/signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gateway-user@example.com\",\n  \"password\": \"Secret123!\",\n  \"tenantId\": \"{{tenant_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/signup", "host": ["{{base_url}}"], "path": ["auth", "signup"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Token reçu', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('token');",
+                  "  pm.collectionVariables.set('jwt_token', json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — capture JWT",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gateway-user@example.com\",\n  \"password\": \"Secret123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('JWT capturé', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('token');",
+                  "  pm.collectionVariables.set('jwt_token', json.token);",
+                  "  console.log('JWT stocké dans {{jwt_token}}');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — sans token dans Authorization (401 attendu sur route protégée)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 — token manquant', () => pm.response.to.have.status(401));",
+                  "pm.test('Message erreur', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.error).to.eql('Missing token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth — routes protégées (via gateway)",
+      "description": "Ces routes nécessitent un JWT valide dans l'header Authorization. Exécuter 'POST /auth/login' d'abord pour remplir {{jwt_token}}.",
+      "item": [
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications — via gateway",
+      "description": "Routes proxiées vers notification-service:3005. JWT requis.",
+      "item": [
+        {
+          "name": "POST /notification/email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"to\": \"dest@example.com\",\n  \"subject\": \"Test via gateway\",\n  \"message\": \"Message envoyé via l'api-gateway\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/email", "host": ["{{base_url}}"], "path": ["notification", "email"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 ou 502', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 502]);",
+                  "  if (pm.response.code === 502) {",
+                  "    console.warn('notification-service non disponible — démarrer sur port 3005');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /notification/sms",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"to\": \"+33612345678\",\n  \"message\": \"SMS via gateway\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/sms", "host": ["{{base_url}}"], "path": ["notification", "sms"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Répond', () => pm.expect(pm.response.code).to.be.oneOf([201, 502]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /notification/push",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipient_id}}\",\n  \"deviceToken\": \"fcm-token-xyz\",\n  \"title\": \"Push via gateway\",\n  \"message\": \"Notification push envoyée via l'api-gateway\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/notification/push", "host": ["{{base_url}}"], "path": ["notification", "push"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Répond', () => pm.expect(pm.response.code).to.be.oneOf([201, 502]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /notification/:userId",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notification/{{recipient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["notification", "{{recipient_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Répond', () => pm.expect(pm.response.code).to.be.oneOf([200, 502]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sécurité gateway",
+      "description": "Tests pour vérifier que les protections de l'api-gateway fonctionnent.",
+      "item": [
+        {
+          "name": "Route protégée sans token — 401",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error: Missing token', () => {",
+                  "  pm.expect(pm.response.json().error).to.eql('Missing token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Route protégée avec token invalide — 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer token.invalide.ici" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error: Invalid token', () => {",
+                  "  pm.expect(pm.response.json().error).to.eql('Invalid token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
