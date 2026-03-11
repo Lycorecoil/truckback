@@ -69,4 +69,9 @@ export class TrackingRepository implements IRepository<TrackingPoint> {
     const docs = await TrackingPointModel.find({ truckId }).sort({ timestamp: -1 });
     return docs.map((d) => d.toJSON() as TrackingPoint);
   }
+
+  async findLatestByShipmentId(shipmentId: string): Promise<TrackingPoint | null> {
+    const doc = await TrackingPointModel.findOne({ shipmentId }).sort({ timestamp: -1 });
+    return doc ? (doc.toJSON() as TrackingPoint) : null;
+  }
 }

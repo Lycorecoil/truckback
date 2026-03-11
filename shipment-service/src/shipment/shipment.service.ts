@@ -1,4 +1,5 @@
 import { GenericService } from "@jb226/generic-service";
+import type { BaseEntity, ServiceResponse } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
 import { sendEmail } from "../clients/NotificationClient";
@@ -8,6 +9,38 @@ const FLEET_SERVICE_URL = process.env["FLEET_SERVICE_URL"] ?? "http://localhost:
 export class ShipmentService extends GenericService<Shipment> {
   constructor(private readonly shipmentRepo: ShipmentRepository) {
     super(shipmentRepo);
+  }
+
+  // Override createOne : après création, notifier les transporteurs de la zone
+  async createOne(data: Omit<Shipment, keyof BaseEntity>): Promise<ServiceResponse<Shipment>> {
+    const response = await super.createOne(data);
+    void this.notifyMatchingTransporters(response.data);
+    return response;
+  }
+
+  private async notifyMatchingTransporters(shipment: Shipment): Promise<void> {
+    try {
+      const trucks = await this.searchMatchingTrucks({
+        poids: shipment.poids,
+        villeDepart: shipment.villeDepart,
+        paysDepart: shipment.paysDepart,
+      });
+
+      const transporterIds = [
+        ...new Set((trucks as Array<{ tenantId: string }>).map((t) => t.tenantId)),
+      ];
+
+      for (const transporterId of transporterIds) {
+        void sendEmail(
+          transporterId,
+          `transporteur-${transporterId}@camion-uber.internal`,
+          "Nouvelle annonce disponible dans votre zone",
+          `Une annonce correspond à votre flotte : ${shipment.marchandise} (${shipment.poids} kg) — ${shipment.villeDepart} → ${shipment.villeArrivee}.`,
+        );
+      }
+    } catch (err) {
+      console.error("[shipment-service] Erreur notification transporteurs :", err);
+    }
   }
 
   async findByCompanyId(companyId: string): Promise<Shipment[]> {
@@ -36,7 +69,7 @@ export class ShipmentService extends GenericService<Shipment> {
     });
     if (params.typeVehicule) query.append("typeVehicule", params.typeVehicule);
 
-    const response = await fetch(`${FLEET_SERVICE_URL}/trucks/match?${query.toString()}`);
+    const response = await fetch(`${FLEET_SERVICE_URL}/fleet/trucks/match?${query.toString()}`);
     if (!response.ok) throw new Error("Erreur lors de la recherche de camions");
     return response.json() as Promise<unknown[]>;
   }
@@ -81,6 +114,20 @@ export class ShipmentService extends GenericService<Shipment> {
       "Livraison confirmée",
       `Votre marchandise (${shipment.marchandise}) a bien été livrée à ${shipment.villeArrivee}.`,
     );
+    return shipment;
+  }
+
+  // Annulation : notifier le transporteur s'il était assigné
+  async cancelShipment(id: string): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.update(id, { statut: "CANCELLED" });
+    if (shipment.transporterId) {
+      void sendEmail(
+        shipment.transporterId,
+        `transporteur-${shipment.transporterId}@camion-uber.internal`,
+        "Annonce annulée",
+        `L'annonce que vous aviez acceptée a été annulée par l'expéditeur : ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
+      );
+    }
     return shipment;
   }
 }

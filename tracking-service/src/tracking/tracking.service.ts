@@ -2,6 +2,9 @@ import { GenericService } from "@jb226/generic-service";
 import type { TrackingPoint } from "./tracking.entity";
 import type { TrackingRepository } from "./tracking.repository";
 import type { WebSocketServer } from "ws";
+import { sendEmail } from "../clients/NotificationClient";
+
+const GPS_SILENCE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 export class TrackingService extends GenericService<TrackingPoint> {
   private wss: WebSocketServer | null = null;
@@ -15,6 +18,9 @@ export class TrackingService extends GenericService<TrackingPoint> {
   }
 
   async addPoint(data: Omit<TrackingPoint, "id" | "createdAt" | "updatedAt">): Promise<TrackingPoint> {
+    // Vérifier si le GPS était silencieux avant ce nouveau point
+    void this.checkGpsSilence(data.shipmentId, data.truckId);
+
     const point = await this.trackingRepo.create({
       ...data,
       createdAt: new Date(),
@@ -32,6 +38,26 @@ export class TrackingService extends GenericService<TrackingPoint> {
     }
 
     return point;
+  }
+
+  private async checkGpsSilence(shipmentId: string, truckId: string): Promise<void> {
+    try {
+      const last = await this.trackingRepo.findLatestByShipmentId(shipmentId);
+      if (!last) return; // premier point, pas d'alerte
+
+      const gapMs = Date.now() - new Date(last.timestamp).getTime();
+      if (gapMs >= GPS_SILENCE_THRESHOLD_MS) {
+        const gapMin = Math.round(gapMs / 60000);
+        void sendEmail(
+          shipmentId, // recipientId = expéditeur lié à la mission
+          `expediteur-${shipmentId}@camion-uber.internal`,
+          "Alerte : GPS du camion silencieux",
+          `Le camion ${truckId} n'a pas envoyé de position GPS depuis ${gapMin} minutes. Un reprise de signal vient d'être détectée.`,
+        );
+      }
+    } catch (err) {
+      console.error("[tracking-service] Erreur vérification silence GPS :", err);
+    }
   }
 
   async getLatestByTruck(truckId: string): Promise<TrackingPoint | null> {

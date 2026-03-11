@@ -123,12 +123,10 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // DELETE /shipments/:id — soft delete (CANCELLED)
+  // DELETE /shipments/:id — soft delete (CANCELLED) + notifie le transporteur si assigné
   router.delete("/:id", async (req, res, next) => {
     try {
-      const result = await service.updateOne(req.params["id"] as string, {
-        statut: "CANCELLED",
-      });
+      const result = await service.cancelShipment(req.params["id"] as string);
       res.json(result);
     } catch (err) {
       next(err);
