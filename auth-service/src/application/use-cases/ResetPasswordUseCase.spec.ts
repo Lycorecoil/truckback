@@ -13,6 +13,7 @@ const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
 
 const makeNotificationMock = (): jest.Mocked<INotificationClient> => ({
   sendEmail: jest.fn().mockResolvedValue(undefined),
+  sendSms: jest.fn().mockResolvedValue(undefined),
 });
 
 describe('ResetPasswordUseCase', () => {

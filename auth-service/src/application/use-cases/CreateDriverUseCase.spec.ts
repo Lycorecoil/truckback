@@ -1,5 +1,6 @@
 import { CreateDriverUseCase } from './CreateDriverUseCase';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { INotificationClient } from '../ports/INotificationClient';
 import { User, UserRole } from '../../domain/entities/User';
 import { UserAlreadyExistsError } from '../../domain/errors/DomainError';
 
@@ -10,16 +11,23 @@ const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
   delete: jest.fn(),
 });
 
+const makeNotificationMock = (): jest.Mocked<INotificationClient> => ({
+  sendEmail: jest.fn().mockResolvedValue(undefined),
+  sendSms: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('CreateDriverUseCase', () => {
   let userRepository: jest.Mocked<IUserRepository>;
+  let notificationClient: jest.Mocked<INotificationClient>;
   let useCase: CreateDriverUseCase;
 
   beforeEach(() => {
     userRepository = makeRepositoryMock();
-    useCase = new CreateDriverUseCase(userRepository);
+    notificationClient = makeNotificationMock();
+    useCase = new CreateDriverUseCase(userRepository, notificationClient);
   });
 
-  it('devrait créer un chauffeur et retourner ses infos', async () => {
+  it('devrait créer un chauffeur et envoyer email + SMS de bienvenue', async () => {
     userRepository.findByEmail.mockResolvedValue(null);
     const savedUser = new User({
       tenantId: 'tenant-1',
@@ -34,13 +42,46 @@ describe('CreateDriverUseCase', () => {
       password: 'password123',
       tenantId: 'tenant-1',
       transporterId: 'transporter-1',
+      telephone: '+237600000001',
     });
 
-    expect(userRepository.findByEmail).toHaveBeenCalledWith('driver@example.com');
-    expect(userRepository.save).toHaveBeenCalledTimes(1);
     expect(result.email).toBe('driver@example.com');
     expect(result.role).toBe('DRIVER');
-    expect(result.id).toBeDefined();
+    // Laisser les void promises se résoudre
+    await new Promise((r) => setTimeout(r, 50));
+    expect(notificationClient.sendEmail).toHaveBeenCalledWith(
+      'driver@example.com',
+      expect.stringContaining('chauffeur'),
+      expect.stringContaining('password123'),
+      savedUser.id,
+    );
+    expect(notificationClient.sendSms).toHaveBeenCalledWith(
+      '+237600000001',
+      expect.stringContaining('password123'),
+      savedUser.id,
+    );
+  });
+
+  it('devrait créer un chauffeur sans SMS si telephone absent', async () => {
+    userRepository.findByEmail.mockResolvedValue(null);
+    const savedUser = new User({
+      tenantId: 'tenant-1',
+      email: 'driver@example.com',
+      password: 'hashed',
+      role: UserRole.DRIVER,
+    });
+    userRepository.save.mockResolvedValue(savedUser);
+
+    await useCase.execute({
+      email: 'driver@example.com',
+      password: 'password123',
+      tenantId: 'tenant-1',
+      transporterId: 'transporter-1',
+    });
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect(notificationClient.sendEmail).toHaveBeenCalledTimes(1);
+    expect(notificationClient.sendSms).not.toHaveBeenCalled();
   });
 
   it("devrait lever UserAlreadyExistsError si l'email existe déjà", async () => {

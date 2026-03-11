@@ -19,4 +19,17 @@ export class NotificationClient implements INotificationClient {
       throw new Error(`[NotificationClient] sendEmail failed (${res.status}): ${text}`);
     }
   }
+
+  async sendSms(to: string, message: string, recipientId: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/notification/sms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to, message, recipientId }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`[NotificationClient] sendSms failed (${res.status}): ${text}`);
+    }
+  }
 }

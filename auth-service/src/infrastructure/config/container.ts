@@ -24,7 +24,7 @@ const jwtService = new JwtService(
 export const container = {
   signUpUseCase: new SignUpUseCase(userRepository, jwtService),
   loginUseCase: new LoginUseCase(userRepository, jwtService),
-  createDriverUseCase: new CreateDriverUseCase(userRepository),
+  createDriverUseCase: new CreateDriverUseCase(userRepository, notificationClient),
   logoutUseCase: new LogoutUseCase(),
   resetPasswordUseCase: new ResetPasswordUseCase(userRepository, notificationClient),
 };
