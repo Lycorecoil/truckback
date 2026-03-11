@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; margin: 2.5cm; color: #1a1a1a; }
+  h1 { font-size: 22pt; color: #1F3864; border-bottom: 3px solid #1F3864; padding-bottom: 8px; margin-top: 0; }
+  h2 { font-size: 16pt; color: #2E5596; border-bottom: 1.5px solid #2E5596; padding-bottom: 4px; margin-top: 30px; }
+  h3 { font-size: 13pt; color: #1F3864; margin-top: 20px; margin-bottom: 6px; }
+  h4 { font-size: 11pt; color: #2E5596; margin-top: 16px; margin-bottom: 4px; font-style: italic; }
+  p { margin: 6px 0; line-height: 1.5; }
+  code { font-family: Consolas, "Courier New", monospace; background: #f0f4f8; padding: 1px 5px; border-radius: 3px; font-size: 10pt; color: #c0392b; }
+  pre { font-family: Consolas, "Courier New", monospace; background: #f0f4f8; border-left: 4px solid #2E5596; padding: 12px 16px; font-size: 9.5pt; line-height: 1.6; margin: 10px 0; white-space: pre-wrap; }
+
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th { background: #1F3864; color: white; padding: 8px 10px; text-align: left; font-weight: bold; }
+  td { border: 1px solid #c8d4e8; padding: 6px 10px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f8fd; }
+  tr:hover td { background: #e8eef8; }
+
+  .check   { color: #27ae60; font-weight: bold; text-align: center; }
+  .cross   { color: #bdc3c7; text-align: center; }
+  .badge   { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: bold; }
+  .badge-ok   { background: #d5f5e3; color: #1e8449; }
+  .badge-warn { background: #fdebd0; color: #a04000; }
+  .badge-low  { background: #eaf2ff; color: #1a5276; }
+
+  .actor-box { border-left: 5px solid #2E5596; padding: 4px 0 4px 16px; margin: 10px 0; }
+  .actor-box.admin   { border-color: #8e44ad; }
+  .actor-box.company { border-color: #27ae60; }
+  .actor-box.transporter { border-color: #e67e22; }
+  .actor-box.driver  { border-color: #2980b9; }
+
+  .step { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px 14px; margin: 8px 0; }
+  .step-num { display: inline-block; background: #2E5596; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: 9pt; font-weight: bold; margin-right: 8px; }
+
+  .flow { font-family: Consolas, monospace; font-size: 9.5pt; background: #1a1a2e; color: #a8dadc; padding: 16px; border-radius: 6px; line-height: 1.8; }
+  .flow .green { color: #90ee90; }
+  .flow .yellow { color: #ffd700; }
+  .flow .orange { color: #ffa500; }
+
+  .note { background: #fff8e1; border-left: 4px solid #f9a825; padding: 8px 12px; font-size: 10pt; margin: 10px 0; border-radius: 0 4px 4px 0; }
+  .page-break { page-break-before: always; }
+  .subtitle { color: #7f8c8d; font-size: 11pt; margin-top: -10px; margin-bottom: 20px; }
+
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin: 4px 0; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Camion Uber — Documentation technique</h1>
+<p class="subtitle">Workflows par acteur &amp; Matrice RBAC détaillée &nbsp;|&nbsp; Version 1.0 &nbsp;|&nbsp; Mars 2026</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>1. Architecture des services</h2>
+
+<table>
+  <tr><th>Service</th><th>Port HTTP</th><th>Port WS</th><th>Rôle</th></tr>
+  <tr><td><code>api-gateway</code></td><td>3006</td><td>—</td><td>Point d'entrée unique — vérification JWT, proxy</td></tr>
+  <tr><td><code>auth-service</code></td><td>3000</td><td>—</td><td>Authentification, émission JWT, gestion des identités</td></tr>
+  <tr><td><code>company-service</code></td><td>3001</td><td>—</td><td>Gestion des organisations (expéditeurs, transporteurs)</td></tr>
+  <tr><td><code>fleet-service</code></td><td>3003</td><td>—</td><td>Gestion des camions et chauffeurs d'un transporteur</td></tr>
+  <tr><td><code>shipment-service</code></td><td>3002</td><td>—</td><td>Cycle de vie des expéditions (PENDING → DELIVERED)</td></tr>
+  <tr><td><code>tracking-service</code></td><td>3004</td><td>3007</td><td>Positions GPS temps réel, diffusion WebSocket</td></tr>
+  <tr><td><code>notification-service</code></td><td>3005</td><td>—</td><td>Emails (Nodemailer/Gmail) et SMS (Africa's Talking)</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>2. Sécurité — Couches d'authentification</h2>
+
+<h3>2.1 Flux d'une requête</h3>
+<div class="flow">
+Client
+  → <span class="yellow">[1] Rate Limit</span>       — 429 si quota dépassé (100 req/min par défaut)<br>
+  → <span class="yellow">[2] authMiddleware</span>    — vérifie JWT HS256, injecte x-user-id / x-user-role / x-tenant-id<br>
+  → <span class="yellow">[3] requireRoles()</span>    — vérifie que le rôle est autorisé sur ce préfixe<br>
+  → <span class="yellow">[4] Proxy → Service</span>   — transmet la requête avec les headers JWT<br>
+  → <span class="green">[5] RBAC fin (controller)</span> — chaque route vérifie à nouveau le rôle précis<br>
+  → Client
+</div>
+
+<p class="note"><strong>Routes publiques</strong> (sans JWT) : <code>POST /auth/signup</code> et <code>POST /auth/login</code></p>
+
+<h3>2.2 Headers injectés par le gateway</h3>
+<table>
+  <tr><th>Header</th><th>Source dans le JWT</th><th>Exemple</th></tr>
+  <tr><td><code>x-user-id</code></td><td><code>payload.sub</code></td><td><code>uuid-1234-abcd</code></td></tr>
+  <tr><td><code>x-user-role</code></td><td><code>payload.role</code></td><td><code>TRANSPORTER</code></td></tr>
+  <tr><td><code>x-tenant-id</code></td><td><code>payload.tenantId</code></td><td><code>tenant-xyz</code></td></tr>
+</table>
+<p>Les services en aval font confiance à ces headers sans re-vérifier le JWT. Ils sont impossibles à forger depuis le client car posés uniquement après vérification de la signature.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>3. Matrice RBAC détaillée</h2>
+
+<h3>3.1 Auth Service</h3>
+<table>
+  <tr><th>Méthode</th><th>Route</th><th>ADMIN</th><th>COMPANY</th><th>TRANSPORTER</th><th>DRIVER</th><th>Public</th></tr>
+  <tr><td>POST</td><td><code>/auth/signup</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td></tr>
+  <tr><td>POST</td><td><code>/auth/login</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><td>POST</td><td><code>/auth/driver/create</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td></tr>
+  <tr><td>POST</td><td><code>/auth/reset-password</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td></tr>
+  <tr><td>POST</td><td><code>/auth/logout</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="cross">—</td></tr>
+</table>
+
+<h3>3.2 Fleet Service</h3>
+<table>
+  <tr><th>Méthode</th><th>Route</th><th>ADMIN</th><th>COMPANY</th><th>TRANSPORTER</th><th>DRIVER</th><th>Remarque</th></tr>
+  <tr><td>POST</td><td><code>/fleet/trucks</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>tenantId injecté depuis JWT</td></tr>
+  <tr><td>GET</td><td><code>/fleet/trucks</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔ (ses propres)</td><td class="check">✔</td><td>TRANSPORTER isolé par tenantId</td></tr>
+  <tr><td>GET</td><td><code>/fleet/trucks/:id</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>—</td></tr>
+  <tr><td>PUT</td><td><code>/fleet/trucks/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>—</td></tr>
+  <tr><td>DELETE</td><td><code>/fleet/trucks/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>Soft delete → statut MAINTENANCE</td></tr>
+  <tr><td>POST</td><td><code>/fleet/trucks/assign-driver</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>—</td></tr>
+  <tr><td>GET</td><td><code>/fleet/trucks/match</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Appelé aussi par shipment-service</td></tr>
+  <tr><td>POST</td><td><code>/fleet/drivers</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>tenantId injecté depuis JWT</td></tr>
+  <tr><td>GET</td><td><code>/fleet/drivers</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔ (ses propres)</td><td class="cross">—</td><td>TRANSPORTER isolé par tenantId</td></tr>
+  <tr><td>GET</td><td><code>/fleet/drivers/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>—</td></tr>
+  <tr><td>PUT</td><td><code>/fleet/drivers/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>—</td></tr>
+  <tr><td>DELETE</td><td><code>/fleet/drivers/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>Soft delete → statut SUSPENDED</td></tr>
+</table>
+
+<h3>3.3 Shipment Service</h3>
+<table>
+  <tr><th>Méthode</th><th>Route</th><th>ADMIN</th><th>COMPANY</th><th>TRANSPORTER</th><th>DRIVER</th><th>Remarque</th></tr>
+  <tr><td>POST</td><td><code>/shipments</code></td><td class="check">✔</td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td>companyId injecté depuis JWT</td></tr>
+  <tr><td>GET</td><td><code>/shipments</code></td><td class="check">✔ (tous)</td><td class="check">✔ (ses propres)</td><td class="check">✔ (ses missions)</td><td class="check">✔</td><td>Isolation automatique par rôle</td></tr>
+  <tr><td>GET</td><td><code>/shipments/:id</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>—</td></tr>
+  <tr><td>PUT</td><td><code>/shipments/:id</code></td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td>Modification directe réservée ADMIN</td></tr>
+  <tr><td>DELETE</td><td><code>/shipments/:id</code></td><td class="check">✔</td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td>Soft delete → statut CANCELLED</td></tr>
+  <tr><td>GET</td><td><code>/shipments/search</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Appelle fleet-service /trucks/match</td></tr>
+  <tr><td>POST</td><td><code>/shipments/:id/accept</code></td><td class="check">✔</td><td class="cross">—</td><td class="check">✔</td><td class="cross">—</td><td>transporterId injecté depuis JWT. Lock atomique MongoDB</td></tr>
+  <tr><td>POST</td><td><code>/shipments/:id/start</code></td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td class="check">✔</td><td>Chauffeur dans le camion</td></tr>
+  <tr><td>POST</td><td><code>/shipments/:id/deliver</code></td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td class="check">✔</td><td>Confirmation remise sur place</td></tr>
+</table>
+
+<h3>3.4 Tracking Service</h3>
+<table>
+  <tr><th>Méthode</th><th>Route</th><th>ADMIN</th><th>COMPANY</th><th>TRANSPORTER</th><th>DRIVER</th><th>Remarque</th></tr>
+  <tr><td>POST</td><td><code>/tracking</code></td><td class="check">✔</td><td class="cross">—</td><td class="cross">—</td><td class="check">✔</td><td>Seul le chauffeur en mission envoie du GPS</td></tr>
+  <tr><td>GET</td><td><code>/tracking/truck/:truckId</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Dernière position connue</td></tr>
+  <tr><td>GET</td><td><code>/tracking/truck/:truckId/history</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Historique complet</td></tr>
+  <tr><td>GET</td><td><code>/tracking/shipment/:shipmentId</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Tous les points d'une expédition</td></tr>
+  <tr><td>WS</td><td><code>ws://localhost:3007</code></td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td class="check">✔</td><td>Diffusion temps réel à chaque POST GPS</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>4. Communication inter-service</h2>
+
+<table>
+  <tr><th>Émetteur</th><th>Destinataire</th><th>Déclencheur</th><th>Endpoint</th><th>Mode</th></tr>
+  <tr>
+    <td><code>auth-service</code></td>
+    <td><code>notification-service</code></td>
+    <td>Création d'un compte chauffeur</td>
+    <td><code>POST /notification/email</code><br><code>POST /notification/sms</code></td>
+    <td>Non-bloquant</td>
+  </tr>
+  <tr>
+    <td><code>auth-service</code></td>
+    <td><code>notification-service</code></td>
+    <td>Reset password</td>
+    <td><code>POST /notification/email</code></td>
+    <td>Non-bloquant</td>
+  </tr>
+  <tr>
+    <td><code>shipment-service</code></td>
+    <td><code>fleet-service</code></td>
+    <td>Recherche camions compatibles</td>
+    <td><code>GET /fleet/trucks/match</code></td>
+    <td>Bloquant (résultat attendu)</td>
+  </tr>
+  <tr>
+    <td><code>shipment-service</code></td>
+    <td><code>notification-service</code></td>
+    <td>Nouvelle expédition créée</td>
+    <td><code>POST /notification/email</code></td>
+    <td>Non-bloquant</td>
+  </tr>
+  <tr>
+    <td><code>shipment-service</code></td>
+    <td><code>notification-service</code></td>
+    <td>Expédition annulée</td>
+    <td><code>POST /notification/email</code></td>
+    <td>Non-bloquant</td>
+  </tr>
+  <tr>
+    <td><code>tracking-service</code></td>
+    <td><code>notification-service</code></td>
+    <td>GPS silencieux &gt; 30 min</td>
+    <td><code>POST /notification/email</code></td>
+    <td>Non-bloquant</td>
+  </tr>
+</table>
+<p class="note"><strong>Non-bloquant</strong> : l'appel est fait en <code>void</code> — une panne du notification-service ne fait pas échouer la requête principale.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>5. Workflows par acteur</h2>
+
+<!-- ─── ADMIN ─── -->
+<h3>5.1 ADMIN</h3>
+<div class="actor-box admin">
+  <p>Supervision globale de la plateforme. Accès total en lecture/écriture sur tous les services.</p>
+</div>
+
+<div class="step"><span class="step-num">1</span><code>POST /auth/signup</code> — Créer son compte <code>{ role: "ADMIN", tenantId: "...", email, password }</code></div>
+<div class="step"><span class="step-num">2</span><code>POST /auth/login</code> — Récupérer le JWT → à mettre dans <code>Authorization: Bearer &lt;token&gt;</code></div>
+<div class="step"><span class="step-num">3</span><code>GET /fleet/trucks</code> — Voir tous les camions de la plateforme</div>
+<div class="step"><span class="step-num">4</span><code>GET /fleet/drivers</code> — Voir tous les chauffeurs</div>
+<div class="step"><span class="step-num">5</span><code>GET /shipments</code> — Voir toutes les expéditions (tous statuts)</div>
+<div class="step"><span class="step-num">6</span><code>PUT /shipments/:id</code> — Modifier une expédition (seul rôle autorisé)</div>
+<div class="step"><span class="step-num">7</span><code>GET /tracking/truck/:truckId</code> — Suivre n'importe quel camion</div>
+
+<!-- ─── COMPANY ─── -->
+<h3>5.2 COMPANY (Expéditeur)</h3>
+<div class="actor-box company">
+  <p>Crée des annonces de transport, suit ses expéditions, peut annuler.</p>
+</div>
+
+<div class="step"><span class="step-num">1</span><code>POST /auth/signup</code> — <code>{ role: "COMPANY", tenantId: "mon-org-id", email, password }</code></div>
+<div class="step"><span class="step-num">2</span><code>POST /auth/login</code> — Récupérer le JWT</div>
+<div class="step"><span class="step-num">3</span><code>POST /shipments</code> — Créer une annonce<br>
+  <pre>{
+  "poids": 3000,
+  "villeDepart": "Cotonou",
+  "paysDepart": "Bénin",
+  "villeArrivee": "Lagos",
+  "paysArrivee": "Nigeria",
+  "description": "Matériaux de construction"
+}</pre>
+  → <code>companyId</code> injecté automatiquement depuis le JWT<br>
+  → Statut = <code>PENDING</code><br>
+  → Email automatique aux transporteurs compatibles
+</div>
+<div class="step"><span class="step-num">4</span><code>GET /shipments/search?poids=3000&amp;villeDepart=Cotonou&amp;paysDepart=Bénin</code> — Voir les camions disponibles</div>
+<div class="step"><span class="step-num">5</span><code>GET /shipments</code> — Voir <strong>uniquement ses propres</strong> expéditions (isolation automatique)</div>
+<div class="step"><span class="step-num">6</span><code>GET /shipments/:id</code> — Détail d'une expédition</div>
+<div class="step"><span class="step-num">7</span><code>GET /tracking/shipment/:shipmentId</code> — Suivre sa marchandise en temps réel</div>
+<div class="step"><span class="step-num">8</span><code>DELETE /shipments/:id</code> — Annuler (→ statut <code>CANCELLED</code> + email auto au transporteur si déjà assigné)</div>
+
+<!-- ─── TRANSPORTER ─── -->
+<h3>5.3 TRANSPORTER (Transporteur)</h3>
+<div class="actor-box transporter">
+  <p>Gère sa flotte (camions + chauffeurs), accepte des missions d'expédition.</p>
+</div>
+
+<h4>Phase 1 — Inscription et configuration</h4>
+<div class="step"><span class="step-num">1</span><code>POST /auth/signup</code> — <code>{ role: "TRANSPORTER", tenantId: "mon-org-id", email, password }</code></div>
+<div class="step"><span class="step-num">2</span><code>POST /auth/login</code> — Récupérer le JWT</div>
+<div class="step"><span class="step-num">3</span><code>POST /fleet/trucks</code> — Ajouter un camion<br>
+  <pre>{
+  "immatriculation": "BN-1234-AB",
+  "marque": "Mercedes",
+  "modele": "Actros",
+  "capacite": 5000,
+  "typeVehicule": "BENNE",
+  "villeDepart": "Cotonou",
+  "paysDepart": "Bénin"
+}</pre>
+  → <code>tenantId</code> injecté automatiquement depuis le JWT
+</div>
+<div class="step"><span class="step-num">4</span><code>GET /fleet/trucks</code> — Voir <strong>uniquement ses propres</strong> camions</div>
+<div class="step"><span class="step-num">5</span><code>POST /auth/driver/create</code> — Créer un compte chauffeur<br>
+  <pre>{
+  "email": "chauffeur@example.com",
+  "password": "motdepasse123",
+  "tenantId": "mon-org-id",
+  "transporterId": "mon-user-id",
+  "telephone": "+22960000000"
+}</pre>
+  → Email + SMS de bienvenue envoyés automatiquement avec les identifiants + lien de téléchargement
+</div>
+<div class="step"><span class="step-num">6</span><code>GET /fleet/drivers</code> — Voir <strong>uniquement ses propres</strong> chauffeurs</div>
+<div class="step"><span class="step-num">7</span><code>POST /fleet/trucks/assign-driver</code> — Assigner un chauffeur à un camion<br>
+  <pre>{ "truckId": "...", "driverId": "..." }</pre>
+</div>
+
+<h4>Phase 2 — Gestion des missions</h4>
+<div class="step"><span class="step-num">8</span><code>GET /shipments</code> — Voir les expéditions qui lui sont assignées (après acceptation)</div>
+<div class="step"><span class="step-num">9</span><code>POST /shipments/:id/accept</code> — Accepter une mission<br>
+  <pre>{ "truckId": "...", "driverId": "..." }</pre>
+  → <code>transporterId</code> injecté depuis le JWT (impossible de forger)<br>
+  → Lock atomique MongoDB — seul le premier transporteur à accepter réussit<br>
+  → Statut = <code>ACCEPTED</code>
+</div>
+<div class="step"><span class="step-num">10</span><code>GET /tracking/truck/:truckId</code> — Suivre son chauffeur en temps réel</div>
+
+<!-- ─── DRIVER ─── -->
+<h3>5.4 DRIVER (Chauffeur)</h3>
+<div class="actor-box driver">
+  <p>Compte créé par le transporteur. Reçoit ses identifiants par email/SMS. Exécute la livraison.</p>
+</div>
+
+<p class="note"><strong>Note</strong> : le chauffeur ne crée pas son propre compte. Il reçoit automatiquement un email et un SMS contenant ses identifiants et le lien de téléchargement de l'application mobile.</p>
+
+<div class="step"><span class="step-num">1</span><code>POST /auth/login</code> — Se connecter avec les identifiants reçus par email</div>
+<div class="step"><span class="step-num">2</span><code>GET /shipments/:id</code> — Voir le détail de sa mission (adresse, poids, description)</div>
+<div class="step"><span class="step-num">3</span><code>POST /shipments/:id/start</code> — Démarrer la livraison au moment du départ<br>
+  → Statut = <code>IN_PROGRESS</code>
+</div>
+<div class="step"><span class="step-num">4</span><code>POST /tracking</code> — Envoyer la position GPS en continu (toutes les N secondes)<br>
+  <pre>{
+  "truckId": "...",
+  "shipmentId": "...",
+  "latitude": 6.3703,
+  "longitude": 2.3912,
+  "vitesse": 75
+}</pre>
+  → Diffusé en temps réel via WebSocket <code>ws://localhost:3007</code> à tous les clients connectés<br>
+  → Si silence &gt; 30 min : alerte email automatique à l'expéditeur
+</div>
+<div class="step"><span class="step-num">5</span><code>GET /tracking/truck/:truckId</code> — Vérifier sa propre position si besoin</div>
+<div class="step"><span class="step-num">6</span><code>POST /shipments/:id/deliver</code> — Confirmer la livraison à destination<br>
+  → Statut = <code>DELIVERED</code>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>6. Cycle de vie d'une expédition</h2>
+
+<div class="flow">
+<span class="green">COMPANY crée</span>          <span class="yellow">TRANSPORTER accepte</span>     <span class="orange">DRIVER démarre</span>      <span class="green">DRIVER livre</span>
+     │                        │                       │                    │
+     ▼                        ▼                       ▼                    ▼
+  <span class="green">PENDING</span> ──────────────► <span class="yellow">ACCEPTED</span> ──────────── <span class="orange">IN_PROGRESS</span> ────────── <span class="green">DELIVERED</span>
+     │
+     └── (COMPANY annule) ──► <span class="orange">CANCELLED</span>
+</div>
+
+<br>
+<table>
+  <tr><th>Statut</th><th>Qui peut y accéder</th><th>Action déclenchante</th><th>Notification automatique</th></tr>
+  <tr><td><code>PENDING</code></td><td>COMPANY (création), TRANSPORTER (consultation), ADMIN</td><td><code>POST /shipments</code></td><td>Email aux transporteurs compatibles</td></tr>
+  <tr><td><code>ACCEPTED</code></td><td>COMPANY, TRANSPORTER concerné, DRIVER assigné, ADMIN</td><td><code>POST /shipments/:id/accept</code></td><td>—</td></tr>
+  <tr><td><code>IN_PROGRESS</code></td><td>Tous</td><td><code>POST /shipments/:id/start</code></td><td>—</td></tr>
+  <tr><td><code>DELIVERED</code></td><td>Tous (lecture seule)</td><td><code>POST /shipments/:id/deliver</code></td><td>—</td></tr>
+  <tr><td><code>CANCELLED</code></td><td>Tous (lecture seule)</td><td><code>DELETE /shipments/:id</code></td><td>Email au transporteur si déjà assigné</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2>7. Notifications automatiques</h2>
+
+<table>
+  <tr><th>Événement</th><th>Destinataire</th><th>Canal</th><th>Contenu</th></tr>
+  <tr><td>Chauffeur créé</td><td>Chauffeur</td><td>Email + SMS</td><td>Identifiants de connexion + lien téléchargement app</td></tr>
+  <tr><td>Reset password demandé</td><td>Utilisateur</td><td>Email</td><td>Lien de réinitialisation</td></tr>
+  <tr><td>Nouvelle expédition</td><td>Transporteurs compatibles</td><td>Email</td><td>Détails de l'annonce</td></tr>
+  <tr><td>Expédition annulée</td><td>Transporteur assigné</td><td>Email</td><td>Information d'annulation</td></tr>
+  <tr><td>GPS silencieux &gt; 30 min</td><td>Expéditeur (companyId)</td><td>Email</td><td>Alerte absence de signal GPS</td></tr>
+</table>
+
+<p style="margin-top:40px; color:#7f8c8d; font-size:9pt; border-top:1px solid #dee2e6; padding-top:10px;">
+  Document généré le 11 mars 2026 — Projet Camion Uber v1.0
+</p>
+
+</body>
+</html>

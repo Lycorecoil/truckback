@@ -1,12 +1,22 @@
 import { Router } from "express";
 import type { TrackingService } from "./tracking.service";
 
+function getHeader(req: import("express").Request, name: string): string {
+  return (req.headers[name] as string | undefined) ?? "";
+}
+
 export function createTrackingRouter(service: TrackingService): Router {
   const router = Router();
 
-  // POST /tracking — envoyer une position GPS
+  // POST /tracking — envoyer une position GPS (DRIVER uniquement)
   router.post("/", async (req, res, next) => {
     try {
+      const role = getHeader(req, "x-user-role");
+      if (role !== "DRIVER" && role !== "ADMIN") {
+        res.status(403).json({ error: "Seul un chauffeur peut envoyer une position GPS" });
+        return;
+      }
+
       const { truckId, shipmentId, latitude, longitude, vitesse } = req.body as {
         truckId?: string;
         shipmentId?: string;
@@ -35,7 +45,7 @@ export function createTrackingRouter(service: TrackingService): Router {
     }
   });
 
-  // GET /tracking/shipment/:shipmentId — tous les points d'une expédition
+  // GET /tracking/shipment/:shipmentId — tous les points d'une expédition (tous rôles)
   router.get("/shipment/:shipmentId", async (req, res, next) => {
     try {
       const points = await service.getByShipment(req.params["shipmentId"] as string);
@@ -45,7 +55,7 @@ export function createTrackingRouter(service: TrackingService): Router {
     }
   });
 
-  // GET /tracking/truck/:truckId/history — historique complet d'un camion
+  // GET /tracking/truck/:truckId/history — historique complet d'un camion (tous rôles)
   router.get("/truck/:truckId/history", async (req, res, next) => {
     try {
       const history = await service.getHistoryByTruck(req.params["truckId"] as string);
@@ -55,7 +65,7 @@ export function createTrackingRouter(service: TrackingService): Router {
     }
   });
 
-  // GET /tracking/truck/:truckId — dernière position connue d'un camion
+  // GET /tracking/truck/:truckId — dernière position connue (tous rôles)
   router.get("/truck/:truckId", async (req, res, next) => {
     try {
       const point = await service.getLatestByTruck(req.params["truckId"] as string);
