@@ -1,0 +1,446 @@
+{
+  "info": {
+    "name": "Camion Uber — Workflow Complet",
+    "description": "Collection complète pour tester le workflow de bout en bout via l'API Gateway (port 3006).\n\nOrdre d'exécution :\n1. Auth — Inscription & Connexion\n2. Fleet — Ajouter camion\n3. Shipment — Créer annonce → Accepter → Démarrer → Livrer\n4. Tracking — GPS\n5. Notifications — Vérifier historique",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3006", "type": "string" },
+    { "key": "companyToken", "value": "", "type": "string" },
+    { "key": "transporterToken", "value": "", "type": "string" },
+    { "key": "companyId", "value": "", "type": "string" },
+    { "key": "transporterId", "value": "", "type": "string" },
+    { "key": "truckId", "value": "", "type": "string" },
+    { "key": "driverId", "value": "", "type": "string" },
+    { "key": "shipmentId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "1.1 Inscription Expéditeur (COMPANY)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('companyToken', res.token);",
+                  "if (res.id) pm.collectionVariables.set('companyId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"company-tenant-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.2 Inscription Transporteur (TRANSPORTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('transporterToken', res.token);",
+                  "if (res.id) pm.collectionVariables.set('transporterId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"TRANSPORTER\",\n  \"tenantId\": \"transporter-tenant-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.3 Connexion Expéditeur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('companyToken', res.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.4 Connexion Transporteur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('transporterToken', res.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Fleet — Ajouter Camion & Chauffeur",
+      "item": [
+        {
+          "name": "2.1 Créer un camion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('truckId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/fleet/trucks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"transporter-tenant-001\",\n  \"immatriculation\": \"LT-1234-CM\",\n  \"chassis\": \"CH123456789\",\n  \"marque\": \"Mercedes\",\n  \"modele\": \"Actros\",\n  \"typeVehicule\": \"PLATEAU\",\n  \"capaciteMax\": 15000,\n  \"villeBase\": \"Douala\",\n  \"paysBase\": \"Cameroun\",\n  \"statut\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.2 Créer un chauffeur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('driverId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/fleet/drivers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"transporter-tenant-001\",\n  \"nom\": \"Mbarga\",\n  \"prenom\": \"Jean\",\n  \"telephone\": \"+237600000001\",\n  \"numeroPermis\": \"PERM-001\",\n  \"statut\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.3 Recherche camions disponibles (matching)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fleet/trucks/match?poids=5000&villeDepart=Douala&paysDepart=Cameroun",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "trucks", "match"],
+              "query": [
+                { "key": "poids", "value": "5000" },
+                { "key": "villeDepart", "value": "Douala" },
+                { "key": "paysDepart", "value": "Cameroun" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Shipment — Workflow Annonce",
+      "item": [
+        {
+          "name": "3.1 Créer une annonce (PENDING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('shipmentId', id);",
+                  "console.log('Shipment ID:', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": \"company-tenant-001\",\n  \"dateAnnonce\": \"2026-03-15\",\n  \"heureAnnonce\": \"08:00\",\n  \"marchandise\": \"Sacs de ciment\",\n  \"emballage\": \"Sacs 50kg\",\n  \"quantite\": 200,\n  \"poids\": 10000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Yaoundé\",\n  \"statut\": \"PENDING\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.2 Rechercher camions compatibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipments/search?poids=10000&villeDepart=Douala&paysDepart=Cameroun",
+              "host": ["{{baseUrl}}"],
+              "path": ["shipments", "search"],
+              "query": [
+                { "key": "poids", "value": "10000" },
+                { "key": "villeDepart", "value": "Douala" },
+                { "key": "paysDepart", "value": "Cameroun" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 Accepter l'annonce (Transporteur) → email expéditeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/accept",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transporterId\": \"transporter-tenant-001\",\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{driverId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.4 Démarrer la mission (Chauffeur) → email expéditeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/start"
+          }
+        },
+        {
+          "name": "3.5 Envoyer position GPS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/tracking",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 3.8480,\n  \"longitude\": 11.5021,\n  \"vitesse\": 80\n}"
+            }
+          }
+        },
+        {
+          "name": "3.6 Confirmer la livraison → email expéditeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/deliver"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Tracking — Historique GPS",
+      "item": [
+        {
+          "name": "4.1 Dernière position du camion",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/tracking/truck/{{truckId}}"
+          }
+        },
+        {
+          "name": "4.2 Historique complet du camion",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/tracking/truck/{{truckId}}/history"
+          }
+        },
+        {
+          "name": "4.3 Tous les points d'une expédition",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/tracking/shipment/{{shipmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Notifications — Vérifier historique",
+      "item": [
+        {
+          "name": "5.1 Notifications de l'expéditeur",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/notification/company-tenant-001"
+          }
+        },
+        {
+          "name": "5.2 Notifications du transporteur",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/notification/transporter-tenant-001"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Cas d'annulation",
+      "item": [
+        {
+          "name": "6.1 Créer une 2e annonce",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('shipmentId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": \"company-tenant-001\",\n  \"dateAnnonce\": \"2026-03-20\",\n  \"heureAnnonce\": \"10:00\",\n  \"marchandise\": \"Bois de construction\",\n  \"quantite\": 50,\n  \"poids\": 8000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Bafoussam\",\n  \"statut\": \"PENDING\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.2 Accepter la 2e annonce",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}/accept",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transporterId\": \"transporter-tenant-001\",\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{driverId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.3 Annuler → email transporteur",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{companyToken}}" }
+            ],
+            "url": "{{baseUrl}}/shipments/{{shipmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Health Checks",
+      "item": [
+        {
+          "name": "Gateway",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        },
+        {
+          "name": "Auth Service",
+          "request": { "method": "GET", "url": "http://localhost:3000/health" }
+        },
+        {
+          "name": "Company Service",
+          "request": { "method": "GET", "url": "http://localhost:3001/health" }
+        },
+        {
+          "name": "Shipment Service",
+          "request": { "method": "GET", "url": "http://localhost:3002/health" }
+        },
+        {
+          "name": "Fleet Service",
+          "request": { "method": "GET", "url": "http://localhost:3003/health" }
+        },
+        {
+          "name": "Tracking Service",
+          "request": { "method": "GET", "url": "http://localhost:3004/health" }
+        },
+        {
+          "name": "Notification Service",
+          "request": { "method": "GET", "url": "http://localhost:3005/health" }
+        }
+      ]
+    }
+  ]
+}
