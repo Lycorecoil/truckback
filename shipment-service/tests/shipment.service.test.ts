@@ -2,6 +2,18 @@ import { ShipmentService } from "../src/shipment/shipment.service";
 import type { ShipmentRepository } from "../src/shipment/shipment.repository";
 import type { Shipment } from "../src/shipment/shipment.entity";
 
+// Mock global fetch — évite les vraies requêtes HTTP vers fleet-service et notification-service
+beforeAll(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: jest.fn().mockResolvedValue([]),
+  }) as jest.Mock;
+});
+
+afterAll(() => {
+  jest.restoreAllMocks();
+});
+
 const mockShipment: Shipment = {
   id: "shipment-uuid-1",
   companyId: "company-uuid-1",
@@ -44,6 +56,26 @@ describe("ShipmentService", () => {
     expect(result[0]?.companyId).toBe("company-uuid-1");
   });
 
+  it("createOne déclenche une notification (fetch mocké) sans erreur", async () => {
+    (mockRepo.create as jest.Mock).mockResolvedValue(mockShipment);
+    // createOne de GenericService wraps create — on teste que ça ne throw pas
+    await expect(service.createOne({
+      companyId: "company-uuid-1",
+      dateAnnonce: new Date("2025-06-15"),
+      heureAnnonce: "08:00",
+      marchandise: "Ciment",
+      quantite: 200,
+      poids: 10000,
+      paysDepart: "Benin",
+      villeDepart: "Cotonou",
+      paysArrivee: "Benin",
+      villeArrivee: "Porto-Novo",
+      statut: "PENDING",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })).resolves.toBeDefined();
+  });
+
   it("acceptShipment assigne un camion et passe a ACCEPTED", async () => {
     (mockRepo.acceptIfPending as jest.Mock).mockResolvedValue({
       ...mockShipment,
@@ -82,5 +114,20 @@ describe("ShipmentService", () => {
     (mockRepo.update as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "DELIVERED" });
     const result = await service.deliverMission("shipment-uuid-1");
     expect(result.statut).toBe("DELIVERED");
+  });
+
+  it("cancelShipment passe le statut a CANCELLED", async () => {
+    (mockRepo.update as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "CANCELLED" });
+    const result = await service.cancelShipment("shipment-uuid-1");
+    expect(result.statut).toBe("CANCELLED");
+  });
+
+  it("cancelShipment avec transporteur assigné envoie une notification (fetch mocké)", async () => {
+    const accepted = { ...mockShipment, statut: "CANCELLED", transporterId: "transporteur-1" };
+    (mockRepo.update as jest.Mock).mockResolvedValue(accepted);
+    const result = await service.cancelShipment("shipment-uuid-1");
+    expect(result.statut).toBe("CANCELLED");
+    // fetch doit avoir été appelé pour la notification
+    expect(global.fetch).toHaveBeenCalled();
   });
 });
