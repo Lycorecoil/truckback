@@ -1,6 +1,7 @@
 import { GenericService } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
+import { sendEmail } from "../clients/NotificationClient";
 
 const FLEET_SERVICE_URL = process.env["FLEET_SERVICE_URL"] ?? "http://localhost:3003";
 
@@ -49,14 +50,37 @@ export class ShipmentService extends GenericService<Shipment> {
     if (!shipment) {
       throw new Error("Cette annonce n'est plus disponible (déjà acceptée ou annulée)");
     }
+    // Notifier l'expéditeur : un transporteur a accepté son annonce
+    void sendEmail(
+      shipment.companyId,
+      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      "Votre annonce a été acceptée",
+      `Bonne nouvelle ! Un transporteur a accepté votre annonce pour ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
+    );
     return shipment;
   }
 
   async startMission(id: string): Promise<Shipment> {
-    return this.shipmentRepo.update(id, { statut: "IN_PROGRESS" });
+    const shipment = await this.shipmentRepo.update(id, { statut: "IN_PROGRESS" });
+    // Notifier l'expéditeur : le chauffeur est en route
+    void sendEmail(
+      shipment.companyId,
+      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      "Votre livraison est en cours",
+      `Le chauffeur a démarré la mission pour ${shipment.marchandise}. Départ : ${shipment.villeDepart} → Arrivée : ${shipment.villeArrivee}.`,
+    );
+    return shipment;
   }
 
   async deliverMission(id: string): Promise<Shipment> {
-    return this.shipmentRepo.update(id, { statut: "DELIVERED" });
+    const shipment = await this.shipmentRepo.update(id, { statut: "DELIVERED" });
+    // Notifier l'expéditeur : livraison confirmée
+    void sendEmail(
+      shipment.companyId,
+      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      "Livraison confirmée",
+      `Votre marchandise (${shipment.marchandise}) a bien été livrée à ${shipment.villeArrivee}.`,
+    );
+    return shipment;
   }
 }

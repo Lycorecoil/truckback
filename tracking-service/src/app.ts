@@ -22,7 +22,7 @@ app.use("/tracking", createTrackingRouter(trackingService));
 app.use(errorMiddleware);
 
 const HTTP_PORT = process.env["PORT"] ?? 3004;
-const WS_PORT = Number(process.env["WS_PORT"] ?? 3005);
+const WS_PORT = Number(process.env["WS_PORT"] ?? 3007);
 
 // Serveur HTTP
 const httpServer = createServer(app);

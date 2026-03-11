@@ -16,7 +16,7 @@ app.use("/shipments", createShipmentRouter(shipmentService));
 
 app.use(errorMiddleware);
 
-const PORT = process.env["PORT"] ?? 3004;
+const PORT = process.env["PORT"] ?? 3002;
 
 connectDatabase()
   .then(() => {
