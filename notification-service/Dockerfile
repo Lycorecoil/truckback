@@ -18,4 +18,4 @@ COPY package*.json ./
 USER appuser
 ENV NODE_ENV=production
 EXPOSE 3005
-CMD ["node", "dist/app.js"]
+CMD ["node", "dist/main.js"]
