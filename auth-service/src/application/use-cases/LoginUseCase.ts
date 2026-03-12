@@ -18,10 +18,13 @@ export class LoginUseCase {
     const isValid = await password.verify(dto.password);
     if (!isValid) throw new InvalidCredentialsError();
 
-    const token = this.jwtService.sign({ sub: user.id, tenantId: user.tenantId, role: user.role });
+    const jwtPayload = { sub: user.id, tenantId: user.tenantId, role: user.role };
+    const token = this.jwtService.sign(jwtPayload);
+    const refreshToken = this.jwtService.signRefresh(jwtPayload);
 
     return {
       token,
+      refreshToken,
       user: { id: user.id, email: user.email, role: user.role, tenantId: user.tenantId },
     };
   }

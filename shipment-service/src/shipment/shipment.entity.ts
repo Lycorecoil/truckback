@@ -8,8 +8,10 @@ export interface GeoPoint {
 }
 
 export interface Shipment extends BaseEntity {
-  companyId: string;           // tenantId de l'expéditeur
-  transporterId?: string;      // tenantId du transporteur (rempli à ACCEPTED)
+  companyId: string;             // userId de l'expéditeur (x-user-id)
+  companyTenantId?: string;      // tenantId de l'expéditeur → lookup email company-service
+  transporterId?: string;        // userId du transporteur (rempli à ACCEPTED)
+  transporterTenantId?: string;  // tenantId du transporteur → lookup email company-service
   truckId?: string;            // id du camion assigné
   driverId?: string;           // id du chauffeur assigné
   dateAnnonce: Date;

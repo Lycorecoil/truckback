@@ -6,9 +6,7 @@ import { LoginUseCase } from '../../application/use-cases/LoginUseCase';
 import { CreateDriverUseCase } from '../../application/use-cases/CreateDriverUseCase';
 import { LogoutUseCase } from '../../application/use-cases/LogoutUseCase';
 import { ResetPasswordUseCase } from '../../application/use-cases/ResetPasswordUseCase';
-
-// Composition root — câble les dépendances manuellement
-// Pas de framework DI : l'injection se fait par constructeur
+import { RefreshTokenUseCase } from '../../application/use-cases/RefreshTokenUseCase';
 
 const userRepository = new MongoUserRepository();
 const notificationClient = new NotificationClient();
@@ -18,7 +16,7 @@ if (!jwtSecret) throw new Error('JWT_SECRET environment variable is required');
 
 const jwtService = new JwtService(
   jwtSecret,
-  process.env['JWT_EXPIRES_IN'] ?? '7d',
+  process.env['JWT_EXPIRES_IN'] ?? '1h',
 );
 
 export const container = {
@@ -27,6 +25,7 @@ export const container = {
   createDriverUseCase: new CreateDriverUseCase(userRepository, notificationClient),
   logoutUseCase: new LogoutUseCase(),
   resetPasswordUseCase: new ResetPasswordUseCase(userRepository, notificationClient),
+  refreshTokenUseCase: new RefreshTokenUseCase(userRepository, jwtService),
 };
 
 export type Container = typeof container;

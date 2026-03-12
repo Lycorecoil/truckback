@@ -21,7 +21,9 @@ const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
 
 const makeJwtMock = (): jest.Mocked<IJwtService> => ({
   sign: jest.fn().mockReturnValue('fake-jwt-token'),
+  signRefresh: jest.fn().mockReturnValue('fake-refresh-token'),
   verify: jest.fn(),
+  verifyRefresh: jest.fn(),
 });
 
 describe('SignUpUseCase', () => {

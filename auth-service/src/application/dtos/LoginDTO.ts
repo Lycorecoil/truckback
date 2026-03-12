@@ -5,6 +5,7 @@ export interface LoginDTO {
 
 export interface LoginResponseDTO {
   token: string;
+  refreshToken: string;
   user: {
     id: string;
     email: string;

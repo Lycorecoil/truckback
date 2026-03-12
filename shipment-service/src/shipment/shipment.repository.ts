@@ -49,7 +49,7 @@ export class ShipmentRepository implements IRepository<Shipment> {
   // Empêche la race condition si deux transporteurs acceptent en même temps
   async acceptIfPending(
     id: string,
-    data: { transporterId: string; truckId: string; driverId: string }
+    data: { transporterId: string; transporterTenantId?: string; truckId: string; driverId: string }
   ): Promise<Shipment | null> {
     const doc = await ShipmentModel.findOneAndUpdate(
       { id, statut: "PENDING" },

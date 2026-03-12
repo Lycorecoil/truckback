@@ -13,7 +13,9 @@ const shipmentSchema = new Schema<Shipment>(
   {
     id: { type: String, required: true, unique: true },
     companyId: { type: String, required: true },
+    companyTenantId: { type: String },
     transporterId: { type: String },
+    transporterTenantId: { type: String },
     truckId: { type: String },
     driverId: { type: String },
     dateAnnonce: { type: Date, required: true },

@@ -58,6 +58,7 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       const userId = getHeader(req, "x-user-id");
+      const transporterTenantId = getHeader(req, "x-tenant-id");
       const { truckId, driverId } = req.body as { truckId?: string; driverId?: string };
       if (!truckId || !driverId) {
         res.status(400).json({ error: "truckId et driverId sont requis" });
@@ -65,6 +66,7 @@ export function createShipmentRouter(service: ShipmentService): Router {
       }
       const shipment = await service.acceptShipment(req.params["id"] as string, {
         transporterId: userId,
+        transporterTenantId,
         truckId,
         driverId,
       });
@@ -167,9 +169,11 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
 
+      const tenantId = getHeader(req, "x-tenant-id");
       const payload = {
         ...body,
         companyId: role === "ADMIN" ? (body["companyId"] ?? userId) : userId,
+        companyTenantId: role === "ADMIN" ? (body["companyTenantId"] as string | undefined ?? tenantId) : tenantId,
       };
 
       const result = await service.createOne(payload as Parameters<typeof service.createOne>[0]);

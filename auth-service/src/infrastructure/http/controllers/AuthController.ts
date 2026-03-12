@@ -96,4 +96,18 @@ export class AuthController {
       next(err);
     }
   }
+
+  async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const body = req.body as { refreshToken?: string };
+      if (!body.refreshToken) {
+        res.status(400).json({ error: 'refreshToken est requis' });
+        return;
+      }
+      const result = await this.container.refreshTokenUseCase.execute({ refreshToken: body.refreshToken });
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

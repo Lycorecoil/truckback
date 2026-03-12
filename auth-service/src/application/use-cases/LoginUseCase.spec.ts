@@ -14,7 +14,9 @@ const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
 
 const makeJwtMock = (): jest.Mocked<IJwtService> => ({
   sign: jest.fn().mockReturnValue('fake-jwt-token'),
+  signRefresh: jest.fn().mockReturnValue('fake-refresh-token'),
   verify: jest.fn(),
+  verifyRefresh: jest.fn(),
 });
 
 describe('LoginUseCase', () => {
@@ -48,6 +50,7 @@ describe('LoginUseCase', () => {
     });
 
     expect(result.token).toBe('fake-jwt-token');
+    expect(result.refreshToken).toBe('fake-refresh-token');
     expect(result.user.email).toBe('test@example.com');
     expect(result.user.role).toBe(UserRole.COMPANY);
     expect(result.user.tenantId).toBe('tenant-1');

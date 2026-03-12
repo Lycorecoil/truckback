@@ -3,15 +3,21 @@ import type { BaseEntity, ServiceResponse } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
 import { sendEmail } from "../clients/NotificationClient";
+import { getOrganizationEmail } from "../clients/CompanyClient";
 
 const FLEET_SERVICE_URL = process.env["FLEET_SERVICE_URL"] ?? "http://localhost:3003";
+const FALLBACK_EMAIL = process.env["FALLBACK_EMAIL"] ?? "ilboudojeanbaptiste41@gmail.com";
+
+async function resolveEmail(tenantId: string | undefined, type: "company" | "transporter"): Promise<string> {
+  if (!tenantId) return FALLBACK_EMAIL;
+  return (await getOrganizationEmail(tenantId, type)) ?? FALLBACK_EMAIL;
+}
 
 export class ShipmentService extends GenericService<Shipment> {
   constructor(private readonly shipmentRepo: ShipmentRepository) {
     super(shipmentRepo);
   }
 
-  // Override createOne : après création, notifier les transporteurs de la zone
   async createOne(data: Omit<Shipment, keyof BaseEntity>): Promise<ServiceResponse<Shipment>> {
     const response = await super.createOne(data);
     void this.notifyMatchingTransporters(response.data);
@@ -26,14 +32,15 @@ export class ShipmentService extends GenericService<Shipment> {
         paysDepart: shipment.paysDepart,
       });
 
-      const transporterIds = [
+      const transporterTenantIds = [
         ...new Set((trucks as Array<{ tenantId: string }>).map((t) => t.tenantId)),
       ];
 
-      for (const transporterId of transporterIds) {
+      for (const tenantId of transporterTenantIds) {
+        const email = await resolveEmail(tenantId, "transporter");
         void sendEmail(
-          transporterId,
-          `transporteur-${transporterId}@camion-uber.internal`,
+          tenantId,
+          email,
           "Nouvelle annonce disponible dans votre zone",
           `Une annonce correspond à votre flotte : ${shipment.marchandise} (${shipment.poids} kg) — ${shipment.villeDepart} → ${shipment.villeArrivee}.`,
         );
@@ -59,7 +66,6 @@ export class ShipmentService extends GenericService<Shipment> {
     return this.shipmentRepo.findByDriverId(driverId);
   }
 
-  // Recherche les camions compatibles dans le fleet-service
   async searchMatchingTrucks(params: {
     poids: number;
     villeDepart: string;
@@ -78,19 +84,18 @@ export class ShipmentService extends GenericService<Shipment> {
     return response.json() as Promise<unknown[]>;
   }
 
-  // Acceptation avec lock atomique — évite la race condition
   async acceptShipment(
     id: string,
-    data: { transporterId: string; truckId: string; driverId: string }
+    data: { transporterId: string; transporterTenantId?: string; truckId: string; driverId: string }
   ): Promise<Shipment> {
     const shipment = await this.shipmentRepo.acceptIfPending(id, data);
     if (!shipment) {
       throw new Error("Cette annonce n'est plus disponible (déjà acceptée ou annulée)");
     }
-    // Notifier l'expéditeur : un transporteur a accepté son annonce
+    const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
-      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      companyEmail,
       "Votre annonce a été acceptée",
       `Bonne nouvelle ! Un transporteur a accepté votre annonce pour ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
     );
@@ -99,10 +104,10 @@ export class ShipmentService extends GenericService<Shipment> {
 
   async startMission(id: string): Promise<Shipment> {
     const shipment = await this.shipmentRepo.update(id, { statut: "IN_PROGRESS" });
-    // Notifier l'expéditeur : le chauffeur est en route
+    const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
-      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      companyEmail,
       "Votre livraison est en cours",
       `Le chauffeur a démarré la mission pour ${shipment.marchandise}. Départ : ${shipment.villeDepart} → Arrivée : ${shipment.villeArrivee}.`,
     );
@@ -111,23 +116,23 @@ export class ShipmentService extends GenericService<Shipment> {
 
   async deliverMission(id: string): Promise<Shipment> {
     const shipment = await this.shipmentRepo.update(id, { statut: "DELIVERED" });
-    // Notifier l'expéditeur : livraison confirmée
+    const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
-      `expediteur-${shipment.companyId}@camion-uber.internal`,
+      companyEmail,
       "Livraison confirmée",
       `Votre marchandise (${shipment.marchandise}) a bien été livrée à ${shipment.villeArrivee}.`,
     );
     return shipment;
   }
 
-  // Annulation : notifier le transporteur s'il était assigné
   async cancelShipment(id: string): Promise<Shipment> {
     const shipment = await this.shipmentRepo.update(id, { statut: "CANCELLED" });
     if (shipment.transporterId) {
+      const transporterEmail = await resolveEmail(shipment.transporterTenantId, "transporter");
       void sendEmail(
         shipment.transporterId,
-        `transporteur-${shipment.transporterId}@camion-uber.internal`,
+        transporterEmail,
         "Annonce annulée",
         `L'annonce que vous aviez acceptée a été annulée par l'expéditeur : ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
       );
