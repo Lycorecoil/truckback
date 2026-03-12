@@ -38,13 +38,15 @@ services:
     image: mongo:7
     container_name: elimmekatruck-mongo-keyfile-setup
     restart: "no"
-    user: "999:999"
+    user: "0:0"
     volumes:
       - mongo_keyfile:/keyfile
     command: >
       bash -c "
         [ -f /keyfile/mongo.key ] ||
-        (openssl rand -base64 756 > /keyfile/mongo.key && chmod 400 /keyfile/mongo.key)
+        (openssl rand -base64 756 > /keyfile/mongo.key &&
+         chmod 400 /keyfile/mongo.key &&
+         chown 999:999 /keyfile/mongo.key)
       "
 
   mongodb:
@@ -173,7 +175,7 @@ services:
       api-gateway-2:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/health"]
       interval: 15s
       timeout: 5s
       retries: 3

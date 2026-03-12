@@ -1,6 +1,6 @@
 global:
-  smtp_smarthost: "${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}"
-  smtp_from: "${SMTP_FROM:-alerts@elimmekatruck.com}"
+  smtp_smarthost: "${SMTP_HOST}:${SMTP_PORT}"
+  smtp_from: "${SMTP_FROM}"
   smtp_auth_username: "${SMTP_USER}"
   smtp_auth_password: "${SMTP_PASS}"
   smtp_require_tls: true
@@ -22,7 +22,7 @@ route:
 receivers:
   - name: "email-ops"
     email_configs:
-      - to: "${FALLBACK_EMAIL:-ilboudojeanbaptiste41@gmail.com}"
+      - to: "${FALLBACK_EMAIL}"
         send_resolved: true
         headers:
           Subject: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} — Elimmekatruck"
