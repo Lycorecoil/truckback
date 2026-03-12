@@ -1,20 +1,21 @@
 {
   "info": {
-    "name": "Camion Uber — Workflow Complet",
-    "description": "Collection complète pour tester le workflow de bout en bout via l'API Gateway (port 3006).\n\nOrdre d'exécution :\n1. Auth — Inscription & Connexion (COMPANY, TRANSPORTER)\n2. Fleet — Camion, Chauffeur, Assignation\n3. Driver — Créer compte + Connexion\n4. Shipment — Créer → Accepter → Démarrer → Livrer\n5. Tracking — GPS temps réel\n6. Cas annulation\n7. Health Checks\n\nNOTE : companyId et transporterId sont injectés automatiquement depuis le JWT — ne pas les mettre dans les bodies.",
+    "name": "Elimmekatruck — Workflow Complet",
+    "description": "Collection complète pour tester le workflow de bout en bout via Nginx → API Gateway.\n\nOrdre d'exécution :\n1. Auth — Inscription & Connexion (COMPANY, TRANSPORTER)\n2. Fleet — Camion, Chauffeur, Assignation\n3. Driver — Créer compte + Connexion\n4. Shipment — Créer → Accepter → Démarrer → Livrer\n5. Tracking — GPS temps réel\n6. Cas annulation\n7. Tests RBAC (403 attendus)\n8. Health Checks\n\nNOTE : companyId et transporterId sont injectés automatiquement depuis le JWT — ne pas les mettre dans les bodies.\nPoint d'entrée : Nginx port 80 → api-gateway-1/2 (least_conn load balancing)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl",           "value": "http://localhost:3006", "type": "string" },
-    { "key": "companyToken",      "value": "", "type": "string" },
-    { "key": "transporterToken",  "value": "", "type": "string" },
-    { "key": "driverToken",       "value": "", "type": "string" },
-    { "key": "companyId",         "value": "", "type": "string" },
-    { "key": "transporterId",     "value": "", "type": "string" },
-    { "key": "driverAuthId",      "value": "", "type": "string" },
-    { "key": "truckId",           "value": "", "type": "string" },
-    { "key": "fleetDriverId",     "value": "", "type": "string" },
-    { "key": "shipmentId",        "value": "", "type": "string" }
+    { "key": "baseUrl", "value": "http://localhost", "type": "string" },
+    { "key": "wsUrl",   "value": "ws://localhost/ws",  "type": "string" },
+    { "key": "companyToken",     "value": "", "type": "string" },
+    { "key": "transporterToken", "value": "", "type": "string" },
+    { "key": "driverToken",      "value": "", "type": "string" },
+    { "key": "companyId",        "value": "", "type": "string" },
+    { "key": "transporterId",    "value": "", "type": "string" },
+    { "key": "driverAuthId",     "value": "", "type": "string" },
+    { "key": "truckId",          "value": "", "type": "string" },
+    { "key": "fleetDriverId",    "value": "", "type": "string" },
+    { "key": "shipmentId",       "value": "", "type": "string" }
   ],
   "item": [
 
@@ -23,70 +24,132 @@
       "item": [
         {
           "name": "1.1 Inscription Expéditeur (COMPANY)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.token) pm.collectionVariables.set('companyToken', res.token);",
-              "if (res.id)    pm.collectionVariables.set('companyId', res.id);",
-              "console.log('Company ID:', res.id);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.accessToken || res.token;",
+                  "if (token) pm.collectionVariables.set('companyToken', token);",
+                  "if (res.user && res.user.id) pm.collectionVariables.set('companyId', res.user.id);",
+                  "else if (res.id) pm.collectionVariables.set('companyId', res.id);",
+                  "console.log('Company token:', token ? 'OK' : 'ERREUR — vérifier res.accessToken');",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/auth/signup",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"company-tenant-001\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"company-tenant-001\"\n}"
+            }
           }
         },
         {
           "name": "1.2 Inscription Transporteur (TRANSPORTER)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.token) pm.collectionVariables.set('transporterToken', res.token);",
-              "if (res.id)    pm.collectionVariables.set('transporterId', res.id);",
-              "console.log('Transporter ID:', res.id);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.accessToken || res.token;",
+                  "if (token) pm.collectionVariables.set('transporterToken', token);",
+                  "if (res.user && res.user.id) pm.collectionVariables.set('transporterId', res.user.id);",
+                  "else if (res.id) pm.collectionVariables.set('transporterId', res.id);",
+                  "console.log('Transporter token:', token ? 'OK' : 'ERREUR');",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/auth/signup",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"TRANSPORTER\",\n  \"tenantId\": \"transporter-tenant-001\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"TRANSPORTER\",\n  \"tenantId\": \"transporter-tenant-001\"\n}"
+            }
           }
         },
         {
           "name": "1.3 Connexion Expéditeur",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.token) pm.collectionVariables.set('companyToken', res.token);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.accessToken || res.token;",
+                  "if (token) pm.collectionVariables.set('companyToken', token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token présent', () => pm.expect(token).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/auth/login",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\"\n}"
+            }
           }
         },
         {
           "name": "1.4 Connexion Transporteur",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.token) pm.collectionVariables.set('transporterToken', res.token);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.accessToken || res.token;",
+                  "if (token) pm.collectionVariables.set('transporterToken', token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token présent', () => pm.expect(token).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/auth/login",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur@test.com\",\n  \"password\": \"motdepasse123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.5 ⛔ Rate limit auth — 6e tentative (doit retourner 429)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Rate limit actif (429)', () => pm.response.to.have.status(429));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hack@test.com\",\n  \"password\": \"wrongpassword\"\n}"
+            }
           }
         }
       ]
@@ -97,80 +160,131 @@
       "item": [
         {
           "name": "2.1 Créer un camion (TRANSPORTER)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "const id = res.data ? res.data.id : res.id;",
-              "if (id) pm.collectionVariables.set('truckId', id);",
-              "console.log('Truck ID:', id);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('truckId', id);",
+                  "console.log('Truck ID:', id);",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/fleet/trucks",
-            "body": { "mode": "raw", "raw": "{\n  \"immatriculation\": \"LT-1234-CM\",\n  \"chassis\": \"CH123456789\",\n  \"marque\": \"Mercedes\",\n  \"modele\": \"Actros\",\n  \"typeVehicule\": \"PLATEAU\",\n  \"capacite\": 15000,\n  \"villeDepart\": \"Douala\",\n  \"paysDepart\": \"Cameroun\",\n  \"statut\": \"AVAILABLE\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"LT-1234-CM\",\n  \"chassis\": \"CH123456789\",\n  \"marque\": \"Mercedes\",\n  \"modele\": \"Actros\",\n  \"typeVehicule\": \"PLATEAU\",\n  \"capacite\": 15000,\n  \"villeDepart\": \"Douala\",\n  \"paysDepart\": \"Cameroun\",\n  \"statut\": \"AVAILABLE\"\n}"
+            }
           }
         },
         {
-          "name": "2.2 Créer une fiche chauffeur dans fleet (TRANSPORTER)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "const id = res.data ? res.data.id : res.id;",
-              "if (id) pm.collectionVariables.set('fleetDriverId', id);",
-              "console.log('Fleet Driver ID:', id);"
-            ]}
-          }],
+          "name": "2.2 Créer fiche chauffeur dans fleet (TRANSPORTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('fleetDriverId', id);",
+                  "console.log('Fleet Driver ID:', id);",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/fleet/drivers",
-            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Mbarga\",\n  \"prenom\": \"Jean\",\n  \"telephone\": \"+237600000001\",\n  \"numeroPermis\": \"PERM-001\",\n  \"statut\": \"AVAILABLE\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Mbarga\",\n  \"prenom\": \"Jean\",\n  \"telephone\": \"+237600000001\",\n  \"numeroPermis\": \"PERM-001\",\n  \"statut\": \"AVAILABLE\"\n}"
+            }
           }
         },
         {
-          "name": "2.3 Créer le compte auth du chauffeur (TRANSPORTER)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.id) pm.collectionVariables.set('driverAuthId', res.id);",
-              "console.log('Driver Auth ID:', res.id, '— email+SMS envoyés automatiquement');"
-            ]}
-          }],
+          "name": "2.3 Créer compte auth du chauffeur (TRANSPORTER) → SMS envoyé",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('driverAuthId', res.id);",
+                  "console.log('Driver Auth ID:', res.id);",
+                  "console.log('→ Vérifier docker logs notification-service pour le SMS sandbox');",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/auth/driver/create",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"chauffeur@test.com\",\n  \"password\": \"chauffeur123\",\n  \"tenantId\": \"transporter-tenant-001\",\n  \"transporterId\": \"{{transporterId}}\",\n  \"telephone\": \"+237600000002\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chauffeur@test.com\",\n  \"password\": \"chauffeur123\",\n  \"tenantId\": \"transporter-tenant-001\",\n  \"transporterId\": \"{{transporterId}}\",\n  \"telephone\": \"+237600000002\"\n}"
+            }
           }
         },
         {
-          "name": "2.4 Assigner le chauffeur au camion (TRANSPORTER)",
+          "name": "2.4 Assigner chauffeur au camion (TRANSPORTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Assignation réussie', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/fleet/trucks/assign-driver",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}"
+            }
           }
         },
         {
           "name": "2.5 Lister mes camions (TRANSPORTER — isolation tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const trucks = res.data || res;",
+                  "pm.test('Au moins 1 camion', () => pm.expect(trucks.length || (trucks.data && trucks.data.length)).to.be.above(0));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{transporterToken}}" }],
@@ -178,7 +292,7 @@
           }
         },
         {
-          "name": "2.6 Recherche camions disponibles (matching)",
+          "name": "2.6 Recherche camions disponibles (matching poids)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -187,9 +301,9 @@
               "host": ["{{baseUrl}}"],
               "path": ["fleet", "trucks", "match"],
               "query": [
-                { "key": "poids",       "value": "5000" },
-                { "key": "villeDepart", "value": "Douala" },
-                { "key": "paysDepart",  "value": "Cameroun" }
+                { "key": "poids",      "value": "5000" },
+                { "key": "villeDepart","value": "Douala" },
+                { "key": "paysDepart", "value": "Cameroun" }
               ]
             }
           }
@@ -201,20 +315,29 @@
       "name": "3. Driver — Connexion",
       "item": [
         {
-          "name": "3.1 Connexion Chauffeur (avec identifiants reçus par email)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "if (res.token) pm.collectionVariables.set('driverToken', res.token);",
-              "console.log('Driver token:', res.token ? 'OK' : 'ERREUR');"
-            ]}
-          }],
+          "name": "3.1 Connexion Chauffeur (identifiants reçus par SMS/email)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.accessToken || res.token;",
+                  "if (token) pm.collectionVariables.set('driverToken', token);",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Driver token présent', () => pm.expect(token).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/auth/login",
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"chauffeur@test.com\",\n  \"password\": \"chauffeur123\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chauffeur@test.com\",\n  \"password\": \"chauffeur123\"\n}"
+            }
           }
         }
       ]
@@ -225,27 +348,45 @@
       "item": [
         {
           "name": "4.1 Créer une annonce (COMPANY)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "const id = res.data ? res.data.id : res.id;",
-              "if (id) pm.collectionVariables.set('shipmentId', id);",
-              "console.log('Shipment ID:', id, '— notifications envoyées aux transporteurs');"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('shipmentId', id);",
+                  "console.log('Shipment ID:', id);",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
             "url": "{{baseUrl}}/shipments",
-            "body": { "mode": "raw", "raw": "{\n  \"dateAnnonce\": \"2026-03-15\",\n  \"heureAnnonce\": \"08:00\",\n  \"marchandise\": \"Sacs de ciment\",\n  \"emballage\": \"Sacs 50kg\",\n  \"quantite\": 200,\n  \"poids\": 10000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Yaoundé\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateAnnonce\": \"2026-03-15\",\n  \"heureAnnonce\": \"08:00\",\n  \"marchandise\": \"Sacs de ciment\",\n  \"emballage\": \"Sacs 50kg\",\n  \"quantite\": 200,\n  \"poids\": 10000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Yaoundé\"\n}"
+            }
           }
         },
         {
           "name": "4.2 Lister mes expéditions (COMPANY — isolation tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -262,27 +403,56 @@
               "host": ["{{baseUrl}}"],
               "path": ["shipments", "search"],
               "query": [
-                { "key": "poids",       "value": "10000" },
-                { "key": "villeDepart", "value": "Douala" },
-                { "key": "paysDepart",  "value": "Cameroun" }
+                { "key": "poids",      "value": "10000" },
+                { "key": "villeDepart","value": "Douala" },
+                { "key": "paysDepart", "value": "Cameroun" }
               ]
             }
           }
         },
         {
           "name": "4.4 Accepter l'annonce (TRANSPORTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const statut = res.data ? res.data.statut : res.statut;",
+                  "pm.test('Statut ACCEPTED', () => pm.expect(statut).to.eql('ACCEPTED'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/shipments/{{shipmentId}}/accept",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}"
+            }
           }
         },
         {
           "name": "4.5 Démarrer la mission (DRIVER ⚠️ token chauffeur obligatoire)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const statut = res.data ? res.data.statut : res.statut;",
+                  "pm.test('Statut IN_PROGRESS', () => pm.expect(statut).to.eql('IN_PROGRESS'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{driverToken}}" }],
@@ -290,31 +460,76 @@
           }
         },
         {
-          "name": "4.6 Envoyer position GPS (DRIVER ⚠️ token chauffeur obligatoire)",
+          "name": "4.6 Envoyer position GPS — Douala (DRIVER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "console.log('→ Le WebSocket clients reçoivent tracking:update en temps réel');"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{driverToken}}" }
             ],
             "url": "{{baseUrl}}/tracking",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 3.8480,\n  \"longitude\": 11.5021,\n  \"vitesse\": 80\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 3.8480,\n  \"longitude\": 11.5021,\n  \"vitesse\": 80\n}"
+            }
           }
         },
         {
-          "name": "4.7 2e position GPS (en route)",
+          "name": "4.7 Envoyer position GPS — En route (DRIVER)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{driverToken}}" }
             ],
             "url": "{{baseUrl}}/tracking",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 4.0510,\n  \"longitude\": 11.5200,\n  \"vitesse\": 95\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 4.0510,\n  \"longitude\": 11.5200,\n  \"vitesse\": 95\n}"
+            }
           }
         },
         {
-          "name": "4.8 Confirmer la livraison (DRIVER ⚠️ token chauffeur obligatoire)",
+          "name": "4.8 Envoyer position GPS — Yaoundé arrivée (DRIVER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{driverToken}}" }
+            ],
+            "url": "{{baseUrl}}/tracking",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 3.8667,\n  \"longitude\": 11.5167,\n  \"vitesse\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "4.9 Confirmer la livraison (DRIVER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const statut = res.data ? res.data.statut : res.statut;",
+                  "pm.test('Statut DELIVERED', () => pm.expect(statut).to.eql('DELIVERED'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{driverToken}}" }],
@@ -329,6 +544,19 @@
       "item": [
         {
           "name": "5.1 Dernière position du camion (COMPANY)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const point = res.data || res;",
+                  "pm.test('latitude présente', () => pm.expect(point.latitude).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -337,6 +565,19 @@
         },
         {
           "name": "5.2 Historique complet du camion (TRANSPORTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "const points = res.data || res;",
+                  "pm.test('3 points GPS enregistrés', () => pm.expect(Array.isArray(points) ? points.length : points.data.length).to.be.at.least(3));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{transporterToken}}" }],
@@ -352,15 +593,28 @@
           }
         },
         {
-          "name": "5.4 ⛔ Test RBAC — GPS par COMPANY (doit retourner 403)",
+          "name": "5.4 ⛔ RBAC — GPS POST par COMPANY (doit retourner 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
             "url": "{{baseUrl}}/tracking",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 5.0,\n  \"longitude\": 12.0\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"shipmentId\": \"{{shipmentId}}\",\n  \"latitude\": 5.0,\n  \"longitude\": 12.0\n}"
+            }
           }
         }
       ]
@@ -371,22 +625,30 @@
       "item": [
         {
           "name": "6.1 Créer une 2e annonce (COMPANY)",
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "const res = pm.response.json();",
-              "const id = res.data ? res.data.id : res.id;",
-              "if (id) pm.collectionVariables.set('shipmentId', id);"
-            ]}
-          }],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const id = res.data ? res.data.id : res.id;",
+                  "if (id) pm.collectionVariables.set('shipmentId', id);",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
             "url": "{{baseUrl}}/shipments",
-            "body": { "mode": "raw", "raw": "{\n  \"dateAnnonce\": \"2026-03-20\",\n  \"heureAnnonce\": \"10:00\",\n  \"marchandise\": \"Bois de construction\",\n  \"quantite\": 50,\n  \"poids\": 8000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Bafoussam\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateAnnonce\": \"2026-03-20\",\n  \"heureAnnonce\": \"10:00\",\n  \"marchandise\": \"Bois de construction\",\n  \"quantite\": 50,\n  \"poids\": 8000,\n  \"paysDepart\": \"Cameroun\",\n  \"villeDepart\": \"Douala\",\n  \"paysArrivee\": \"Cameroun\",\n  \"villeArrivee\": \"Bafoussam\"\n}"
+            }
           }
         },
         {
@@ -394,15 +656,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/shipments/{{shipmentId}}/accept",
-            "body": { "mode": "raw", "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truckId}}\",\n  \"driverId\": \"{{fleetDriverId}}\"\n}"
+            }
           }
         },
         {
           "name": "6.3 Annuler l'expédition (COMPANY) → email auto au transporteur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Annulation réussie', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));",
+                  "console.log('→ Email annulation envoyé au transporteur (vérifier logs notification-service)');"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -410,7 +686,17 @@
           }
         },
         {
-          "name": "6.4 ⛔ Test RBAC — Annuler par TRANSPORTER (doit retourner 403)",
+          "name": "6.4 ⛔ RBAC — Annuler par TRANSPORTER (doit retourner 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{transporterToken}}" }],
@@ -421,22 +707,45 @@
     },
 
     {
-      "name": "7. Tests RBAC (403 attendus)",
+      "name": "7. Tests RBAC (403 / 401 attendus)",
       "item": [
         {
           "name": "7.1 ⛔ COMPANY crée un camion (doit retourner 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{companyToken}}" }
             ],
             "url": "{{baseUrl}}/fleet/trucks",
-            "body": { "mode": "raw", "raw": "{\n  \"immatriculation\": \"HACK-001\",\n  \"capacite\": 9999\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"HACK-001\",\n  \"capacite\": 9999\n}"
+            }
           }
         },
         {
           "name": "7.2 ⛔ COMPANY démarre une mission (doit retourner 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -445,20 +754,61 @@
         },
         {
           "name": "7.3 ⛔ TRANSPORTER crée une expédition (doit retourner 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{transporterToken}}" }
             ],
             "url": "{{baseUrl}}/shipments",
-            "body": { "mode": "raw", "raw": "{\n  \"poids\": 5000,\n  \"villeDepart\": \"Douala\",\n  \"paysDepart\": \"Cameroun\"\n}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poids\": 5000,\n  \"villeDepart\": \"Douala\",\n  \"paysDepart\": \"Cameroun\"\n}"
+            }
           }
         },
         {
           "name": "7.4 ⛔ Sans token (doit retourner 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
+            "url": "{{baseUrl}}/shipments"
+          }
+        },
+        {
+          "name": "7.5 ⛔ Token invalide (doit retourner 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer token_bidon_invalide" }],
             "url": "{{baseUrl}}/shipments"
           }
         }
@@ -468,13 +818,126 @@
     {
       "name": "8. Health Checks",
       "item": [
-        { "name": "Gateway",              "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
-        { "name": "Auth Service",         "request": { "method": "GET", "url": "http://localhost:3000/health" } },
-        { "name": "Company Service",      "request": { "method": "GET", "url": "http://localhost:3001/health" } },
-        { "name": "Shipment Service",     "request": { "method": "GET", "url": "http://localhost:3002/health" } },
-        { "name": "Fleet Service",        "request": { "method": "GET", "url": "http://localhost:3003/health" } },
-        { "name": "Tracking HTTP",        "request": { "method": "GET", "url": "http://localhost:3004/health" } },
-        { "name": "Notification Service", "request": { "method": "GET", "url": "http://localhost:3005/health" } }
+        {
+          "name": "Nginx → Gateway (port 80)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('Status ok', () => pm.expect(res.status).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        },
+        {
+          "name": "Auth Service (direct :3000)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3000/health" }
+        },
+        {
+          "name": "Company Service (direct :3001)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3001/health" }
+        },
+        {
+          "name": "Shipment Service (direct :3002)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3002/health" }
+        },
+        {
+          "name": "Fleet Service (direct :3003)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3003/health" }
+        },
+        {
+          "name": "Tracking HTTP (direct :3004)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3004/health" }
+        },
+        {
+          "name": "Notification Service (direct :3005)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test('DB connectée', () => pm.expect(res.db).to.eql('connected'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "http://localhost:3005/health" }
+        },
+        {
+          "name": "Prometheus (direct :9090)",
+          "request": { "method": "GET", "url": "http://localhost:9090/-/healthy" }
+        },
+        {
+          "name": "Grafana (direct :3008)",
+          "request": { "method": "GET", "url": "http://localhost:3008/api/health" }
+        }
       ]
     }
 
