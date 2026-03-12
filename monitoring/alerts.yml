@@ -1,0 +1,62 @@
+groups:
+  - name: elimmekatruck.services
+    interval: 30s
+    rules:
+
+      # ─── Service down ─────────────────────────────────────────────────────
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} est inaccessible"
+          description: "Prometheus ne peut plus scraper {{ $labels.job }} depuis 1 minute."
+
+      # ─── Taux d'erreur > 5% sur 5 min ────────────────────────────────────
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum by (service) (rate(http_requests_total{status_code=~"5.."}[5m]))
+            /
+            sum by (service) (rate(http_requests_total[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreur 5xx élevé sur {{ $labels.service }}"
+          description: "{{ $labels.service }} : {{ $value | humanizePercentage }} d'erreurs 5xx sur 5 min."
+
+      # ─── Latence P99 > 2 s ───────────────────────────────────────────────
+      - alert: HighP99Latency
+        expr: |
+          histogram_quantile(0.99,
+            sum by (service, le) (rate(http_request_duration_seconds_bucket[5m]))
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence P99 > 2s sur {{ $labels.service }}"
+          description: "{{ $labels.service }} : P99 = {{ $value | humanizeDuration }} sur 5 min."
+
+      # ─── Mémoire heap Node.js > 400 Mo ───────────────────────────────────
+      - alert: HighHeapUsage
+        expr: nodejs_heap_size_used_bytes > 400e6
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap Node.js élevée sur {{ $labels.service }}"
+          description: "{{ $labels.service }} : {{ $value | humanize1024 }}B de heap utilisée."
+
+      # ─── Redémarrages fréquents (processus) ──────────────────────────────
+      - alert: FrequentRestarts
+        expr: changes(process_start_time_seconds[15m]) > 2
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redémarrages fréquents sur {{ $labels.service }}"
+          description: "{{ $labels.service }} a redémarré {{ $value }} fois en 15 min."

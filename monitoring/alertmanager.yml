@@ -1,0 +1,35 @@
+global:
+  smtp_smarthost: "${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}"
+  smtp_from: "${SMTP_FROM:-alerts@elimmekatruck.com}"
+  smtp_auth_username: "${SMTP_USER}"
+  smtp_auth_password: "${SMTP_PASS}"
+  smtp_require_tls: true
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "service"]
+  group_wait:      30s
+  group_interval:  5m
+  repeat_interval: 4h
+  receiver: "email-ops"
+
+  routes:
+    - match:
+        severity: critical
+      receiver: "email-ops"
+      repeat_interval: 1h
+
+receivers:
+  - name: "email-ops"
+    email_configs:
+      - to: "${FALLBACK_EMAIL:-ilboudojeanbaptiste41@gmail.com}"
+        send_resolved: true
+        headers:
+          Subject: "[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} — Elimmekatruck"
+
+inhibit_rules:
+  - source_match:
+      severity: "critical"
+    target_match:
+      severity: "warning"
+    equal: ["service"]
