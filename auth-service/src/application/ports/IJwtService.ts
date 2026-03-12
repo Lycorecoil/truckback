@@ -1,7 +1,9 @@
 export interface JwtPayload {
-  sub: string;     // userId
+  sub: string;      // userId
   tenantId: string;
   role: string;
+  iat?: number;     // issued at (ajouté par jsonwebtoken)
+  exp?: number;     // expiry timestamp (secondes UNIX, ajouté par jsonwebtoken)
 }
 
 export interface IJwtService {

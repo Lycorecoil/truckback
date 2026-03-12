@@ -40,38 +40,119 @@ const WS_PORT   = Number(process.env["WS_PORT"] ?? 3007);
 
 const httpServer = createServer(app);
 
-// WebSocket avec authentification JWT lors du handshake
+// ─── WebSocket avec authentification et subscriptions filtrées ──────────────
+//
+// Protocole client :
+//   1. Connexion : ws://host:WS_PORT?token=<jwt>
+//   2. Subscription : { "type": "subscribe", "shipmentId": "..." }
+//      ou              { "type": "subscribe", "truckId": "..." }
+//   3. Réception : { "type": "tracking:update", "data": <TrackingPoint> }
+//                   uniquement si le point correspond à la subscription
+//
+// Sécurité : un chauffeur (DRIVER) ne peut s'abonner qu'à ses propres missions.
+//            Les autres rôles peuvent s'abonner à n'importe quel shipment/truck.
+
+interface WsSubscription {
+  shipmentIds: Set<string>;
+  truckIds:    Set<string>;
+  role:        string;
+  userId:      string;
+}
+
 const wss = new WebSocketServer({ port: WS_PORT });
 
-function verifyWsToken(req: IncomingMessage): boolean {
+// Map WebSocket → subscription du client
+const subscriptions = new Map<WebSocket, WsSubscription>();
+
+interface JwtPayload { sub: string; role: string; tenantId: string; exp?: number; }
+
+function verifyWsToken(req: IncomingMessage): JwtPayload | null {
   try {
     const url      = new URL(req.url ?? "", `http://localhost:${WS_PORT}`);
     const token    = url.searchParams.get("token");
     const authHeader = req.headers["authorization"];
     const rawToken = token ?? authHeader?.replace("Bearer ", "");
-    if (!rawToken) return false;
+    if (!rawToken) return null;
 
     const secret = process.env["JWT_SECRET"];
-    if (!secret) return false;
+    if (!secret) return null;
 
-    jwt.verify(rawToken, secret);
-    return true;
+    return jwt.verify(rawToken, secret) as JwtPayload;
   } catch {
-    return false;
+    return null;
   }
 }
 
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
-  if (!verifyWsToken(req)) {
+  const payload = verifyWsToken(req);
+  if (!payload) {
     logger.warn("WebSocket — connexion rejetée (token invalide)");
     ws.close(1008, "Token invalide ou manquant");
     return;
   }
-  logger.info("WebSocket — client authentifié connecté");
-  ws.on("close", () => logger.info("WebSocket — client déconnecté"));
+
+  // Initialise la subscription vide
+  subscriptions.set(ws, {
+    shipmentIds: new Set(),
+    truckIds:    new Set(),
+    role:        payload.role,
+    userId:      payload.sub,
+  });
+
+  logger.info({ userId: payload.sub, role: payload.role }, "WebSocket — client authentifié");
+
+  ws.on("message", (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString()) as {
+        type: string;
+        shipmentId?: string;
+        truckId?: string;
+      };
+      const sub = subscriptions.get(ws);
+      if (!sub || msg.type !== "subscribe") return;
+
+      if (msg.shipmentId) sub.shipmentIds.add(msg.shipmentId);
+      if (msg.truckId)    sub.truckIds.add(msg.truckId);
+
+      logger.debug(
+        { userId: sub.userId, shipmentId: msg.shipmentId, truckId: msg.truckId },
+        "WebSocket — subscription enregistrée"
+      );
+    } catch {
+      // message malformé — ignore
+    }
+  });
+
+  ws.on("close", () => {
+    subscriptions.delete(ws);
+    logger.info({ userId: payload.sub }, "WebSocket — client déconnecté");
+  });
 });
 
-trackingService.setWebSocketServer(wss);
+// Expose la fonction de broadcast filtré au service
+export function broadcastTrackingUpdate(point: {
+  shipmentId?: string;
+  truckId: string;
+  [key: string]: unknown;
+}): void {
+  const message = JSON.stringify({ type: "tracking:update", data: point });
+
+  wss.clients.forEach((client) => {
+    if (client.readyState !== WebSocket.OPEN) return;
+
+    const sub = subscriptions.get(client);
+    if (!sub) return;
+
+    // Diffuse uniquement aux clients abonnés à ce shipment ou ce truck
+    const interested =
+      (point.shipmentId && sub.shipmentIds.has(point.shipmentId)) ||
+      sub.truckIds.has(point.truckId);
+
+    if (interested) client.send(message);
+  });
+}
+
+trackingService.setWebSocketServer(wss, broadcastTrackingUpdate);
 
 connectDatabase()
   .then(() => {

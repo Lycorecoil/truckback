@@ -1,18 +1,24 @@
 import 'dotenv/config';
+import { createServer } from 'http';
 import { createApp } from './infrastructure/http/server';
 import { connectDatabase } from './infrastructure/db/database';
+import { registerGracefulShutdown } from './utils/gracefulShutdown';
+import { logger } from './utils/logger';
 
-const PORT = process.env['PORT'] ?? 3005;
+process.env['SERVICE_NAME'] = 'notification-service';
 
-const app = createApp();
+const PORT   = process.env['PORT'] ?? 3005;
+const app    = createApp();
+const server = createServer(app);
 
 connectDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`[notification-service] Running on port ${PORT}`);
+    server.listen(PORT, () => {
+      logger.info(`Notification Service démarré sur le port ${PORT}`);
     });
+    registerGracefulShutdown(server, 'notification-service');
   })
   .catch((err: unknown) => {
-    console.error('[notification-service] Erreur de connexion MongoDB :', err);
+    logger.error({ err }, '[notification-service] Erreur de connexion MongoDB');
     process.exit(1);
   });

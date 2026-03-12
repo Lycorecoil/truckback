@@ -12,8 +12,8 @@ services:
     volumes:
       - mongo_data:/data/db
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpass
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD is required}
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh --quiet
       interval: 10s
@@ -33,7 +33,7 @@ services:
       PORT: 3000
       NODE_ENV: production
       SERVICE_NAME: auth-service
-      DATABASE_URL: mongodb://root:rootpass@mongodb:27017/auth-service?authSource=admin
+      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/auth-service?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_EXPIRES_IN: 1h
@@ -57,7 +57,7 @@ services:
       PORT: 3001
       NODE_ENV: production
       SERVICE_NAME: company-service
-      MONGO_URI: mongodb://root:rootpass@mongodb:27017/company-service?authSource=admin
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/company-service?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
@@ -79,7 +79,7 @@ services:
       PORT: 3003
       NODE_ENV: production
       SERVICE_NAME: fleet-service
-      MONGODB_URI: mongodb://root:rootpass@mongodb:27017/fleet-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/fleet-service?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
@@ -101,7 +101,7 @@ services:
       PORT: 3002
       NODE_ENV: production
       SERVICE_NAME: shipment-service
-      MONGODB_URI: mongodb://root:rootpass@mongodb:27017/shipment-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/shipment-service?authSource=admin
       FLEET_SERVICE_URL: http://fleet-service:3003
       NOTIFICATION_SERVICE_URL: http://notification-service:3005
       COMPANY_SERVICE_URL: http://company-service:3001
@@ -131,7 +131,7 @@ services:
       WS_PORT: 3007
       NODE_ENV: production
       SERVICE_NAME: tracking-service
-      MONGODB_URI: mongodb://root:rootpass@mongodb:27017/tracking-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/tracking-service?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
@@ -153,7 +153,7 @@ services:
       PORT: 3005
       NODE_ENV: production
       SERVICE_NAME: notification-service
-      DATABASE_URL: mongodb://root:rootpass@mongodb:27017/notification-service?authSource=admin
+      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/notification-service?authSource=admin
       JWT_SECRET: ${JWT_SECRET}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}

@@ -14,6 +14,18 @@ const mockPoint: TrackingPoint = {
   updatedAt: new Date(),
 };
 
+// Mock global fetch — évite les vraies requêtes HTTP vers notification-service
+beforeAll(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: jest.fn().mockResolvedValue({}),
+  }) as jest.Mock;
+});
+
+afterAll(() => {
+  jest.restoreAllMocks();
+});
+
 const mockRepo = {
   findById: jest.fn(),
   findAll: jest.fn(),
@@ -23,6 +35,7 @@ const mockRepo = {
   exists: jest.fn(),
   findByShipmentId: jest.fn(),
   findLatestByTruckId: jest.fn(),
+  findLatestByShipmentId: jest.fn(),
   findHistoryByTruckId: jest.fn(),
 } as unknown as TrackingRepository;
 

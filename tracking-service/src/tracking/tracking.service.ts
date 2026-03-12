@@ -6,15 +6,23 @@ import { sendEmail } from "../clients/NotificationClient";
 
 const GPS_SILENCE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
+type BroadcastFn = (point: TrackingPoint) => void;
+
 export class TrackingService extends GenericService<TrackingPoint> {
   private wss: WebSocketServer | null = null;
+  private broadcastFn: BroadcastFn | null = null;
 
   constructor(private readonly trackingRepo: TrackingRepository) {
     super(trackingRepo);
   }
 
-  setWebSocketServer(wss: WebSocketServer): void {
+  /**
+   * Injecte le serveur WebSocket et la fonction de broadcast filtrée.
+   * Appelé depuis app.ts après création du WSS.
+   */
+  setWebSocketServer(wss: WebSocketServer, broadcastFn?: BroadcastFn): void {
     this.wss = wss;
+    this.broadcastFn = broadcastFn ?? null;
   }
 
   async addPoint(data: Omit<TrackingPoint, "id" | "createdAt" | "updatedAt">): Promise<TrackingPoint> {
@@ -27,13 +35,14 @@ export class TrackingService extends GenericService<TrackingPoint> {
       updatedAt: new Date(),
     });
 
-    // Diffusion WebSocket à tous les clients connectés
-    if (this.wss) {
+    // Broadcast filtré : uniquement aux clients abonnés à ce shipment/truck
+    if (this.broadcastFn) {
+      this.broadcastFn(point);
+    } else if (this.wss) {
+      // Fallback : broadcast global si pas de fonction filtrée (tests, etc.)
       const message = JSON.stringify({ type: "tracking:update", data: point });
       this.wss.clients.forEach((client) => {
-        if (client.readyState === 1) {
-          client.send(message);
-        }
+        if (client.readyState === 1) client.send(message);
       });
     }
 
@@ -49,7 +58,7 @@ export class TrackingService extends GenericService<TrackingPoint> {
       if (gapMs >= GPS_SILENCE_THRESHOLD_MS) {
         const gapMin = Math.round(gapMs / 60000);
         void sendEmail(
-          shipmentId, // recipientId = expéditeur lié à la mission
+          shipmentId,
           `expediteur-${shipmentId}@camion-uber.internal`,
           "Alerte : GPS du camion silencieux",
           `Le camion ${truckId} n'a pas envoyé de position GPS depuis ${gapMin} minutes. Un reprise de signal vient d'être détectée.`,
