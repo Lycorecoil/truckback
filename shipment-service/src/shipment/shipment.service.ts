@@ -3,6 +3,7 @@ import type { BaseEntity, ServiceResponse } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
 import { sendEmail } from "../clients/NotificationClient";
+import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import { getOrganizationEmail } from "../clients/CompanyClient";
 
 const FLEET_SERVICE_URL = process.env["FLEET_SERVICE_URL"] ?? "http://localhost:3003";
@@ -79,7 +80,7 @@ export class ShipmentService extends GenericService<Shipment> {
     });
     if (params.typeVehicule) query.append("typeVehicule", params.typeVehicule);
 
-    const response = await fetch(`${FLEET_SERVICE_URL}/fleet/trucks/match?${query.toString()}`);
+    const response = await fetchWithTimeout(`${FLEET_SERVICE_URL}/fleet/trucks/match?${query.toString()}`);
     if (!response.ok) throw new Error("Erreur lors de la recherche de camions");
     return response.json() as Promise<unknown[]>;
   }

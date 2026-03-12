@@ -1,31 +1,47 @@
 import "dotenv/config";
+import { createServer } from "http";
 import express from "express";
 import { connectDatabase } from "./config/database";
 import { ShipmentRepository } from "./shipment/shipment.repository";
 import { ShipmentService } from "./shipment/shipment.service";
 import { createShipmentRouter } from "./shipment/shipment.controller";
 import { errorMiddleware } from "./middlewares/error.middlewares";
+import { jwtVerifyMiddleware } from "./middlewares/jwtVerify.middleware";
+import { requestIdMiddleware } from "./utils/requestId.middleware";
+import { internalRateLimiter } from "./utils/rateLimit.middleware";
+import { registerGracefulShutdown } from "./utils/gracefulShutdown";
+import { logger } from "./utils/logger";
+
+process.env["SERVICE_NAME"] = "shipment-service";
 
 const app = express();
-app.use(express.json());
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "1mb" }));
+app.use(requestIdMiddleware);
+app.use(internalRateLimiter);
 
-const shipmentRepository = new ShipmentRepository();
-const shipmentService = new ShipmentService(shipmentRepository);
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "shipment-service" });
+});
 
+app.use(jwtVerifyMiddleware);
+
+const shipmentService = new ShipmentService(new ShipmentRepository());
 app.use("/shipments", createShipmentRouter(shipmentService));
-
 app.use(errorMiddleware);
 
 const PORT = process.env["PORT"] ?? 3002;
+const server = createServer(app);
 
 connectDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Shipment Service démarré sur le port ${PORT}`);
+    server.listen(PORT, () => {
+      logger.info(`Shipment Service démarré sur le port ${PORT}`);
     });
+    registerGracefulShutdown(server, "shipment-service");
   })
   .catch((err: unknown) => {
-    console.error("Erreur de connexion MongoDB :", err);
+    logger.error({ err }, "Erreur de connexion MongoDB");
     process.exit(1);
   });
 

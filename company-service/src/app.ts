@@ -1,33 +1,47 @@
 import "dotenv/config";
+import { createServer } from "http";
 import express from "express";
+import mongoose from "mongoose";
 import { createOrganizationRouter } from "./organization/organization.controller";
 import { errorMiddleware } from "./middlewares/error.middlewares";
-import { connectDatabase } from "./config/database";
+import { jwtVerifyMiddleware } from "./middlewares/jwtVerify.middleware";
+import { requestIdMiddleware } from "./utils/requestId.middleware";
+import { internalRateLimiter } from "./utils/rateLimit.middleware";
+import { registerGracefulShutdown } from "./utils/gracefulShutdown";
+import { logger } from "./utils/logger";
+
+process.env["SERVICE_NAME"] = "company-service";
+
+const MONGO_URI = process.env["MONGO_URI"] ?? "mongodb://localhost:27017/company-service";
 
 const app = express();
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "1mb" }));
+app.use(requestIdMiddleware);
+app.use(internalRateLimiter);
 
-// Parse le body JSON des requêtes entrantes
-app.use(express.json());
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "company-service" });
+});
 
-// Routes — même logique, deux chemins distincts filtrés par type
-app.use("/company", createOrganizationRouter("COMPANY"));
+app.use(jwtVerifyMiddleware);
+
+app.use("/company",     createOrganizationRouter("COMPANY"));
 app.use("/transporter", createOrganizationRouter("TRANSPORTER"));
-
-// Middleware d'erreurs — toujours en dernier
 app.use(errorMiddleware);
 
-// Démarrage du serveur
-const PORT = process.env.PORT || 3001;
+const PORT   = process.env["PORT"] ?? 3001;
+const server = createServer(app);
 
-connectDatabase()
+mongoose
+  .connect(MONGO_URI)
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Company Service démarré sur le port ${PORT}`);
+    server.listen(PORT, () => {
+      logger.info(`Company Service démarré sur le port ${PORT}`);
     });
+    registerGracefulShutdown(server, "company-service");
   })
-  .catch((err) => {
-    console.error("❌ Échec de connexion à MongoDB :", err);
+  .catch((err: unknown) => {
+    logger.error({ err }, "Erreur de connexion MongoDB");
     process.exit(1);
   });
-
-export { app };

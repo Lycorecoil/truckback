@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+
 const NOTIFICATION_SERVICE_URL = process.env["NOTIFICATION_SERVICE_URL"] ?? "http://localhost:3005";
 
 export async function sendEmail(
@@ -7,13 +9,16 @@ export async function sendEmail(
   body: string,
 ): Promise<void> {
   try {
-    await fetch(`${NOTIFICATION_SERVICE_URL}/notification/email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recipientId, to, subject, body }),
-    });
+    await fetchWithTimeout(
+      `${NOTIFICATION_SERVICE_URL}/notification/email`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId, to, subject, body }),
+      },
+      5_000,
+    );
   } catch (err) {
-    // Non-bloquant : log l'erreur sans faire échouer la requête principale
     console.error("[shipment-service][NotificationClient] Erreur envoi email :", err);
   }
 }

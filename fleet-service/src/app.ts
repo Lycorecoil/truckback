@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createServer } from "http";
 import express from "express";
 import { connectDatabase } from "./config/database";
 import { TruckRepository } from "./truck/truck.repository";
@@ -8,34 +9,45 @@ import { DriverRepository } from "./driver/driver.repository";
 import { DriverService } from "./driver/driver.service";
 import { createDriverRouter } from "./driver/driver.controller";
 import { errorMiddleware } from "./middlewares/error.middlewares";
+import { jwtVerifyMiddleware } from "./middlewares/jwtVerify.middleware";
+import { requestIdMiddleware } from "./utils/requestId.middleware";
+import { internalRateLimiter } from "./utils/rateLimit.middleware";
+import { registerGracefulShutdown } from "./utils/gracefulShutdown";
+import { logger } from "./utils/logger";
+
+process.env["SERVICE_NAME"] = "fleet-service";
 
 const app = express();
-app.use(express.json());
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "1mb" }));
+app.use(requestIdMiddleware);
+app.use(internalRateLimiter);
 
-// Instanciation des dépendances
-const truckRepository = new TruckRepository();
-const truckService = new TruckService(truckRepository);
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "fleet-service" });
+});
 
-const driverRepository = new DriverRepository();
-const driverService = new DriverService(driverRepository);
+app.use(jwtVerifyMiddleware);
 
-// Routes
-app.use("/fleet/trucks", createTruckRouter(truckService));
+const truckService  = new TruckService(new TruckRepository());
+const driverService = new DriverService(new DriverRepository());
+
+app.use("/fleet/trucks",  createTruckRouter(truckService));
 app.use("/fleet/drivers", createDriverRouter(driverService));
-
-// Middleware d'erreurs — toujours en dernier
 app.use(errorMiddleware);
 
 const PORT = process.env["PORT"] ?? 3003;
+const server = createServer(app);
 
 connectDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Fleet Service démarré sur le port ${PORT}`);
+    server.listen(PORT, () => {
+      logger.info(`Fleet Service démarré sur le port ${PORT}`);
     });
+    registerGracefulShutdown(server, "fleet-service");
   })
   .catch((err: unknown) => {
-    console.error("Erreur de connexion MongoDB :", err);
+    logger.error({ err }, "Erreur de connexion MongoDB");
     process.exit(1);
   });
 
