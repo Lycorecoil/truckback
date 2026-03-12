@@ -33,7 +33,7 @@ export class NotificationController {
 
   async getUserNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await this.container.getUserNotificationsUseCase.execute({ userId: req.params.userId });
+      const result = await this.container.getUserNotificationsUseCase.execute({ userId: req.params["userId"] as string });
       res.status(200).json(result);
     } catch (err) {
       next(err);
