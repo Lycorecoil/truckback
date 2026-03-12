@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { connectDatabase } from "./config/database";
 import { TrackingRepository } from "./tracking/tracking.repository";
 import { TrackingService } from "./tracking/tracking.service";
+import type { TrackingPoint } from "./tracking/tracking.entity";
 import { createTrackingRouter } from "./tracking/tracking.controller";
 import { errorMiddleware } from "./middlewares/error.middlewares";
 import { jwtVerifyMiddleware } from "./middlewares/jwtVerify.middleware";
@@ -139,11 +140,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 });
 
 // Expose la fonction de broadcast filtré au service
-export function broadcastTrackingUpdate(point: {
-  shipmentId?: string;
-  truckId: string;
-  [key: string]: unknown;
-}): void {
+export function broadcastTrackingUpdate(point: TrackingPoint): void {
   const message = JSON.stringify({ type: "tracking:update", data: point });
 
   wss.clients.forEach((client) => {
