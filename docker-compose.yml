@@ -7,6 +7,7 @@ services:
     image: mongo:7
     container_name: elimmekatruck-mongo
     restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     volumes:
@@ -19,6 +20,68 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Initialise le replica set au premier démarrage (one-shot, idempotent)
+  mongodb-init:
+    image: mongo:7
+    container_name: elimmekatruck-mongo-init
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    entrypoint: >
+      mongosh --host mongodb:27017
+        -u ${MONGO_ROOT_USER:-root}
+        -p ${MONGO_ROOT_PASSWORD}
+        --authenticationDatabase admin
+        --eval "
+          try { rs.status(); print('replica set already initiated'); }
+          catch(e) {
+            rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] });
+            print('replica set initiated');
+          }
+        "
+
+  redis:
+    image: redis:7-alpine
+    container_name: elimmekatruck-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: elimmekatruck-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: elimmekatruck-grafana
+    restart: unless-stopped
+    ports:
+      - "3008:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
   # ─── Microservices ───────────────────────────────────────────────────────────
 
@@ -33,12 +96,16 @@ services:
       PORT: 3000
       NODE_ENV: production
       SERVICE_NAME: auth-service
-      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/auth-service?authSource=admin
+      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/auth-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_EXPIRES_IN: 1h
     depends_on:
       mongodb:
+        condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
+      redis:
         condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
@@ -57,11 +124,13 @@ services:
       PORT: 3001
       NODE_ENV: production
       SERVICE_NAME: company-service
-      MONGO_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/company-service?authSource=admin
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/company-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
       interval: 15s
@@ -79,11 +148,13 @@ services:
       PORT: 3003
       NODE_ENV: production
       SERVICE_NAME: fleet-service
-      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/fleet-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/fleet-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3003/health || exit 1
       interval: 15s
@@ -101,7 +172,7 @@ services:
       PORT: 3002
       NODE_ENV: production
       SERVICE_NAME: shipment-service
-      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/shipment-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/shipment-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       FLEET_SERVICE_URL: http://fleet-service:3003
       NOTIFICATION_SERVICE_URL: http://notification-service:3005
       COMPANY_SERVICE_URL: http://company-service:3001
@@ -131,11 +202,13 @@ services:
       WS_PORT: 3007
       NODE_ENV: production
       SERVICE_NAME: tracking-service
-      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/tracking-service?authSource=admin
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/tracking-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3004/health || exit 1
       interval: 15s
@@ -153,7 +226,7 @@ services:
       PORT: 3005
       NODE_ENV: production
       SERVICE_NAME: notification-service
-      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/notification-service?authSource=admin
+      DATABASE_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/notification-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_SECRET: ${JWT_SECRET}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -168,6 +241,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3005/health || exit 1
       interval: 15s
@@ -186,6 +261,7 @@ services:
       NODE_ENV: production
       SERVICE_NAME: api-gateway
       JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       AUTH_SERVICE_URL: http://auth-service:3000
       COMPANY_SERVICE_URL: http://company-service:3001
@@ -206,6 +282,8 @@ services:
         condition: service_healthy
       notification-service:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3006/health || exit 1
       interval: 15s
@@ -214,4 +292,10 @@ services:
 
 volumes:
   mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local

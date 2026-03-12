@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createServer } from "http";
 import { IncomingMessage } from "http";
 import express from "express";
+import mongoose from "mongoose";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import { connectDatabase } from "./config/database";
@@ -14,6 +15,7 @@ import { requestIdMiddleware } from "./utils/requestId.middleware";
 import { internalRateLimiter } from "./utils/rateLimit.middleware";
 import { registerGracefulShutdown } from "./utils/gracefulShutdown";
 import { logger } from "./utils/logger";
+import { metricsMiddleware, metricsHandler } from "./utils/metrics.middleware";
 
 process.env["SERVICE_NAME"] = "tracking-service";
 
@@ -22,10 +24,17 @@ app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
 app.use(requestIdMiddleware);
 app.use(internalRateLimiter);
+app.use(metricsMiddleware);
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "tracking-service" });
+  const db = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  const status = db === "connected" ? "ok" : "degraded";
+  res.status(db === "connected" ? 200 : 503).json({
+    status, service: "tracking-service", db, uptime: Math.floor(process.uptime()),
+  });
 });
+
+app.get("/metrics", metricsHandler);
 
 app.use(jwtVerifyMiddleware);
 
