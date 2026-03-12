@@ -30,3 +30,8 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# SSL certificates (générés localement — ne pas committer)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
