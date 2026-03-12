@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit de Maturité Production — Camion-Uber</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222639;
+    --border: #2d3147;
+    --text: #e2e4ef;
+    --text-muted: #7b82a8;
+    --accent: #5b6fe6;
+    --red: #f05b5b;
+    --orange: #f0934e;
+    --yellow: #e8c84a;
+    --green: #4ec994;
+    --red-bg: rgba(240,91,91,.12);
+    --orange-bg: rgba(240,147,78,.12);
+    --yellow-bg: rgba(232,200,74,.12);
+    --green-bg: rgba(78,201,148,.12);
+    --score-gradient: linear-gradient(135deg, #5b6fe6 0%, #9b59b6 100%);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+  .header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+  .header .meta { color: var(--text-muted); font-size: .875rem; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: .75rem; }
+  .header .meta span::before { content: '▸ '; color: var(--accent); }
+
+  .score-card {
+    background: var(--score-gradient);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+  }
+  .score-big { font-size: 5rem; font-weight: 800; line-height: 1; color: #fff; }
+  .score-big span { font-size: 2rem; font-weight: 400; opacity: .7; }
+  .score-right h2 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+  .score-right p { color: rgba(255,255,255,.75); margin-top: .25rem; }
+  .score-badge {
+    display: inline-block;
+    background: rgba(255,255,255,.2);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 20px;
+    padding: .25rem .85rem;
+    font-size: .8rem;
+    margin-top: .5rem;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .domain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .domain-card .label { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .domain-card .name { font-weight: 600; font-size: .95rem; }
+  .domain-card .score-row { display: flex; align-items: center; gap: .75rem; margin-top: .25rem; }
+  .domain-card .score-val { font-size: 1.4rem; font-weight: 700; }
+  .domain-card .bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .domain-card .bar-fill { height: 100%; border-radius: 3px; }
+  .red .bar-fill, .red .score-val { background: var(--red); color: var(--red); }
+  .orange .bar-fill, .orange .score-val { background: var(--orange); color: var(--orange); }
+  .yellow .bar-fill, .yellow .score-val { background: var(--yellow); color: var(--yellow); }
+  .green .bar-fill, .green .score-val { background: var(--green); color: var(--green); }
+
+  section { margin-bottom: 2.5rem; }
+  h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    padding-bottom: .6rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 .75rem; color: var(--text); }
+
+  .issue-card {
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+  }
+  .issue-card.critical { background: var(--red-bg); border-color: var(--red); }
+  .issue-card.high     { background: var(--orange-bg); border-color: var(--orange); }
+  .issue-card.medium   { background: var(--yellow-bg); border-color: var(--yellow); }
+  .issue-card.strength { background: var(--green-bg); border-color: var(--green); }
+  .issue-card .issue-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    flex-wrap: wrap;
+  }
+  .issue-card .badge {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .15rem .55rem;
+    border-radius: 4px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .critical .badge { background: var(--red); color: #fff; }
+  .high .badge     { background: var(--orange); color: #fff; }
+  .medium .badge   { background: var(--yellow); color: #000; }
+  .strength .badge { background: var(--green); color: #000; }
+  .issue-card .affected { font-size: .8rem; color: var(--text-muted); margin-bottom: .6rem; font-family: monospace; }
+  .issue-card p { color: var(--text); font-size: .9rem; line-height: 1.7; }
+  .issue-card .fix-label { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin: .9rem 0 .4rem; }
+  .critical .fix-label { color: var(--red); }
+  .high .fix-label     { color: var(--orange); }
+  .medium .fix-label   { color: var(--yellow); }
+
+  pre {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: .82rem;
+    line-height: 1.6;
+    margin-top: .6rem;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    color: #c8d3f5;
+  }
+  code { font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; font-size: .85em; color: #8ecb86; }
+
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  th { text-align: left; padding: .7rem 1rem; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+  td { padding: .65rem 1rem; border-top: 1px solid var(--border); font-size: .875rem; vertical-align: middle; }
+  tr:hover td { background: var(--surface2); }
+  td code { font-size: .78rem; }
+
+  .forgotten-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: .75rem;
+  }
+  .forgotten-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+  }
+  .forgotten-item .num {
+    width: 28px; height: 28px; min-width: 28px;
+    background: var(--accent); color: #fff;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 700;
+  }
+  .forgotten-item .ftext { font-size: .875rem; }
+  .forgotten-item .ftext strong { display: block; margin-bottom: .2rem; }
+  .forgotten-item .ftext .fstatus { font-size: .75rem; margin-top: .25rem; }
+
+  .sprint-section { margin-bottom: 1.5rem; }
+  .sprint-header {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  }
+  .sprint-header h3 { margin: 0; font-size: 1rem; }
+  .sprint-target {
+    background: var(--accent); color: #fff;
+    font-size: .75rem; font-weight: 700;
+    padding: .2rem .65rem; border-radius: 20px;
+  }
+  .sprint-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; overflow: hidden; }
+  .sprint-item {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    align-items: center;
+    padding: .75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    gap: .75rem;
+    font-size: .875rem;
+  }
+  .sprint-item:first-child { border-top: none; }
+  .sprint-num {
+    width: 24px; height: 24px;
+    background: var(--surface2); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; color: var(--text-muted);
+  }
+  .sprint-files { font-size: .75rem; color: var(--text-muted); margin-top: .15rem; font-family: monospace; }
+  .effort { font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 4px; letter-spacing: .04em; }
+  .effort-xs { background: #1e3a2a; color: var(--green); }
+  .effort-s  { background: #1e3050; color: #7aadee; }
+  .effort-m  { background: #2d2a1a; color: var(--yellow); }
+  .effort-l  { background: #3a1e1e; color: var(--red); }
+
+  footer { text-align: center; color: var(--text-muted); font-size: .8rem; padding-top: 2rem; border-top: 1px solid var(--border); margin-top: 3rem; }
+
+  @media print {
+    body { background: #fff; color: #111; }
+    .score-card { background: #5b6fe6 !important; -webkit-print-color-adjust: exact; }
+    pre { background: #f5f5f5 !important; color: #333 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="header">
+    <h1>🚛 Audit de Maturité Production</h1>
+    <div style="color: var(--text-muted); margin-top:.4rem; font-size:.95rem;">Camion-Uber — Plateforme Microservices</div>
+    <div class="meta">
+      <span>Date : 2026-03-12</span>
+      <span>Auditeur : Senior Staff Engineer</span>
+      <span>Branche : feat/sprint4-tracing-docs-hardening</span>
+      <span>Périmètre : 7 services + API Gateway + Nginx + CI/CD + Monitoring</span>
+    </div>
+  </div>
+
+  <!-- Score global -->
+  <div class="score-card">
+    <div>
+      <div class="score-big">6,1<span>/10</span></div>
+    </div>
+    <div class="score-right">
+      <h2>Non Prêt pour la Production</h2>
+      <p>4 bloquants critiques doivent être résolus avant tout déploiement.</p>
+      <span class="score-badge">Objectif : &gt; 7,0 / 10 après le Sprint 1</span>
+    </div>
+  </div>
+
+  <!-- Scores par domaine -->
+  <div class="domain-grid">
+    <div class="domain-card red">
+      <span class="label">Domaine 9</span>
+      <span class="name">Performance</span>
+      <div class="score-row"><span class="score-val">3,0</span><div class="bar"><div class="bar-fill" style="width:30%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card red">
+      <span class="label">Domaine 3</span>
+      <span class="name">Communication inter-services</span>
+      <div class="score-row"><span class="score-val">4,0</span><div class="bar"><div class="bar-fill" style="width:40%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card red">
+      <span class="label">Domaine 4</span>
+      <span class="name">Fiabilité base de données</span>
+      <div class="score-row"><span class="score-val">4,5</span><div class="bar"><div class="bar-fill" style="width:45%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card orange">
+      <span class="label">Domaine 5</span>
+      <span class="name">Résilience &amp; Tolérance aux pannes</span>
+      <div class="score-row"><span class="score-val">5,0</span><div class="bar"><div class="bar-fill" style="width:50%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card yellow">
+      <span class="label">Domaine 8</span>
+      <span class="name">Qualité de l'API</span>
+      <div class="score-row"><span class="score-val">6,0</span><div class="bar"><div class="bar-fill" style="width:60%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card yellow">
+      <span class="label">Domaine 6</span>
+      <span class="name">Pipeline CI/CD</span>
+      <div class="score-row"><span class="score-val">6,5</span><div class="bar"><div class="bar-fill" style="width:65%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card yellow">
+      <span class="label">Domaine 7</span>
+      <span class="name">Déploiement</span>
+      <div class="score-row"><span class="score-val">7,0</span><div class="bar"><div class="bar-fill" style="width:70%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card yellow">
+      <span class="label">Domaine 1</span>
+      <span class="name">Sécurité</span>
+      <div class="score-row"><span class="score-val">7,5</span><div class="bar"><div class="bar-fill" style="width:75%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+    <div class="domain-card green">
+      <span class="label">Domaine 2</span>
+      <span class="name">Journalisation &amp; Monitoring</span>
+      <div class="score-row"><span class="score-val">8,0</span><div class="bar"><div class="bar-fill" style="width:80%"></div></div><span style="font-size:.8rem;color:var(--text-muted)">/10</span></div>
+    </div>
+  </div>
+
+  <!-- Bloquants critiques -->
+  <section>
+    <h2>🔴 Bloquants Critiques</h2>
+    <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:.9rem;">Ces problèmes <strong style="color:var(--text)">doivent être résolus</strong> avant tout déploiement en production.</p>
+
+    <div class="issue-card critical">
+      <div class="issue-title"><span class="badge">BC-1</span> Absence de Circuit Breaker sur les appels HTTP inter-services</div>
+      <div class="affected">*/src/clients/NotificationClient.ts (auth, shipment, tracking)</div>
+      <p>Tous les appels HTTP vers les services aval sont effectués sans circuit breaker. Un <code>notification-service</code> dégradé bloquera tous les appelants pendant 5 s, épuisant la boucle événementielle Node.js et provoquant une panne en cascade.</p>
+      <div class="fix-label">→ Correction</div>
+      <pre>const breaker = new CircuitBreaker(fetchWithTimeout, {
+  timeout: 5000,
+  errorThresholdPercentage: 50,
+  resetTimeout: 30000,
+});</pre>
+    </div>
+
+    <div class="issue-card critical">
+      <div class="issue-title"><span class="badge">BC-2</span> Aucun Index Mongoose Défini dans le Code</div>
+      <div class="affected">auth-service/src/infrastructure/db/UserModel.ts · tous les *Model.ts</div>
+      <p>Seuls des index simples <code>unique: true</code> existent. Les requêtes filtrant par <code>tenantId</code> effectuent des scans complets de la collection — goulot d'étranglement à 10 k documents, panne à 100 k.</p>
+      <div class="fix-label">→ Correction</div>
+      <pre>UserSchema.index({ tenantId: 1, email: 1 });          // index composé
+UserSchema.index({ tenantId: 1, role: 1 });
+RevokedTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL</pre>
+    </div>
+
+    <div class="issue-card critical">
+      <div class="issue-title"><span class="badge">BC-3</span> Absence de File de Messages — Notifications Perdues en cas d'Échec</div>
+      <div class="affected">shipment-service/src/clients/NotificationClient.ts · toutes les implémentations NotificationClient</div>
+      <p>Les erreurs fire-and-forget sont absorbées silencieusement (simple <code>console.error</code>). Aucune file morte, aucun réessai, aucune visibilité sur les notifications perdues. Aucune intégration BullMQ, RabbitMQ ou Redis Streams.</p>
+      <div class="fix-label">→ Correction</div>
+      <p style="margin-top:.4rem;font-size:.875rem;">Introduire une file BullMQ dans <code>notification-service</code>. Les producteurs poussent des jobs ; le worker retente avec backoff exponentiel (3 tentatives, 2×, max 30 s).</p>
+    </div>
+
+    <div class="issue-card critical">
+      <div class="issue-title"><span class="badge">BC-4</span> Aucun Test de Charge — Capacités Inconnues</div>
+      <div class="affected">Absent : répertoire load-tests/</div>
+      <p>Aucun script k6, Artillery ou Locust dans le dépôt. Plafonds de débit, latence p99 sous charge et seuils de saturation CPU/mémoire totalement inconnus. Les SLOs ne peuvent pas être validés.</p>
+      <div class="fix-label">→ Correction</div>
+      <p style="margin-top:.4rem;font-size:.875rem;">Créer <code>load-tests/</code> avec des scripts k6 couvrant : connexion, création d'expédition, mise à jour GPS.</p>
+    </div>
+  </section>
+
+  <!-- Risques élevés -->
+  <section>
+    <h2>🟠 Problèmes à Risque Élevé</h2>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-1</span> Absence de Versionnage de l'API (préfixe <code>/v1</code>)</div>
+      <p>Toutes les routes sont montées à la racine. Tout changement incompatible nécessite une bascule coordonnée de tous les clients sans fenêtre de dépréciation.</p>
+      <div class="fix-label">→ Correction</div>
+      <p style="margin-top:.4rem;font-size:.875rem;">Préfixer toutes les routes avec <code>/v1</code> dans <code>api-gateway/src/proxy/proxyRouter.ts</code> et mettre à jour <code>docs/openapi.yaml</code>.</p>
+    </div>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-2</span> Absence de Réessai avec Backoff Exponentiel</div>
+      <div class="affected">shipment-service/src/utils/fetchWithTimeout.ts</div>
+      <p><code>fetchWithTimeout</code> lève une exception dès le premier échec. Les erreurs transitoires provoquent des échecs permanents au lieu de se résoudre automatiquement.</p>
+      <div class="fix-label">→ Correction</div>
+      <pre>// 3 tentatives, base 500 ms, multiplicateur 2×
+async function retryWithBackoff(fn, retries = 3, base = 500) {
+  for (let i = 0; i &lt;= retries; i++) {
+    try { return await fn(); }
+    catch (e) {
+      if (i === retries) throw e;
+      await delay(base * 2 ** i);
+    }
+  }
+}</pre>
+    </div>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-3</span> <code>tracking-service</code> NotificationClient Utilise <code>fetch()</code> Sans Timeout</div>
+      <div class="affected">tracking-service/src/clients/NotificationClient.ts</div>
+      <p>Contrairement aux autres services, le tracking-service utilise le <code>fetch()</code> natif sans <code>AbortController</code>. Un <code>notification-service</code> lent peut bloquer indéfiniment un gestionnaire WebSocket.</p>
+      <div class="fix-label">→ Correction</div>
+      <p style="margin-top:.4rem;font-size:.875rem;">Remplacer par <code>fetchWithTimeout(url, options, 5_000)</code> — déjà implémenté dans <code>shipment-service/src/utils/fetchWithTimeout.ts</code>.</p>
+    </div>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-4</span> Absence d'En-tête Content Security Policy (CSP)</div>
+      <div class="affected">nginx/nginx.conf · api-gateway/src/server.ts</div>
+      <p>Ni Nginx ni Helmet ne définissent un en-tête <code>Content-Security-Policy</code>. Sans CSP, une attaque XSS réussie ne rencontre aucune atténuation au niveau du navigateur.</p>
+      <div class="fix-label">→ Correction (Nginx)</div>
+      <pre>add_header Content-Security-Policy
+  "default-src 'self'; script-src 'self'; object-src 'none';" always;</pre>
+    </div>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-5</span> Les Secrets Docker ne Sont pas Utilisés en Production</div>
+      <div class="affected">docker-compose.prod.yml</div>
+      <p>Les secrets sont passés sous forme de variables d'environnement en clair. Tout <code>docker inspect</code> ou listing de processus expose toutes les valeurs secrètes.</p>
+    </div>
+
+    <div class="issue-card high">
+      <div class="issue-title"><span class="badge">RE-6</span> Absence d'ESLint et de Seuil de Couverture dans la CI</div>
+      <div class="affected">.github/workflows/ci.yml</div>
+      <p>La CI exécute tests, typecheck, build Docker et <code>npm audit</code> — sans lint et sans seuil de couverture. Les régressions de style et les baisses de couverture passent inaperçues.</p>
+      <div class="fix-label">→ Correction</div>
+      <p style="margin-top:.4rem;font-size:.875rem;">Ajouter <code>npm run lint</code> et <code>--coverageThreshold='{"global":{"lines":70}}'</code> à la commande de test.</p>
+    </div>
+  </section>
+
+  <!-- Risques moyens -->
+  <section>
+    <h2>🟡 Problèmes à Risque Moyen</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Problème</th><th>Fichier concerné</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>RM-1</code></td><td><code>JWT_REFRESH_SECRET</code> utilise silencieusement une valeur de repli si la variable d'env est absente</td><td><code>JwtService.ts:11</code></td></tr>
+          <tr><td><code>RM-2</code></td><td>CORS par défaut sur <code>http://localhost:3000</code> si <code>ALLOWED_ORIGINS</code> non défini en production</td><td><code>api-gateway/src/server.ts</code></td></tr>
+          <tr><td><code>RM-3</code></td><td>Réponses d'erreur sans code machine-lisible — uniquement <code>{ error: string }</code></td><td>Tous les <code>*/middleware/error*.ts</code></td></tr>
+          <tr><td><code>RM-4</code></td><td>Absence de traçage distribué (OpenTelemetry/Jaeger) — débogage multi-services manuel</td><td>Tous les services</td></tr>
+          <tr><td><code>RM-5</code></td><td>Aucune stratégie de sauvegarde MongoDB documentée ou automatisée</td><td>Absent : <code>scripts/backup-mongo.sh</code></td></tr>
+          <tr><td><code>RM-6</code></td><td>Absence de limites CPU/mémoire dans docker-compose — risque de kill OOM sous charge</td><td><code>docker-compose.yml</code></td></tr>
+          <tr><td><code>RM-7</code></td><td>Absence de déploiement rolling/blue-green — <code>docker compose up</code> provoque un temps d'arrêt</td><td><code>docker-compose.prod.yml</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Points forts -->
+  <section>
+    <h2>🟢 Points Forts de l'Architecture</h2>
+    <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:.9rem;">Ces éléments sont de qualité production et doivent servir d'implémentations de référence.</p>
+
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-1</span> TLSv1.2+, HSTS Preload, Suite de Chiffrement Moderne</div><p><code>nginx/nginx.conf</code> impose TLSv1.2+, HSTS 2 ans avec preload, tickets de session désactivés. Conforme au profil Mozilla "Intermediate".</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-2</span> Rate Limiting Multi-couches</div><p>Zones Nginx (10 req/min auth, 100 général) + <code>express-rate-limit</code> adossé à Redis. Résiste aux redémarrages sans perte d'état des compteurs.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-3</span> bcrypt 12 Rounds, Asynchrone, Value Object</div><p><code>Password.ts</code> — bcrypt 12 rounds (~250 ms/hachage), pattern value-object garantit que les mots de passe ne sont jamais accidentellement loggés.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-4</span> Liste Noire de Révocation de Tokens</div><p><code>LogoutUseCase</code> + <code>IRevokedTokenRepository</code> avec nettoyage TTL. JWT sans état avec révocation avec état — le meilleur des deux approches.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-5</span> Arrêt Gracieux sur les 7 Services</div><p>SIGTERM/SIGINT, drainage via <code>server.close()</code>, fermeture MongoDB, kill forcé après 10 s. Prévient toute perte de données lors des redémarrages.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-6</span> Stack Complète Prometheus + Grafana + Alertmanager</div><p>6 règles d'alerte, dashboard 8 panneaux, alertes email, rétention 15 jours.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-7</span> Logs Pino Structurés + X-Request-ID via AsyncLocalStorage</div><p>JSON en production, lisible en dev. IDs propagés depuis Nginx jusqu'au dernier service, inclus dans chaque ligne de log.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-8</span> Documentation OpenAPI 3.0</div><p><code>docs/openapi.yaml</code> — 30+ endpoints, tous les 7 services, schémas requête/réponse, sécurité Bearer.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-9</span> API Gateway à Charge Équilibrée (2 instances)</div><p>Nginx <code>least_conn</code>, <code>max_fails=3 fail_timeout=30s</code>, pool keepalive 32 connexions.</p></div>
+    <div class="issue-card strength"><div class="issue-title"><span class="badge">F-10</span> Health Checks sur Chaque Service</div><p><code>GET /health</code> retourne <code>{ status, db, uptime }</code> avec HTTP 200/503. Docker <code>wget --spider</code>, 15 s, 3 tentatives.</p></div>
+  </section>
+
+  <!-- 7 contrôles oubliés -->
+  <section>
+    <h2>⚠️ Les 7 Contrôles Production les Plus Souvent Oubliés</h2>
+    <div class="forgotten-grid">
+      <div class="forgotten-item"><div class="num">1</div><div class="ftext"><strong>Circuit Breakers</strong>Isolation des pannes aval<div class="fstatus" style="color:var(--red)">🔴 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">2</div><div class="ftext"><strong>Index de base de données</strong>Composés &amp; TTL<div class="fstatus" style="color:var(--red)">🔴 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">3</div><div class="ftext"><strong>Versionnage de l'API (/v1)</strong>Avant le premier client externe<div class="fstatus" style="color:var(--red)">🔴 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">4</div><div class="ftext"><strong>Tests de charge</strong>k6 / Artillery avant le lancement<div class="fstatus" style="color:var(--red)">🔴 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">5</div><div class="ftext"><strong>Content Security Policy</strong>Atténuation XSS côté navigateur<div class="fstatus" style="color:var(--orange)">🟠 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">6</div><div class="ftext"><strong>File de messages</strong>Pour les jobs asynchrones critiques<div class="fstatus" style="color:var(--red)">🔴 Absent dans ce projet</div></div></div>
+      <div class="forgotten-item"><div class="num">7</div><div class="ftext"><strong>Rotation des secrets</strong>Vault / Docker secrets<div class="fstatus" style="color:var(--orange)">🟠 Partiel dans ce projet</div></div></div>
+    </div>
+  </section>
+
+  <!-- Plan d'action -->
+  <section>
+    <h2>🗓 Plan d'Action Priorisé</h2>
+
+    <!-- Sprint 1 -->
+    <div class="sprint-section">
+      <div class="sprint-header">
+        <h3>Sprint 1 — Bloquants Critiques (P0)</h3>
+        <span class="sprint-target">Objectif : 7,5 / 10</span>
+      </div>
+      <div class="sprint-body">
+        <div class="sprint-item"><div class="sprint-num">1.1</div><div><div>Ajouter le circuit breaker <code>opossum</code> sur tous les clients HTTP inter-services</div><div class="sprint-files">*/src/clients/NotificationClient.ts</div></div><span class="effort effort-m">M</span></div>
+        <div class="sprint-item"><div class="sprint-num">1.2</div><div><div>Définir les index Mongoose composés + TTL sur RevokedToken</div><div class="sprint-files">Tous les *Model.ts</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">1.3</div><div><div>Corriger le <code>NotificationClient</code> du tracking-service : remplacer <code>fetch()</code> par <code>fetchWithTimeout(5000)</code></div><div class="sprint-files">tracking-service/src/clients/NotificationClient.ts</div></div><span class="effort effort-xs">XS</span></div>
+        <div class="sprint-item"><div class="sprint-num">1.4</div><div><div>Ajouter l'étape ESLint dans GitHub Actions CI</div><div class="sprint-files">.github/workflows/ci.yml</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">1.5</div><div><div>Imposer le seuil de couverture 70 % (lignes) dans la CI</div><div class="sprint-files">.github/workflows/ci.yml + fichiers jest.config.ts</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">1.6</div><div><div>Créer des tests de charge k6 pour le login et la création d'expédition</div><div class="sprint-files">load-tests/login.js · load-tests/shipment.js</div></div><span class="effort effort-m">M</span></div>
+      </div>
+    </div>
+
+    <!-- Sprint 2 -->
+    <div class="sprint-section">
+      <div class="sprint-header">
+        <h3>Sprint 2 — Risques Élevés (P1)</h3>
+        <span class="sprint-target" style="background:var(--orange)">Objectif : 8,5 / 10</span>
+      </div>
+      <div class="sprint-body">
+        <div class="sprint-item"><div class="sprint-num">2.1</div><div><div>Ajouter le préfixe <code>/v1</code> sur toutes les routes + mettre à jour la spec OpenAPI</div><div class="sprint-files">api-gateway/src/proxy/proxyRouter.ts · docs/openapi.yaml</div></div><span class="effort effort-m">M</span></div>
+        <div class="sprint-item"><div class="sprint-num">2.2</div><div><div>Ajouter le réessai avec backoff exponentiel à <code>fetchWithTimeout</code> (3 tentatives, 500 ms, 2×)</div><div class="sprint-files">shipment-service/src/utils/fetchWithTimeout.ts</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">2.3</div><div><div>Implémenter la file BullMQ dans <code>notification-service</code></div><div class="sprint-files">notification-service/src/infrastructure/queue/</div></div><span class="effort effort-l">L</span></div>
+        <div class="sprint-item"><div class="sprint-num">2.4</div><div><div>Ajouter l'en-tête <code>Content-Security-Policy</code> dans Nginx + Helmet</div><div class="sprint-files">nginx/nginx.conf · api-gateway/src/server.ts</div></div><span class="effort effort-xs">XS</span></div>
+        <div class="sprint-item"><div class="sprint-num">2.5</div><div><div>Migrer les secrets de production vers les secrets Docker</div><div class="sprint-files">docker-compose.prod.yml</div></div><span class="effort effort-m">M</span></div>
+        <div class="sprint-item"><div class="sprint-num">2.6</div><div><div>Publier le rapport de couverture HTML en artefact CI</div><div class="sprint-files">.github/workflows/ci.yml</div></div><span class="effort effort-xs">XS</span></div>
+      </div>
+    </div>
+
+    <!-- Sprint 3 -->
+    <div class="sprint-section">
+      <div class="sprint-header">
+        <h3>Sprint 3 — Risques Moyens (P2)</h3>
+        <span class="sprint-target" style="background:var(--green);color:#000">Objectif : 9,0 / 10</span>
+      </div>
+      <div class="sprint-body">
+        <div class="sprint-item"><div class="sprint-num">3.1</div><div><div>Intégrer OpenTelemetry SDK + exporteur Jaeger sur tous les services</div><div class="sprint-files">*/src/utils/tracing.ts (nouveau)</div></div><span class="effort effort-l">L</span></div>
+        <div class="sprint-item"><div class="sprint-num">3.2</div><div><div>Ajouter les limites de ressources (0,5 CPU, 512 Mo) dans docker-compose</div><div class="sprint-files">docker-compose.yml</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">3.3</div><div><div>Documenter et automatiser la sauvegarde MongoDB (mongodump + S3)</div><div class="sprint-files">docs/backup-strategy.md · scripts/backup-mongo.sh (nouveau)</div></div><span class="effort effort-m">M</span></div>
+        <div class="sprint-item"><div class="sprint-num">3.4</div><div><div>Ajouter le champ <code>code</code> d'erreur dans tous les middlewares d'erreur</div><div class="sprint-files">*/src/middleware/error*.ts</div></div><span class="effort effort-s">S</span></div>
+        <div class="sprint-item"><div class="sprint-num">3.5</div><div><div>Rendre <code>JWT_REFRESH_SECRET</code> obligatoire (exception au démarrage si absent)</div><div class="sprint-files">auth-service/src/infrastructure/services/JwtService.ts</div></div><span class="effort effort-xs">XS</span></div>
+        <div class="sprint-item"><div class="sprint-num">3.6</div><div><div>Implémenter la configuration de mise à jour rolling Docker Swarm</div><div class="sprint-files">docker-compose.prod.yml</div></div><span class="effort effort-m">M</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.75rem;margin-top:1rem;flex-wrap:wrap;font-size:.8rem;color:var(--text-muted);">
+      Effort : &nbsp;
+      <span class="effort effort-xs">XS</span> &lt;2h &nbsp;
+      <span class="effort effort-s">S</span> 2–4h &nbsp;
+      <span class="effort effort-m">M</span> 4–8h &nbsp;
+      <span class="effort effort-l">L</span> 8–16h
+    </div>
+  </section>
+
+  <!-- Annexe -->
+  <section>
+    <h2>📁 Carte des Fichiers Critiques</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Domaine</th><th>Chemin du fichier critique</th></tr></thead>
+        <tbody>
+          <tr><td>JWT &amp; tokens</td><td><code>auth-service/src/infrastructure/services/JwtService.ts</code></td></tr>
+          <tr><td>Révocation de token</td><td><code>auth-service/src/application/use-cases/LogoutUseCase.ts</code></td></tr>
+          <tr><td>Hachage des mots de passe</td><td><code>auth-service/src/domain/value-objects/Password.ts</code></td></tr>
+          <tr><td>HTTP inter-services</td><td><code>shipment-service/src/utils/fetchWithTimeout.ts</code></td></tr>
+          <tr><td>Clients notification</td><td><code>*/src/clients/NotificationClient.ts</code> (3 services)</td></tr>
+          <tr><td>Auth API Gateway</td><td><code>api-gateway/src/middleware/authMiddleware.ts</code></td></tr>
+          <tr><td>CORS/Helmet Gateway</td><td><code>api-gateway/src/server.ts</code></td></tr>
+          <tr><td>TLS + en-têtes Nginx</td><td><code>nginx/nginx.conf</code></td></tr>
+          <tr><td>Rate limiting Nginx</td><td><code>nginx/nginx.dev.conf</code></td></tr>
+          <tr><td>Pipeline CI/CD</td><td><code>.github/workflows/ci.yml</code></td></tr>
+          <tr><td>Config Prometheus</td><td><code>monitoring/prometheus.yml</code></td></tr>
+          <tr><td>Règles d'alerte</td><td><code>monitoring/alerts.yml</code></td></tr>
+          <tr><td>Dashboard Grafana</td><td><code>monitoring/grafana/dashboards/services-overview.json</code></td></tr>
+          <tr><td>Spec OpenAPI</td><td><code>docs/openapi.yaml</code></td></tr>
+          <tr><td>Docker Compose (dev)</td><td><code>docker-compose.yml</code></td></tr>
+          <tr><td>Docker Compose (prod)</td><td><code>docker-compose.prod.yml</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Audit de Maturité Production &mdash; Camion-Uber &mdash; 2026-03-12 &mdash; feat/sprint4-tracing-docs-hardening
+  </footer>
+</div>
+</body>
+</html>
