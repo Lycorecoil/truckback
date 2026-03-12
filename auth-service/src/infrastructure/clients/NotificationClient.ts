@@ -1,4 +1,5 @@
 import { INotificationClient } from "../../application/ports/INotificationClient";
+import { fetchWithTimeout } from "../../utils/fetchWithTimeout";
 
 export class NotificationClient implements INotificationClient {
   private readonly baseUrl: string;
@@ -8,7 +9,7 @@ export class NotificationClient implements INotificationClient {
   }
 
   async sendEmail(to: string, subject: string, body: string, recipientId: string): Promise<void> {
-    const res = await fetch(`${this.baseUrl}/notification/email`, {
+    const res = await fetchWithTimeout(`${this.baseUrl}/notification/email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to, subject, body, recipientId }),
@@ -21,7 +22,7 @@ export class NotificationClient implements INotificationClient {
   }
 
   async sendSms(to: string, message: string, recipientId: string): Promise<void> {
-    const res = await fetch(`${this.baseUrl}/notification/sms`, {
+    const res = await fetchWithTimeout(`${this.baseUrl}/notification/sms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to, message, recipientId }),
