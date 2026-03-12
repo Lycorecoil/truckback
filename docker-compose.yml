@@ -33,18 +33,36 @@ x-gateway-depends: &gateway-depends
 services:
   # ─── Infrastructure ──────────────────────────────────────────────────────────
 
+  # Génère le keyFile MongoDB (requis : replSet + auth) — one-shot, idempotent
+  mongo-keyfile-setup:
+    image: mongo:7
+    container_name: elimmekatruck-mongo-keyfile-setup
+    restart: "no"
+    user: "999:999"
+    volumes:
+      - mongo_keyfile:/keyfile
+    command: >
+      bash -c "
+        [ -f /keyfile/mongo.key ] ||
+        (openssl rand -base64 756 > /keyfile/mongo.key && chmod 400 /keyfile/mongo.key)
+      "
+
   mongodb:
     image: mongo:7
     container_name: elimmekatruck-mongo
     restart: unless-stopped
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/keyfile/mongo.key"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - mongo_keyfile:/keyfile:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD is required}
+    depends_on:
+      mongo-keyfile-setup:
+        condition: service_completed_successfully
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh --quiet
       interval: 10s
@@ -359,6 +377,8 @@ services:
 
 volumes:
   mongo_data:
+    driver: local
+  mongo_keyfile:
     driver: local
   redis_data:
     driver: local
