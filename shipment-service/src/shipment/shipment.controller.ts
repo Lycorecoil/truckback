@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { validateBody } from "../utils/validate";
+import { CreateShipmentSchema } from "./schemas";
 import type { ShipmentService } from "./shipment.service";
 import type { ShipmentStatus } from "./shipment.entity";
 
@@ -6,24 +8,6 @@ type Role = "ADMIN" | "COMPANY" | "TRANSPORTER" | "DRIVER";
 
 function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
-}
-
-function validateShipment(body: Record<string, unknown>): string[] {
-  const errors: string[] = [];
-  if (!body["marchandise"])       errors.push("marchandise est requise");
-  if (!body["villeDepart"])       errors.push("villeDepart est requise");
-  if (!body["paysDepart"])        errors.push("paysDepart est requis");
-  if (!body["villeArrivee"])      errors.push("villeArrivee est requise");
-  if (!body["paysArrivee"])       errors.push("paysArrivee est requis");
-  if (!body["dateAnnonce"])       errors.push("dateAnnonce est requise");
-  if (!body["heureAnnonce"])      errors.push("heureAnnonce est requise (format HH:MM)");
-  const poids = Number(body["poids"]);
-  if (!body["poids"] || isNaN(poids) || poids <= 0)
-    errors.push("poids doit être un nombre positif");
-  const quantite = Number(body["quantite"]);
-  if (!body["quantite"] || isNaN(quantite) || quantite <= 0)
-    errors.push("quantite doit être un nombre positif");
-  return errors;
 }
 
 export function createShipmentRouter(service: ShipmentService): Router {
@@ -183,7 +167,7 @@ export function createShipmentRouter(service: ShipmentService): Router {
   });
 
   // POST /shipments — uniquement COMPANY (ou ADMIN)
-  router.post("/", async (req, res, next) => {
+  router.post("/", validateBody(CreateShipmentSchema), async (req, res, next) => {
     try {
       const role = getHeader(req, "x-user-role") as Role;
       const userId = getHeader(req, "x-user-id");
@@ -194,11 +178,6 @@ export function createShipmentRouter(service: ShipmentService): Router {
       }
 
       const body = req.body as Record<string, unknown>;
-      const errors = validateShipment(body);
-      if (errors.length > 0) {
-        res.status(400).json({ error: errors.join("; ") });
-        return;
-      }
 
       const tenantId = getHeader(req, "x-tenant-id");
       const payload = {

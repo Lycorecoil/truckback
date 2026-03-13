@@ -1,3 +1,4 @@
+import './tracing';
 import 'dotenv/config';
 import { createServer } from 'http';
 import { createApp } from './infrastructure/http/server';

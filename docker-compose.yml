@@ -13,6 +13,7 @@ x-gateway-env: &gateway-env
   FLEET_SERVICE_URL: http://fleet-service:3003
   TRACKING_SERVICE_URL: http://tracking-service:3004
   NOTIFICATION_SERVICE_URL: http://notification-service:3005
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
 
 x-gateway-depends: &gateway-depends
   auth-service:
@@ -142,6 +143,16 @@ services:
       SMTP_FROM: ${SMTP_FROM}
       FALLBACK_EMAIL: ${FALLBACK_EMAIL:-ilboudojeanbaptiste41@gmail.com}
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: elimmekatruck-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4318:4318"     # OTLP HTTP receiver
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
   grafana:
     image: grafana/grafana:10.4.2
     container_name: elimmekatruck-grafana
@@ -197,6 +208,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_EXPIRES_IN: 1h
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     depends_on:
       mongodb:
         condition: service_healthy
@@ -334,6 +346,8 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      REDIS_URL: redis://redis:6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     depends_on:
       mongodb:
         condition: service_healthy

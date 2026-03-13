@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { Container } from '../../../infrastructure/config/container';
+import { emailQueue, smsQueue } from '../../queue/notificationQueue';
 
 export class NotificationController {
   constructor(private readonly container: Container) {}
 
   async sendEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await this.container.sendEmailUseCase.execute(req.body);
-      res.status(201).json(result);
+      await emailQueue.add('send', req.body);
+      res.status(202).json({ message: 'Email en file d\'attente' });
     } catch (err) {
       next(err);
     }
@@ -15,8 +16,8 @@ export class NotificationController {
 
   async sendSms(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await this.container.sendSmsUseCase.execute(req.body);
-      res.status(201).json(result);
+      await smsQueue.add('send', req.body);
+      res.status(202).json({ message: 'SMS en file d\'attente' });
     } catch (err) {
       next(err);
     }

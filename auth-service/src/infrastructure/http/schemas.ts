@@ -1,0 +1,19 @@
+import { z } from 'zod';
+
+export const SignUpSchema = z.object({
+  email:    z.string().email('Email invalide'),
+  password: z.string().min(8, 'Mot de passe : 8 caractères minimum'),
+  role:     z.enum(['COMPANY', 'TRANSPORTER'], { message: 'Rôle invalide (COMPANY ou TRANSPORTER)' }),
+  tenantId: z.string().min(1, 'tenantId requis'),
+});
+
+export const LoginSchema = z.object({
+  email:    z.string().email('Email invalide'),
+  password: z.string().min(1, 'Mot de passe requis'),
+});
+
+export const CreateDriverSchema = z.object({
+  email:    z.string().email('Email invalide'),
+  password: z.string().min(8, 'Mot de passe : 8 caractères minimum'),
+  tenantId: z.string().min(1, 'tenantId requis'),
+});
