@@ -26,4 +26,16 @@ export class JwtService implements IJwtService {
   verifyRefresh(token: string): JwtPayload {
     return jwt.verify(token, this.refreshSecret) as JwtPayload;
   }
+
+  signReset(userId: string): string {
+    const resetSecret = `${this.secret}_reset`;
+    return jwt.sign({ sub: userId, purpose: 'password-reset' }, resetSecret, { expiresIn: '15m' } as jwt.SignOptions);
+  }
+
+  verifyReset(token: string): string {
+    const resetSecret = `${this.secret}_reset`;
+    const payload = jwt.verify(token, resetSecret) as { sub: string; purpose: string };
+    if (payload.purpose !== 'password-reset') throw new Error('Token invalide');
+    return payload.sub;
+  }
 }

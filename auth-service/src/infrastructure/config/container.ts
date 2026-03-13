@@ -8,6 +8,7 @@ import { CreateDriverUseCase } from '../../application/use-cases/CreateDriverUse
 import { LogoutUseCase } from '../../application/use-cases/LogoutUseCase';
 import { ResetPasswordUseCase } from '../../application/use-cases/ResetPasswordUseCase';
 import { RefreshTokenUseCase } from '../../application/use-cases/RefreshTokenUseCase';
+import { ConfirmResetPasswordUseCase } from '../../application/use-cases/ConfirmResetPasswordUseCase';
 
 const userRepository         = new MongoUserRepository();
 const revokedTokenRepository = new MongoRevokedTokenRepository();
@@ -26,7 +27,8 @@ export const container = {
   loginUseCase:       new LoginUseCase(userRepository, jwtService),
   createDriverUseCase: new CreateDriverUseCase(userRepository, notificationClient),
   logoutUseCase:      new LogoutUseCase(revokedTokenRepository, jwtService),
-  resetPasswordUseCase: new ResetPasswordUseCase(userRepository, notificationClient),
+  resetPasswordUseCase: new ResetPasswordUseCase(userRepository, jwtService, notificationClient),
+  confirmResetPasswordUseCase: new ConfirmResetPasswordUseCase(userRepository, jwtService, revokedTokenRepository),
   refreshTokenUseCase: new RefreshTokenUseCase(userRepository, jwtService, revokedTokenRepository),
 };
 

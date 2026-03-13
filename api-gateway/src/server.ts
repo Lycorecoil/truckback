@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import type { RedisClientType } from 'redis';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
 import { createRateLimitMiddleware } from './middleware/rateLimitMiddleware';
-import { authMiddleware } from './middleware/authMiddleware';
+import { createAuthMiddleware } from './middleware/authMiddleware';
 import { createProxyRouter } from './proxy/proxyRouter';
 import { getServiceUrls } from './config/services';
 import { metricsMiddleware, metricsHandler } from './utils/metrics.middleware';
@@ -26,10 +26,10 @@ export function createApp(redisClient?: RedisClientType): Application {
 
   app.get('/metrics', metricsHandler);
 
-  app.use(authMiddleware);
+  app.use(createAuthMiddleware(redisClient));
 
   const services = getServiceUrls();
-  app.use('/', createProxyRouter(services));
+  app.use('/', createProxyRouter(services, redisClient));
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'Route not found' });

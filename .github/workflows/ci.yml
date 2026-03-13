@@ -40,8 +40,16 @@ jobs:
         working-directory: ${{ matrix.service }}
 
       - name: Run tests
-        run: npm test -- --passWithNoTests --forceExit
+        run: npm test -- --passWithNoTests --forceExit --coverage --coverageThreshold='{"global":{"lines":60,"functions":60}}'
         working-directory: ${{ matrix.service }}
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.service }}
+          path: ${{ matrix.service }}/coverage/lcov.info
+          retention-days: 7
 
   # ─── Vérification TypeScript (tsc --noEmit) ───────────────────────────────────
   typecheck:

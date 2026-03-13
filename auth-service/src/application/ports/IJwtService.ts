@@ -9,6 +9,8 @@ export interface JwtPayload {
 export interface IJwtService {
   sign(payload: JwtPayload): string;
   signRefresh(payload: JwtPayload): string;
+  signReset(userId: string): string;
   verify(token: string): JwtPayload;
   verifyRefresh(token: string): JwtPayload;
+  verifyReset(token: string): string; // retourne userId
 }

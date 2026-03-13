@@ -48,4 +48,8 @@ export class MongoUserRepository implements IUserRepository {
   async delete(id: string): Promise<void> {
     await UserModel.deleteOne({ id });
   }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    await UserModel.updateOne({ id: userId }, { $set: { password: passwordHash } });
+  }
 }

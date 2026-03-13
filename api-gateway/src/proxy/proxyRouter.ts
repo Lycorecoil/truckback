@@ -1,9 +1,12 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import type { RedisClientType } from 'redis';
+import jwt from 'jsonwebtoken';
 import { ServiceUrls } from '../config/services';
 import { requireRoles } from '../middleware/rbacMiddleware';
+import { blacklistAccessToken, type JwtPayload } from '../middleware/authMiddleware';
 
-export function createProxyRouter(services: ServiceUrls): Router {
+export function createProxyRouter(services: ServiceUrls, redisClient?: RedisClientType): Router {
   const router = Router();
 
   const proxy = (target: string, pathPrefix: string) =>
@@ -21,7 +24,25 @@ export function createProxyRouter(services: ServiceUrls): Router {
       },
     });
 
-  // Auth — public pour signup/login (géré dans authMiddleware), restreint pour le reste
+  // Intercept POST /auth/logout — blackliste l'access token dans Redis avant de proxifier
+  router.post('/auth/logout', async (req: Request, _res: Response, next: NextFunction) => {
+    if (redisClient) {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+      const secret = process.env['JWT_SECRET'];
+      if (token && secret) {
+        try {
+          const payload = jwt.verify(token, secret) as JwtPayload;
+          await blacklistAccessToken(redisClient, token, payload);
+        } catch {
+          // token déjà expiré — pas besoin de blacklister
+        }
+      }
+    }
+    next();
+  });
+
+  // Auth — public pour signup/login, restreint pour le reste
   router.use('/auth', proxy(services.auth, '/auth'));
 
   // Company — tous les rôles authentifiés

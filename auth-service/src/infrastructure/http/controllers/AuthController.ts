@@ -97,6 +97,20 @@ export class AuthController {
     }
   }
 
+  async confirmResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const body = req.body as { token?: string; newPassword?: string };
+      if (!body.token || !body.newPassword) {
+        res.status(400).json({ error: 'token et newPassword sont requis' });
+        return;
+      }
+      await this.container.confirmResetPasswordUseCase.execute(body as { token: string; newPassword: string });
+      res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const body = req.body as { refreshToken?: string };

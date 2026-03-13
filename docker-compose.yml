@@ -53,6 +53,11 @@ services:
   mongodb:
     image: mongo:7
     container_name: elimmekatruck-mongo
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
     restart: unless-stopped
     command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/keyfile/mongo.key"]
     ports:
@@ -96,6 +101,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: elimmekatruck-redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -197,6 +207,11 @@ services:
     build:
       context: ./auth-service
     container_name: auth-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 384M
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -226,6 +241,11 @@ services:
     build:
       context: ./company-service
     container_name: company-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -250,6 +270,11 @@ services:
     build:
       context: ./fleet-service
     container_name: fleet-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
     restart: unless-stopped
     ports:
       - "3003:3003"
@@ -274,6 +299,11 @@ services:
     build:
       context: ./shipment-service
     container_name: shipment-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 384M
     restart: unless-stopped
     ports:
       - "3002:3002"
@@ -302,6 +332,11 @@ services:
     build:
       context: ./tracking-service
     container_name: tracking-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 384M
     restart: unless-stopped
     ports:
       - "3004:3004"
@@ -328,6 +363,11 @@ services:
     build:
       context: ./notification-service
     container_name: notification-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 384M
     restart: unless-stopped
     ports:
       - "3005:3005"
@@ -365,6 +405,11 @@ services:
     build:
       context: ./api-gateway
     container_name: api-gateway-1
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
     restart: unless-stopped
     environment:
       <<: *gateway-env
@@ -380,6 +425,11 @@ services:
     build:
       context: ./api-gateway
     container_name: api-gateway-2
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
     restart: unless-stopped
     environment:
       <<: *gateway-env
