@@ -93,6 +93,21 @@ function verifyWsToken(req: IncomingMessage): JwtPayload | null {
   }
 }
 
+// Heartbeat : détecte les clients zombie toutes les 30s
+const heartbeatInterval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    const ext = ws as WebSocket & { isAlive?: boolean };
+    if (ext.isAlive === false) {
+      subscriptions.delete(ws);
+      return ws.terminate();
+    }
+    ext.isAlive = false;
+    ws.ping();
+  });
+}, 30_000);
+
+wss.on("close", () => clearInterval(heartbeatInterval));
+
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   const payload = verifyWsToken(req);
   if (!payload) {
@@ -100,6 +115,10 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     ws.close(1008, "Token invalide ou manquant");
     return;
   }
+
+  // Marque le client comme vivant à la connexion et sur chaque pong
+  (ws as WebSocket & { isAlive?: boolean }).isAlive = true;
+  ws.on("pong", () => { (ws as WebSocket & { isAlive?: boolean }).isAlive = true; });
 
   // Initialise la subscription vide
   subscriptions.set(ws, {

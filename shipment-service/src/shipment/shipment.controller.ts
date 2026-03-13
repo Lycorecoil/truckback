@@ -76,13 +76,21 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // POST /shipments/:id/start — uniquement DRIVER (ou ADMIN)
+  // POST /shipments/:id/start — uniquement DRIVER assigné (ou ADMIN)
   router.post("/:id/start", async (req, res, next) => {
     try {
-      const role = getHeader(req, "x-user-role") as Role;
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
       if (role !== "DRIVER" && role !== "ADMIN") {
         res.status(403).json({ error: "Seul un chauffeur peut démarrer une livraison" });
         return;
+      }
+      if (role === "DRIVER") {
+        const existing = await service.getById(req.params["id"] as string) as { driverId?: string };
+        if (existing.driverId !== userId) {
+          res.status(403).json({ error: "Vous n'êtes pas assigné à cette expédition" });
+          return;
+        }
       }
       const shipment = await service.startMission(req.params["id"] as string);
       res.json(shipment);
@@ -91,13 +99,21 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // POST /shipments/:id/deliver — uniquement DRIVER (ou ADMIN)
+  // POST /shipments/:id/deliver — uniquement DRIVER assigné (ou ADMIN)
   router.post("/:id/deliver", async (req, res, next) => {
     try {
-      const role = getHeader(req, "x-user-role") as Role;
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
       if (role !== "DRIVER" && role !== "ADMIN") {
         res.status(403).json({ error: "Seul un chauffeur peut confirmer une livraison" });
         return;
+      }
+      if (role === "DRIVER") {
+        const existing = await service.getById(req.params["id"] as string) as { driverId?: string };
+        if (existing.driverId !== userId) {
+          res.status(403).json({ error: "Vous n'êtes pas assigné à cette expédition" });
+          return;
+        }
       }
       const shipment = await service.deliverMission(req.params["id"] as string);
       res.json(shipment);
@@ -144,7 +160,22 @@ export function createShipmentRouter(service: ShipmentService): Router {
   // GET /shipments/:id
   router.get("/:id", async (req, res, next) => {
     try {
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
       const result = await service.getById(req.params["id"] as string);
+
+      if (role !== "ADMIN") {
+        const s = result as { companyId?: string; transporterId?: string; driverId?: string };
+        const hasAccess =
+          s.companyId     === userId ||
+          s.transporterId === userId ||
+          s.driverId      === userId;
+        if (!hasAccess) {
+          res.status(403).json({ error: "Accès refusé à cette expédition" });
+          return;
+        }
+      }
+
       res.json(result);
     } catch (err) {
       next(err);
@@ -203,13 +234,21 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // DELETE /shipments/:id — soft delete (CANCELLED) — COMPANY ou ADMIN
+  // DELETE /shipments/:id — soft delete (CANCELLED) — COMPANY propriétaire ou ADMIN
   router.delete("/:id", async (req, res, next) => {
     try {
-      const role = getHeader(req, "x-user-role") as Role;
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
       if (role !== "COMPANY" && role !== "ADMIN") {
         res.status(403).json({ error: "Seul une entreprise peut annuler une expédition" });
         return;
+      }
+      if (role === "COMPANY") {
+        const existing = await service.getById(req.params["id"] as string) as { companyId?: string };
+        if (existing.companyId !== userId) {
+          res.status(403).json({ error: "Vous ne pouvez annuler que vos propres expéditions" });
+          return;
+        }
       }
       const result = await service.cancelShipment(req.params["id"] as string);
       res.json(result);

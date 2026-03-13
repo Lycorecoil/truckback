@@ -1,4 +1,5 @@
-import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { fetchWithRetry } from "../utils/fetchWithTimeout";
+import { logger } from "../utils/logger";
 
 const NOTIFICATION_SERVICE_URL = process.env["NOTIFICATION_SERVICE_URL"] ?? "http://localhost:3005";
 
@@ -9,16 +10,15 @@ export async function sendEmail(
   body: string,
 ): Promise<void> {
   try {
-    await fetchWithTimeout(
+    await fetchWithRetry(
       `${NOTIFICATION_SERVICE_URL}/notification/email`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recipientId, to, subject, body }),
       },
-      5_000,
     );
   } catch (err) {
-    console.error("[shipment-service][NotificationClient] Erreur envoi email :", err);
+    logger.error({ err, recipientId }, "[shipment-service][NotificationClient] Erreur envoi email après retries");
   }
 }

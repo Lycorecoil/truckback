@@ -32,3 +32,28 @@ export async function fetchWithTimeout(
     clearTimeout(timer);
   }
 }
+
+/**
+ * fetch() avec retry exponentiel + timeout + propagation X-Request-ID.
+ * Retente uniquement sur erreur réseau/timeout (pas sur 4xx/5xx).
+ */
+export async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+  maxRetries: number = 3,
+): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetchWithTimeout(url, options, timeoutMs);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 500; // 1s, 2s, 4s
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
