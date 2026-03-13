@@ -39,14 +39,15 @@ export function jwtVerifyMiddleware(
   }
 
   const token = authHeader.slice(7);
-  const secret = process.env["JWT_SECRET"];
-  if (!secret) {
-    res.status(500).json({ error: "JWT_SECRET non configuré" });
+  const rawPublicKey = process.env["JWT_PUBLIC_KEY"];
+  if (!rawPublicKey) {
+    res.status(500).json({ error: "JWT_PUBLIC_KEY non configuré" });
     return;
   }
+  const publicKey = rawPublicKey.replace(/\\n/g, '\n');
 
   try {
-    const payload = jwt.verify(token, secret) as JwtPayload;
+    const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as JwtPayload;
     req.jwtUser = payload;
     // Synchronise les headers de confiance avec le token vérifié
     req.headers["x-user-id"]   = payload.sub;

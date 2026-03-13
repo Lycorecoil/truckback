@@ -13,17 +13,20 @@ const makeUser = (): User =>
   });
 
 const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
-  findById: jest.fn(),
-  findByEmail: jest.fn(),
-  save: jest.fn(),
-  delete: jest.fn(),
+  findById:       jest.fn(),
+  findByEmail:    jest.fn(),
+  save:           jest.fn(),
+  delete:         jest.fn(),
+  updatePassword: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeJwtMock = (): jest.Mocked<IJwtService> => ({
-  sign: jest.fn().mockReturnValue('fake-jwt-token'),
-  signRefresh: jest.fn().mockReturnValue('fake-refresh-token'),
-  verify: jest.fn(),
+  sign:          jest.fn().mockReturnValue('fake-jwt-token'),
+  signRefresh:   jest.fn().mockReturnValue('fake-refresh-token'),
+  signReset:     jest.fn().mockReturnValue('fake-reset-token'),
+  verify:        jest.fn(),
   verifyRefresh: jest.fn(),
+  verifyReset:   jest.fn().mockReturnValue('user-id-1'),
 });
 
 describe('SignUpUseCase', () => {

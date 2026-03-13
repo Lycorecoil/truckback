@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import type { TruckService } from "./truck.service";
 
 type Role = "ADMIN" | "TRANSPORTER" | "COMPANY" | "DRIVER";
@@ -7,23 +8,22 @@ function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
 }
 
-/** Retourne une liste d'erreurs de validation ou [] si tout est OK */
-function validateTruck(body: Record<string, unknown>): string[] {
-  const errors: string[] = [];
-  if (!body["immatriculation"])           errors.push("immatriculation est requise");
-  if (!body["marque"])                    errors.push("marque est requise");
-  if (!body["modele"])                    errors.push("modele est requis");
-  if (!body["typeVehicule"])              errors.push("typeVehicule est requis");
-  if (!body["villeBase"])                 errors.push("villeBase est requise");
-  if (!body["paysBase"])                  errors.push("paysBase est requis");
-  const cap = Number(body["capaciteMax"]);
-  if (!body["capaciteMax"] || isNaN(cap) || cap <= 0)
-    errors.push("capaciteMax doit être un nombre positif");
-  const validStatuts = ["AVAILABLE", "BUSY", "MAINTENANCE"];
-  if (body["statut"] && !validStatuts.includes(String(body["statut"])))
-    errors.push(`statut doit être parmi : ${validStatuts.join(", ")}`);
-  return errors;
-}
+const TruckCreateSchema = z.object({
+  immatriculation: z.string().min(1, "immatriculation est requise"),
+  chassis:         z.string().min(1, "chassis est requis"),
+  marque:          z.string().min(1, "marque est requise"),
+  modele:          z.string().min(1, "modele est requis"),
+  typeVehicule:    z.string().min(1, "typeVehicule est requis"),
+  carrosserie:     z.string().optional(),
+  gabarit:         z.string().optional(),
+  capaciteMax:     z.number({ invalid_type_error: "capaciteMax doit être un nombre" }).positive("capaciteMax doit être un nombre positif"),
+  photoUrl:        z.string().url().optional(),
+  statut:          z.enum(["AVAILABLE", "BUSY", "MAINTENANCE"]).optional(),
+  driverId:        z.string().optional(),
+  villeBase:       z.string().min(1, "villeBase est requise"),
+  paysBase:        z.string().min(1, "paysBase est requis"),
+  tenantId:        z.string().optional(),
+});
 
 export function createTruckRouter(service: TruckService): Router {
   const router = Router();
@@ -122,16 +122,16 @@ export function createTruckRouter(service: TruckService): Router {
         return;
       }
 
-      const body = req.body as Record<string, unknown>;
-      const errors = validateTruck(body);
-      if (errors.length > 0) {
-        res.status(400).json({ error: errors.join("; ") });
+      const parsed = TruckCreateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const messages = parsed.error.errors.map((e) => e.message).join("; ");
+        res.status(400).json({ error: messages });
         return;
       }
 
       const payload = {
-        ...body,
-        tenantId: role === "ADMIN" ? (body["tenantId"] ?? tenantId) : tenantId,
+        ...parsed.data,
+        tenantId: role === "ADMIN" ? (parsed.data.tenantId ?? tenantId) : tenantId,
       };
 
       const result = await service.createOne(payload as Parameters<typeof service.createOne>[0]);

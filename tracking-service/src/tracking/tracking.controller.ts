@@ -1,9 +1,18 @@
 import { Router } from "express";
+import { z } from "zod";
 import type { TrackingService } from "./tracking.service";
 
 function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
 }
+
+const TrackingPointSchema = z.object({
+  truckId:    z.string().min(1, "truckId est requis"),
+  shipmentId: z.string().min(1, "shipmentId est requis"),
+  latitude:   z.number({ invalid_type_error: "latitude doit être un nombre" }).min(-90).max(90),
+  longitude:  z.number({ invalid_type_error: "longitude doit être un nombre" }).min(-180).max(180),
+  vitesse:    z.number().nonnegative().optional(),
+});
 
 export function createTrackingRouter(service: TrackingService): Router {
   const router = Router();
@@ -17,18 +26,14 @@ export function createTrackingRouter(service: TrackingService): Router {
         return;
       }
 
-      const { truckId, shipmentId, latitude, longitude, vitesse } = req.body as {
-        truckId?: string;
-        shipmentId?: string;
-        latitude?: number;
-        longitude?: number;
-        vitesse?: number;
-      };
-
-      if (!truckId || !shipmentId || latitude === undefined || longitude === undefined) {
-        res.status(400).json({ error: "truckId, shipmentId, latitude et longitude sont requis" });
+      const parsed = TrackingPointSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const messages = parsed.error.errors.map((e) => e.message).join("; ");
+        res.status(400).json({ error: messages });
         return;
       }
+
+      const { truckId, shipmentId, latitude, longitude, vitesse } = parsed.data;
 
       const point = await service.addPoint({
         truckId,

@@ -33,6 +33,5 @@ export const errorMiddleware = (
   }
 
   // Erreur inconnue : on log et on renvoie 500
-  console.error("Erreur interne :", err);
-  res.status(500).json({ success: false, error: "Erreur interne du serveur.", code: 500 });
+  res.status(500).json({ success: false, code: 500, error: "Erreur interne du serveur." });
 };

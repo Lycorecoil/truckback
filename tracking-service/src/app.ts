@@ -85,10 +85,11 @@ function verifyWsToken(req: IncomingMessage): JwtPayload | null {
     const rawToken = token ?? authHeader?.replace("Bearer ", "");
     if (!rawToken) return null;
 
-    const secret = process.env["JWT_SECRET"];
-    if (!secret) return null;
+    const rawPublicKey = process.env["JWT_PUBLIC_KEY"];
+    if (!rawPublicKey) return null;
+    const publicKey = rawPublicKey.replace(/\\n/g, '\n');
 
-    return jwt.verify(rawToken, secret) as JwtPayload;
+    return jwt.verify(rawToken, publicKey, { algorithms: ['RS256'] }) as JwtPayload;
   } catch {
     return null;
   }

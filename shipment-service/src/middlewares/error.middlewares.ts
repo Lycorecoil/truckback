@@ -9,5 +9,5 @@ export const errorMiddleware: ErrorRequestHandler = (err, _req, res, _next) => {
   const message: string =
     err instanceof Error ? err.message : "Erreur interne du serveur";
 
-  res.status(status).json({ error: message });
+  res.status(status).json({ success: false, code: status, error: message });
 };

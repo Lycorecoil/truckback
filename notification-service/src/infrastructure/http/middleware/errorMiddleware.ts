@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { DomainError } from '../../../domain/errors/NotificationError';
+import { logger } from '../../../utils/logger';
 
 export function errorMiddleware(
   err: Error,
@@ -8,10 +9,10 @@ export function errorMiddleware(
   _next: NextFunction,
 ): void {
   if (err instanceof DomainError) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, code: 400, error: err.message });
     return;
   }
 
-  console.error('[notification-service]', err);
-  res.status(500).json({ error: 'Erreur interne du serveur.' });
+  logger.error({ err }, '[notification-service] Erreur interne');
+  res.status(500).json({ success: false, code: 500, error: 'Erreur interne du serveur.' });
 }

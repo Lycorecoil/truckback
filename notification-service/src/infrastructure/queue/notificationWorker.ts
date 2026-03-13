@@ -14,7 +14,7 @@ const notifRepo      = new MongoNotificationRepository();
 
 // ─── Email worker ─────────────────────────────────────────────────────────────
 export const emailWorker = new Worker<SendEmailDTO>(
-  'notification:email',
+  'notification-email',
   async (job) => {
     // Lance si throw → BullMQ retente automatiquement
     await emailProvider.send({ to: job.data.to, subject: job.data.subject, body: job.data.body });
@@ -44,7 +44,7 @@ emailWorker.on('failed', async (job, err) => {
 
 // ─── SMS worker ───────────────────────────────────────────────────────────────
 export const smsWorker = new Worker<SendSmsDTO>(
-  'notification:sms',
+  'notification-sms',
   async (job) => {
     await smsProvider.send({ to: job.data.to, message: job.data.message });
     await notifRepo.save(new Notification({

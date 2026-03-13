@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { DomainError, UnauthorizedError } from '../../../domain/errors/DomainError';
+import { logger } from '../../../utils/logger';
 
 export function errorMiddleware(
   err: Error,
@@ -8,15 +9,15 @@ export function errorMiddleware(
   _next: NextFunction,
 ): void {
   if (err instanceof UnauthorizedError) {
-    res.status(401).json({ error: err.message });
+    res.status(401).json({ success: false, code: 401, error: err.message });
     return;
   }
 
   if (err instanceof DomainError) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, code: 400, error: err.message });
     return;
   }
 
-  console.error('[auth-service]', err);
-  res.status(500).json({ error: 'Erreur interne du serveur.' });
+  logger.error({ err }, '[auth-service] Erreur interne');
+  res.status(500).json({ success: false, code: 500, error: 'Erreur interne du serveur.' });
 }

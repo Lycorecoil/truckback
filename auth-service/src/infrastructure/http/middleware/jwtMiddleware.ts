@@ -25,13 +25,14 @@ export function jwtMiddleware(
   }
 
   const token = authHeader.slice(7);
-  const secret = process.env['JWT_SECRET'];
-  if (!secret) {
-    return next(new Error('JWT_SECRET non configuré.'));
+  const rawPublicKey = process.env['JWT_PUBLIC_KEY'];
+  if (!rawPublicKey) {
+    return next(new Error('JWT_PUBLIC_KEY non configuré.'));
   }
+  const publicKey = rawPublicKey.replace(/\\n/g, '\n');
 
   try {
-    const payload = jwt.verify(token, secret) as JWTPayload;
+    const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as JWTPayload;
     req.user = payload;
     next();
   } catch {

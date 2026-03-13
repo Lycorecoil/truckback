@@ -44,7 +44,7 @@ services:
       NODE_ENV: production
       SERVICE_NAME: api-gateway-1
       INSTANCE_ID: "1"
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       AUTH_SERVICE_URL: http://auth-service:3000
       COMPANY_SERVICE_URL: http://company-service:3001
@@ -83,7 +83,7 @@ services:
       NODE_ENV: production
       SERVICE_NAME: api-gateway-2
       INSTANCE_ID: "2"
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       AUTH_SERVICE_URL: http://auth-service:3000
       COMPANY_SERVICE_URL: http://company-service:3001
@@ -133,6 +133,11 @@ services:
     ports: []
     expose:
       - "3005"
+
+  # Jaeger UI accessible uniquement en local (SSH tunnel pour accès distant)
+  jaeger:
+    ports:
+      - "127.0.0.1:16686:16686"
 
   mongodb:
     ports: []  # MongoDB non exposé vers l'extérieur en prod

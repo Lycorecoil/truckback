@@ -39,5 +39,7 @@ const truckSchema = new Schema<Truck>(
 truckSchema.index({ tenantId: 1, statut: 1 });
 truckSchema.index({ tenantId: 1, villeBase: 1, paysBase: 1 });
 truckSchema.index({ villeBase: 1, paysBase: 1 });
+// Index optimisé pour findMatching : champs d'égalité d'abord, champ de range (capaciteMax) en dernier
+truckSchema.index({ statut: 1, villeBase: 1, paysBase: 1, capaciteMax: 1 }, { name: 'trucks_findMatching' });
 
 export const TruckModel = model<Truck>("Truck", truckSchema);

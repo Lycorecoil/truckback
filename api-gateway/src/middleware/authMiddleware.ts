@@ -11,7 +11,7 @@ export interface JwtPayload {
   exp?: number;
 }
 
-const PUBLIC_PATHS = ['/auth/signup', '/auth/login'];
+const PUBLIC_PATHS = ['/v1/auth/signup', '/v1/auth/login'];
 
 /** Hash d'un token pour la blacklist Redis (évite de stocker le token brut). */
 export function tokenHash(token: string): string {
@@ -50,15 +50,16 @@ export function createAuthMiddleware(redisClient?: RedisClientType) {
     }
 
     const token = authHeader.slice(7);
-    const secret = process.env['JWT_SECRET'];
-    if (!secret) {
-      res.status(500).json({ error: 'JWT_SECRET not configured' });
+    const rawPublicKey = process.env['JWT_PUBLIC_KEY'];
+    if (!rawPublicKey) {
+      res.status(500).json({ error: 'JWT_PUBLIC_KEY not configured' });
       return;
     }
+    const publicKey = rawPublicKey.replace(/\\n/g, '\n');
 
     let payload: JwtPayload;
     try {
-      payload = jwt.verify(token, secret) as JwtPayload;
+      payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as JwtPayload;
     } catch {
       res.status(401).json({ error: 'Invalid token' });
       return;

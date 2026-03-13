@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const CreateShipmentSchema = z.object({
   marchandise:  z.string().min(1, 'marchandise requise'),
   emballage:    z.string().optional(),
-  quantite:     z.number({ invalid_type_error: 'quantite doit être un nombre' }).positive('quantite doit être positive'),
-  poids:        z.number({ invalid_type_error: 'poids doit être un nombre' }).positive('poids doit être positif'),
+  quantite:     z.number({ error: 'quantite doit être un nombre' }).positive('quantite doit être positive'),
+  poids:        z.number({ error: 'poids doit être un nombre' }).positive('poids doit être positif'),
   villeDepart:  z.string().min(1, 'villeDepart requise'),
   paysDepart:   z.string().min(1, 'paysDepart requis'),
   villeArrivee: z.string().min(1, 'villeArrivee requise'),

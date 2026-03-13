@@ -24,7 +24,7 @@ if [ ! -f ".env" ]; then
 fi
 
 # Vérification des variables critiques
-for VAR in JWT_SECRET JWT_REFRESH_SECRET SMTP_USER SMTP_PASS; do
+for VAR in JWT_PRIVATE_KEY JWT_PUBLIC_KEY JWT_REFRESH_SECRET SMTP_USER SMTP_PASS; do
     VAL=$(grep "^${VAR}=" .env | cut -d= -f2-)
     if [ -z "$VAL" ]; then
         echo "❌ Variable $VAR manquante ou vide dans .env"

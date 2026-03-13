@@ -42,8 +42,8 @@ app.use(jwtVerifyMiddleware);
 const truckService  = new TruckService(new TruckRepository());
 const driverService = new DriverService(new DriverRepository());
 
-app.use("/fleet/trucks",  createTruckRouter(truckService));
-app.use("/fleet/drivers", createDriverRouter(driverService));
+app.use("/trucks",  createTruckRouter(truckService));
+app.use("/drivers", createDriverRouter(driverService));
 app.use(errorMiddleware);
 
 const PORT = process.env["PORT"] ?? 3003;

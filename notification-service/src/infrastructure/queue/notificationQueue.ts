@@ -8,12 +8,12 @@ const defaultJobOptions = {
   removeOnFail: 50,
 };
 
-export const emailQueue = new Queue('notification:email', {
+export const emailQueue = new Queue('notification-email', {
   connection: getRedisConnection(),
   defaultJobOptions,
 });
 
-export const smsQueue = new Queue('notification:sms', {
+export const smsQueue = new Queue('notification-sms', {
   connection: getRedisConnection(),
   defaultJobOptions,
 });

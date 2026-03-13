@@ -43,7 +43,12 @@ const PORT   = process.env["PORT"] ?? 3001;
 const server = createServer(app);
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5_000,
+    socketTimeoutMS: 45_000,
+    maxPoolSize: 10,
+    minPoolSize: 2,
+  })
   .then(() => {
     server.listen(PORT, () => {
       logger.info(`Company Service démarré sur le port ${PORT}`);

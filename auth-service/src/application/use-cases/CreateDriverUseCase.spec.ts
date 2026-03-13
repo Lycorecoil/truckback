@@ -5,10 +5,11 @@ import { User, UserRole } from '../../domain/entities/User';
 import { UserAlreadyExistsError } from '../../domain/errors/DomainError';
 
 const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
-  findById: jest.fn(),
-  findByEmail: jest.fn(),
-  save: jest.fn(),
-  delete: jest.fn(),
+  findById:       jest.fn(),
+  findByEmail:    jest.fn(),
+  save:           jest.fn(),
+  delete:         jest.fn(),
+  updatePassword: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeNotificationMock = (): jest.Mocked<INotificationClient> => ({

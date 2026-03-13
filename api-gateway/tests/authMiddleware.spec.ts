@@ -1,18 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { authMiddleware } from '../src/middleware/authMiddleware';
 
-const JWT_SECRET = 'test-secret';
+// Génère une paire RSA pour les tests — RS256 comme en production
+const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicKeyEncoding:  { type: 'pkcs1', format: 'pem' },
+  privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+});
 
 beforeEach(() => {
-  process.env['JWT_SECRET'] = JWT_SECRET;
+  process.env['JWT_PUBLIC_KEY'] = publicKey;
 });
 
 afterEach(() => {
-  delete process.env['JWT_SECRET'];
+  delete process.env['JWT_PUBLIC_KEY'];
 });
 
-const makeMocks = (path = '/company/shipments') => {
+const makeMocks = (path = '/v1/company/shipments') => {
   const req = {
     path,
     headers: {} as Record<string, string>,
@@ -66,8 +72,8 @@ describe('authMiddleware', () => {
       const { req, res, next } = makeMocks();
       const expiredToken = jwt.sign(
         { sub: 'user-1', role: 'COMPANY', tenantId: 'tenant-1' },
-        JWT_SECRET,
-        { expiresIn: -1 },
+        privateKey,
+        { algorithm: 'RS256', expiresIn: -1 } as jwt.SignOptions,
       );
       req.headers['authorization'] = `Bearer ${expiredToken}`;
 
@@ -82,8 +88,8 @@ describe('authMiddleware', () => {
       const { req, res, next } = makeMocks();
       const token = jwt.sign(
         { sub: 'user-42', role: 'DRIVER', tenantId: 'tenant-99' },
-        JWT_SECRET,
-        { expiresIn: '15m' },
+        privateKey,
+        { algorithm: 'RS256', expiresIn: '15m' } as jwt.SignOptions,
       );
       req.headers['authorization'] = `Bearer ${token}`;
 
@@ -98,8 +104,8 @@ describe('authMiddleware', () => {
   });
 
   describe('public routes', () => {
-    it('should call next() without checking token for /auth/signup', () => {
-      const { req, res, next } = makeMocks('/auth/signup');
+    it('should call next() without checking token for /v1/auth/signup', () => {
+      const { req, res, next } = makeMocks('/v1/auth/signup');
 
       authMiddleware(req, res, next);
 
@@ -107,8 +113,8 @@ describe('authMiddleware', () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should call next() without checking token for /auth/login', () => {
-      const { req, res, next } = makeMocks('/auth/login');
+    it('should call next() without checking token for /v1/auth/login', () => {
+      const { req, res, next } = makeMocks('/v1/auth/login');
 
       authMiddleware(req, res, next);
 

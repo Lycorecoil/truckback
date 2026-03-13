@@ -14,11 +14,18 @@ const userRepository         = new MongoUserRepository();
 const revokedTokenRepository = new MongoRevokedTokenRepository();
 const notificationClient     = new NotificationClient();
 
-const jwtSecret = process.env['JWT_SECRET'];
-if (!jwtSecret) throw new Error('JWT_SECRET environment variable is required');
+const jwtPrivateKey = process.env['JWT_PRIVATE_KEY'];
+const jwtPublicKey  = process.env['JWT_PUBLIC_KEY'];
+if (!jwtPrivateKey) throw new Error('JWT_PRIVATE_KEY environment variable is required');
+if (!jwtPublicKey)  throw new Error('JWT_PUBLIC_KEY environment variable is required');
+
+// Les clés PEM stockées en env contiennent des \n littéraux — les restaurer
+const privateKey = jwtPrivateKey.replace(/\\n/g, '\n');
+const publicKey  = jwtPublicKey.replace(/\\n/g, '\n');
 
 const jwtService = new JwtService(
-  jwtSecret,
+  privateKey,
+  publicKey,
   process.env['JWT_EXPIRES_IN'] ?? '1h',
 );
 

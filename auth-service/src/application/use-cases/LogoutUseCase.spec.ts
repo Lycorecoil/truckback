@@ -10,8 +10,10 @@ const makeRevokedTokenRepo = (): jest.Mocked<IRevokedTokenRepository> => ({
 const makeJwtMock = (): jest.Mocked<IJwtService> => ({
   sign:          jest.fn(),
   signRefresh:   jest.fn(),
+  signReset:     jest.fn().mockReturnValue('fake-reset-token'),
   verify:        jest.fn(),
   verifyRefresh: jest.fn(),
+  verifyReset:   jest.fn().mockReturnValue('user-id-1'),
 });
 
 describe('LogoutUseCase', () => {

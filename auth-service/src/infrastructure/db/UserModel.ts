@@ -18,7 +18,7 @@ const UserSchema = new Schema<UserDocument>(
     role: { type: String, required: true, enum: ["ADMIN", "COMPANY", "TRANSPORTER", "DRIVER"] },
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: false, versionKey: false },
+  { versionKey: false },
 );
 
 export const UserModel = mongoose.model<UserDocument>("User", UserSchema);
