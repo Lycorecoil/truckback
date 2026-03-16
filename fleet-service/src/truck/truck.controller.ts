@@ -124,7 +124,7 @@ export function createTruckRouter(service: TruckService): Router {
 
       const parsed = TruckCreateSchema.safeParse(req.body);
       if (!parsed.success) {
-        const messages = parsed.error.errors.map((e) => e.message).join("; ");
+        const messages = parsed.error.errors.map((e: { message: string }) => e.message).join("; ");
         res.status(400).json({ error: messages });
         return;
       }

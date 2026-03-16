@@ -30,8 +30,8 @@ export class DriverRepository implements IRepository<Driver> {
     };
   }
 
-  async create(data: Omit<Driver, "id">): Promise<Driver> {
-    const doc = await DriverModel.create({ ...data, id: randomUUID() });
+  async create(data: Omit<Driver, "id"> & { id?: string }): Promise<Driver> {
+    const doc = await DriverModel.create({ ...data, id: data.id ?? randomUUID() });
     return doc.toJSON() as Driver;
   }
 

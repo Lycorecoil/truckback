@@ -13,7 +13,11 @@ export const LoginSchema = z.object({
 });
 
 export const CreateDriverSchema = z.object({
-  email:    z.string().email('Email invalide'),
-  password: z.string().min(8, 'Mot de passe : 8 caractères minimum'),
-  tenantId: z.string().min(1, 'tenantId requis'),
+  email:        z.string().email('Email invalide'),
+  password:     z.string().min(8, 'Mot de passe : 8 caractères minimum'),
+  tenantId:     z.string().min(1, 'tenantId requis'),
+  telephone:    z.string().min(8, 'Numéro de téléphone invalide'),
+  nom:          z.string().min(1, 'nom requis'),
+  prenom:       z.string().min(1, 'prenom requis'),
+  numeroPermis: z.string().min(1, 'numeroPermis requis'),
 });

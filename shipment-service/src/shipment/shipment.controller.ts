@@ -70,8 +70,9 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "DRIVER") {
-        const existing = await service.getById(req.params["id"] as string) as { driverId?: string };
-        if (existing.driverId !== userId) {
+        const existing = await service.getById(req.params["id"] as string) as { data?: { driverId?: string }; driverId?: string };
+        const existingData = existing.data ?? existing;
+        if (existingData.driverId !== userId) {
           res.status(403).json({ error: "Vous n'êtes pas assigné à cette expédition" });
           return;
         }
@@ -93,8 +94,9 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "DRIVER") {
-        const existing = await service.getById(req.params["id"] as string) as { driverId?: string };
-        if (existing.driverId !== userId) {
+        const existing = await service.getById(req.params["id"] as string) as { data?: { driverId?: string }; driverId?: string };
+        const existingData = existing.data ?? existing;
+        if (existingData.driverId !== userId) {
           res.status(403).json({ error: "Vous n'êtes pas assigné à cette expédition" });
           return;
         }
@@ -117,7 +119,14 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "TRANSPORTER") {
-        res.json(await service.findByTransporterId(userId));
+        // Expéditions déjà acceptées par ce transporteur + expéditions PENDING disponibles
+        const [mine, pending] = await Promise.all([
+          service.findByTransporterId(userId),
+          service.findByStatut("PENDING"),
+        ]);
+        const ids = new Set((mine as Array<{ id: string }>).map((s) => s.id));
+        const all = [...mine, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
+        res.json(all);
         return;
       }
       if (role === "DRIVER") {
@@ -149,7 +158,7 @@ export function createShipmentRouter(service: ShipmentService): Router {
       const result = await service.getById(req.params["id"] as string);
 
       if (role !== "ADMIN") {
-        const s = result as { companyId?: string; transporterId?: string; driverId?: string };
+        const s = (result as { data?: { companyId?: string; transporterId?: string; driverId?: string } }).data ?? result as { companyId?: string; transporterId?: string; driverId?: string };
         const hasAccess =
           s.companyId     === userId ||
           s.transporterId === userId ||
@@ -167,15 +176,20 @@ export function createShipmentRouter(service: ShipmentService): Router {
   });
 
   // POST /shipments — uniquement COMPANY (ou ADMIN)
-  router.post("/", validateBody(CreateShipmentSchema), async (req, res, next) => {
-    try {
-      const role = getHeader(req, "x-user-role") as Role;
-      const userId = getHeader(req, "x-user-id");
-
+  router.post("/",
+    (req: import("express").Request, res: import("express").Response, next: import("express").NextFunction) => {
+      const role = (req.headers["x-user-role"] as string | undefined) ?? "";
       if (role !== "COMPANY" && role !== "ADMIN") {
         res.status(403).json({ error: "Seul une entreprise peut créer une expédition" });
         return;
       }
+      next();
+    },
+    validateBody(CreateShipmentSchema),
+    async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
 
       const body = req.body as Record<string, unknown>;
 
@@ -223,8 +237,9 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "COMPANY") {
-        const existing = await service.getById(req.params["id"] as string) as { companyId?: string };
-        if (existing.companyId !== userId) {
+        const existing = await service.getById(req.params["id"] as string) as { data?: { companyId?: string }; companyId?: string };
+        const existingData = existing.data ?? existing;
+        if (existingData.companyId !== userId) {
           res.status(403).json({ error: "Vous ne pouvez annuler que vos propres expéditions" });
           return;
         }

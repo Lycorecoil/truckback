@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const CreateShipmentSchema = z.object({
-  marchandise:  z.string().min(1, 'marchandise requise'),
+  marchandise:  z.string({ error: 'marchandise requise' }).min(1, 'marchandise requise'),
   emballage:    z.string().optional(),
   quantite:     z.number({ error: 'quantite doit être un nombre' }).positive('quantite doit être positive'),
   poids:        z.number({ error: 'poids doit être un nombre' }).positive('poids doit être positif'),

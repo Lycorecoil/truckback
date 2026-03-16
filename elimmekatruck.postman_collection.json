@@ -1,0 +1,1581 @@
+{
+  "info": {
+    "_postman_id": "elimmekatruck-v1",
+    "name": "Elimmekatruck — Camion Uber API",
+    "description": "Collection organisée par rôle.\n\n**Flux de test recommandé :**\n1. 🔐 Auth → Signup Company\n2. 🔐 Auth → Signup Transporter\n3. 🔐 Auth → Login Company (token auto-sauvegardé → token_company)\n4. 🔐 Auth → Login Transporter (token auto-sauvegardé → token_transporter)\n5. 🏢 COMPANY → Créer une entreprise\n6. 🚛 TRANSPORTER → Créer un profil transporteur\n7. 🚛 TRANSPORTER → Créer un camion\n8. 🏢 COMPANY → Créer une expédition\n9. 🚛 TRANSPORTER → Accepter une expédition\n10. 🚗 DRIVER → Démarrer une mission\n11. 🚗 DRIVER → Envoyer position GPS\n12. 🚗 DRIVER → Livrer une mission\n\n**Variables auto-remplies par les scripts Tests :**\n`token_company`, `token_transporter`, `token_driver`, `truck_id`, `driver_id`, `shipment_id`, `company_id`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost",
+      "type": "default"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "token_company",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "token_transporter",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "token_driver",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "token_admin",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "refresh_token_company",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "refresh_token_transporter",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "refresh_token_driver",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "company_user_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "company_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "transporter_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "truck_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "driver_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "shipment_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "reset_token",
+      "value": "",
+      "type": "default"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth (no token required)",
+      "item": [
+        {
+          "name": "Signup — Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('company_user_id', res.id);",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('token_company', res.token);",
+                  "  pm.collectionVariables.set('token', res.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"company@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"tenant-company-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "signup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Signup — Transporter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('token_transporter', res.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporter@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"TRANSPORTER\",\n  \"tenantId\": \"tenant-transporter-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "signup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — Company ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token présent', () => pm.expect(pm.response.json()).to.have.property('token'));",
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('token_company', res.token);",
+                  "pm.collectionVariables.set('token', res.token);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refresh_token_company', res.refreshToken);",
+                  "console.log('Token Company sauvegardé ✓');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"company@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — Admin ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('token_admin', res.token);",
+                  "pm.collectionVariables.set('token', res.token);",
+                  "console.log('Token Admin sauvegardé ✓');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@elimmekatruck.com\",\n  \"password\": \"Admin1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — Transporter ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('token_transporter', res.token);",
+                  "pm.collectionVariables.set('token', res.token);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refresh_token_transporter', res.refreshToken);",
+                  "console.log('Token Transporter sauvegardé ✓');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporter@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login — Driver ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('token_driver', res.token);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refresh_token_driver', res.refreshToken);",
+                  "console.log('Token Driver sauvegardé ✓');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"driver@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 COMPANY",
+      "item": [
+        {
+          "name": "Créer une entreprise",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "const companyId = (res.data && res.data.id) || res.id; if (companyId) { pm.collectionVariables.set('company_id', companyId); console.log('company_id sauvegardé:', companyId); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"raisonSociale\": \"SociétéTest SA\",\n  \"formeJuridique\": \"SA\",\n  \"rccm\": \"RCCM-BJ-2024-001\",\n  \"ifu\": \"IFU-123456\",\n  \"secteurActivite\": \"Commerce\",\n  \"pays\": \"Bénin\",\n  \"ville\": \"Cotonou\",\n  \"email\": \"contact@societetest.bj\",\n  \"telephone\": \"+22901020304\",\n  \"nomRepresentant\": \"Dupont\",\n  \"prenomRepresentant\": \"Jean\",\n  \"fonctionRepresentant\": \"Directeur Général\",\n  \"emailRepresentant\": \"jean.dupont@societetest.bj\",\n  \"telephoneRepresentant\": \"+22901020305\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/company/company",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "company"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Voir mon profil entreprise",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/company/company/{{company_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "company",
+                "{{company_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mettre à jour mon profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ville\": \"Porto-Novo\",\n  \"telephone\": \"+22901020399\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/company/company/{{company_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "company",
+                "{{company_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer une expédition ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "const shipment = res.data || res;",
+                  "if (shipment.id) { pm.collectionVariables.set('shipment_id', shipment.id); console.log('shipment_id sauvegardé:', shipment.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marchandise\": \"Ciment Portland\",\n  \"emballage\": \"Sacs 50kg\",\n  \"quantite\": 200,\n  \"poids\": 10000,\n  \"villeDepart\": \"Cotonou\",\n  \"paysDepart\": \"Bénin\",\n  \"villeArrivee\": \"Lomé\",\n  \"paysArrivee\": \"Togo\",\n  \"dateAnnonce\": \"2026-03-20\",\n  \"heureAnnonce\": \"08:00\",\n  \"prixTransport\": 150000,\n  \"geolocDepart\": { \"latitude\": 6.3654, \"longitude\": 2.4183 },\n  \"geolocArrivee\": { \"latitude\": 6.1375, \"longitude\": 1.2123 },\n  \"commentaireGeneral\": \"Chargement à l'entrepôt zone portuaire\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister mes expéditions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtenir une expédition par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "{{shipment_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Annuler une expédition (Company)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commentaireAnnulation\": \"Client a annulé la commande\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "{{shipment_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rechercher camions disponibles ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_company}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/search?poids=10000&villeDepart=Cotonou&paysDepart=Bénin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "poids",
+                  "value": "10000"
+                },
+                {
+                  "key": "villeDepart",
+                  "value": "Cotonou"
+                },
+                {
+                  "key": "paysDepart",
+                  "value": "Bénin"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚛 TRANSPORTER",
+      "item": [
+        {
+          "name": "Créer un profil transporteur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "const transporterId = (res.data && res.data.id) || res.id; if (transporterId) pm.collectionVariables.set('transporter_id', transporterId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"raisonSociale\": \"Trans Express SARL\",\n  \"formeJuridique\": \"SARL\",\n  \"rccm\": \"RCCM-BJ-2024-002\",\n  \"ifu\": \"IFU-654321\",\n  \"secteurActivite\": \"Transport\",\n  \"pays\": \"Bénin\",\n  \"ville\": \"Cotonou\",\n  \"email\": \"contact@transexpress.bj\",\n  \"telephone\": \"+22906070809\",\n  \"nomRepresentant\": \"Martin\",\n  \"prenomRepresentant\": \"Pierre\",\n  \"fonctionRepresentant\": \"Gérant\",\n  \"emailRepresentant\": \"pierre.martin@transexpress.bj\",\n  \"telephoneRepresentant\": \"+22906070810\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/company/transporter",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "transporter"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Voir mon profil transporteur",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/company/transporter/{{transporter_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "transporter",
+                "{{transporter_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mettre à jour mon profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ville\": \"Parakou\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/company/transporter/{{transporter_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "transporter",
+                "{{transporter_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un compte Driver ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('driver_auth_id', res.id); pm.collectionVariables.set('driver_id', res.id); console.log('driver_id sauvegardé:', res.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"driver@test.com\",\n  \"password\": \"password123\",\n  \"tenantId\": \"tenant-transporter-001\",\n  \"telephone\": \"+22911223344\",\n  \"nom\": \"Koffi\",\n  \"prenom\": \"Amos\",\n  \"numeroPermis\": \"PERMIS-BJ-2025-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/drivers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "drivers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister mes chauffeurs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/drivers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "drivers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtenir un chauffeur par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/drivers/{{driver_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "drivers",
+                "{{driver_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un camion ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const res = pm.response.json();",
+                  "const truck = res.data || res;",
+                  "if (truck.id) { pm.collectionVariables.set('truck_id', truck.id); console.log('truck_id sauvegardé:', truck.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"AB-123-CD\",\n  \"chassis\": \"VIN1234567890ABC\",\n  \"marque\": \"Mercedes\",\n  \"modele\": \"Actros\",\n  \"typeVehicule\": \"Semi-remorque\",\n  \"carrosserie\": \"Bâché\",\n  \"gabarit\": \"Grand\",\n  \"capaciteMax\": 20000,\n  \"villeBase\": \"Cotonou\",\n  \"paysBase\": \"Bénin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "trucks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister mes camions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "trucks"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtenir un camion par ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks/{{truck_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "trucks",
+                "{{truck_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assigner chauffeur à camion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truck_id}}\",\n  \"driverId\": \"{{driver_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks/assign-driver",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "trucks",
+                "assign-driver"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister les expéditions disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accepter une expédition (Transporter) ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut ACCEPTED', () => {",
+                  "  const res = pm.response.json();",
+                  "  const shipment = res.data || res;",
+                  "  pm.expect(shipment.statut).to.eql('ACCEPTED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truck_id}}\",\n  \"driverId\": \"{{driver_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}/accept",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "{{shipment_id}}",
+                "accept"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚗 DRIVER",
+      "item": [
+        {
+          "name": "Démarrer une mission ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut IN_PROGRESS', () => {",
+                  "  const res = pm.response.json();",
+                  "  const shipment = res.data || res;",
+                  "  pm.expect(shipment.statut).to.eql('IN_PROGRESS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_driver}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}/start",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "{{shipment_id}}",
+                "start"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Livrer une mission ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Statut DELIVERED', () => {",
+                  "  const res = pm.response.json();",
+                  "  const shipment = res.data || res;",
+                  "  pm.expect(shipment.statut).to.eql('DELIVERED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_driver}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}/deliver",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments",
+                "{{shipment_id}}",
+                "deliver"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Envoyer position GPS ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_driver}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"truckId\": \"{{truck_id}}\",\n  \"shipmentId\": \"{{shipment_id}}\",\n  \"latitude\": 6.3654,\n  \"longitude\": 2.4183,\n  \"vitesse\": 85\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/tracking/tracking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "tracking",
+                "tracking"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Voir mes expéditions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_driver}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/shipments/shipments?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "shipments",
+                "shipments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 ADMIN",
+      "item": [
+        {
+          "name": "Lister toutes les entreprises",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/company/company?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "company"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "raisonSociale",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister tous les transporteurs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/company/transporter?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "company",
+                "transporter"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Envoyer un Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 202 (mis en queue)', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{company_user_id}}\",\n  \"to\": \"company@test.com\",\n  \"subject\": \"Test Elimmekatruck\",\n  \"body\": \"Ceci est un test de notification depuis Postman.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/notification/notification/email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notification",
+                "notification",
+                "email"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Envoyer un SMS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 202 (mis en queue)', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{company_user_id}}\",\n  \"to\": \"+22901020304\",\n  \"message\": \"Test SMS depuis Elimmekatruck Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/notification/notification/sms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notification",
+                "notification",
+                "sms"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Voir notifications d'un utilisateur",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/notification/notification/{{company_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "notification",
+                "notification",
+                "{{company_user_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 Health Checks",
+      "item": [
+        {
+          "name": "Gateway — Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Auth Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Company Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3001",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Shipment Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3002",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Fleet Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3003/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3003",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tracking Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3004/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3004",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notification Service — Health (direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3005/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3005",
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

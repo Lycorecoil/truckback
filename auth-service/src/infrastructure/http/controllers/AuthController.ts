@@ -3,6 +3,7 @@ import { Container } from '../../config/container';
 import type { SignUpDTO } from '../../../application/dtos/SignUpDTO';
 import type { LoginDTO } from '../../../application/dtos/LoginDTO';
 import type { CreateDriverDTO } from '../../../application/dtos/CreateDriverDTO';
+import type { AuthenticatedRequest } from '../middleware/jwtMiddleware';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,14 +60,21 @@ export class AuthController {
     }
   }
 
-  async createDriver(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async createDriver(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (req.user?.role !== 'TRANSPORTER' && req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Seul un TRANSPORTER ou ADMIN peut créer un driver.' });
+        return;
+      }
       const body = req.body as Record<string, unknown>;
       const errors = validateBody(body, {
-        email: (v) => (!v || !EMAIL_REGEX.test(String(v)) ? 'email invalide' : null),
-        password: (v) => (!v || String(v).length < 6 ? 'password doit faire au moins 6 caractères' : null),
-        tenantId: (v) => (!v ? 'tenantId est requis' : null),
-        transporterId: (v) => (!v ? 'transporterId est requis' : null),
+        email:        (v) => (!v || !EMAIL_REGEX.test(String(v)) ? 'email invalide' : null),
+        password:     (v) => (!v || String(v).length < 8 ? 'password doit faire au moins 8 caractères' : null),
+        tenantId:     (v) => (!v ? 'tenantId est requis' : null),
+        telephone:    (v) => (!v ? 'telephone est requis' : null),
+        nom:          (v) => (!v ? 'nom est requis' : null),
+        prenom:       (v) => (!v ? 'prenom est requis' : null),
+        numeroPermis: (v) => (!v ? 'numeroPermis est requis' : null),
       });
       if (errors.length > 0) {
         res.status(400).json({ error: errors.join('; ') });

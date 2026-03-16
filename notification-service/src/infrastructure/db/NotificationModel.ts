@@ -18,7 +18,7 @@ const NotificationSchema = new Schema<NotificationDocument>(
     status: { type: String, required: true, enum: ["SENT", "FAILED"] },
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: false, versionKey: false },
+  { versionKey: false, toJSON: { transform: (_doc, ret: Record<string, unknown>) => { delete ret["_id"]; } } },
 );
 
 export const NotificationModel = mongoose.model<NotificationDocument>("Notification", NotificationSchema);

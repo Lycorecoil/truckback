@@ -82,7 +82,7 @@ export class ShipmentService extends GenericService<Shipment> {
     if (params.typeVehicule) query.append("typeVehicule", params.typeVehicule);
 
     const response = await withCircuitBreaker('fleet-service', () =>
-      fetchWithRetry(`${FLEET_SERVICE_URL}/fleet/trucks/match?${query.toString()}`),
+      fetchWithRetry(`${FLEET_SERVICE_URL}/trucks/match?${query.toString()}`),
     );
     if (!response.ok) throw new Error("Erreur lors de la recherche de camions");
     return response.json() as Promise<unknown[]>;

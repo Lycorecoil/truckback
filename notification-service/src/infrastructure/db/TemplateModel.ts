@@ -16,7 +16,7 @@ const TemplateSchema = new Schema<TemplateDocument>(
     subject: { type: String },
     body: { type: String, required: true },
   },
-  { _id: false, versionKey: false },
+  { versionKey: false, toJSON: { transform: (_doc, ret: Record<string, unknown>) => { delete ret["_id"]; } } },
 );
 
 export const TemplateModel = mongoose.model<TemplateDocument>("NotificationTemplate", TemplateSchema);

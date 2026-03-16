@@ -132,6 +132,7 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
     });
 
     it("200 si role DRIVER", async () => {
+      (mockService.getById as jest.Mock).mockResolvedValue({ ...mockShipment, driverId: "driver-1" });
       (mockService.startMission as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "IN_PROGRESS" });
       const res = await request(app)
         .post("/shipments/s-uuid-1/start")
@@ -150,6 +151,7 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
     });
 
     it("200 si role DRIVER", async () => {
+      (mockService.getById as jest.Mock).mockResolvedValue({ ...mockShipment, driverId: "driver-1" });
       (mockService.deliverMission as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "DELIVERED" });
       const res = await request(app)
         .post("/shipments/s-uuid-1/deliver")
@@ -175,6 +177,7 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
     });
 
     it("200 si role COMPANY", async () => {
+      (mockService.getById as jest.Mock).mockResolvedValue({ ...mockShipment, companyId: "company-1" });
       (mockService.cancelShipment as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "CANCELLED" });
       const res = await request(app)
         .delete("/shipments/s-uuid-1")

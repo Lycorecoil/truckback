@@ -257,6 +257,8 @@ services:
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_EXPIRES_IN: 1h
+      REDIS_URL: redis://redis:6379
+      NOTIFICATION_SERVICE_URL: http://notification-service:3005
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
     depends_on:
       mongodb:
@@ -318,11 +320,14 @@ services:
       SERVICE_NAME: fleet-service
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/fleet-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      REDIS_URL: redis://redis:6379
     depends_on:
       mongodb:
         condition: service_healthy
       mongodb-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3003/health || exit 1
       interval: 15s

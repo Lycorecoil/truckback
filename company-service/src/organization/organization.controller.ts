@@ -72,7 +72,12 @@ export const createOrganizationRouter = (type: OrganizationType): Router => {
    */
   router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await service.createOne({ ...req.body, type });
+      const tenantId = req.headers["x-tenant-id"] as string;
+      if (!tenantId) {
+        res.status(400).json({ error: "tenantId manquant (token invalide)" });
+        return;
+      }
+      const result = await service.createOne({ ...req.body, type, tenantId });
       res.status(201).json(result);
     } catch (error) {
       next(error);

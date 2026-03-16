@@ -5,6 +5,7 @@ import { User, UserRole } from '../../domain/entities/User';
 import { Email } from '../../domain/value-objects/Email';
 import { Password } from '../../domain/value-objects/Password';
 import { UserAlreadyExistsError } from '../../domain/errors/DomainError';
+import { publishDriverCreated } from '../../infrastructure/queue/DriverCreatedPublisher';
 
 const APP_DOWNLOAD_LINK = process.env['APP_DOWNLOAD_LINK'] ?? 'https://camion-uber.app/download';
 
@@ -31,6 +32,19 @@ export class CreateDriverUseCase {
     // Notifier le chauffeur par email + SMS avec ses identifiants
     void this.notifyDriver(saved.id, dto.email, dto.password, dto.telephone);
 
+    // Publier l'event pour que fleet-service crée le profil automatiquement
+    void publishDriverCreated({
+      userId:       saved.id,
+      tenantId:     dto.tenantId,
+      email:        dto.email,
+      telephone:    dto.telephone,
+      nom:          dto.nom,
+      prenom:       dto.prenom,
+      numeroPermis: dto.numeroPermis,
+    }).catch((err) => {
+      console.error('[CreateDriver] Erreur publication event driver.created :', err);
+    });
+
     return { id: saved.id, email: saved.email, role: 'DRIVER' };
   }
 
@@ -38,7 +52,7 @@ export class CreateDriverUseCase {
     driverId: string,
     email: string,
     plainPassword: string,
-    telephone?: string,
+    telephone: string,
   ): Promise<void> {
     const emailBody = [
       `Bonjour,`,
@@ -68,13 +82,11 @@ export class CreateDriverUseCase {
       console.error('[CreateDriver] Erreur envoi email :', err);
     }
 
-    if (telephone) {
-      const smsMessage = `Camion Uber: Compte créé. Email: ${email} | MDP: ${plainPassword} | App: ${APP_DOWNLOAD_LINK}`;
-      try {
-        await this.notificationClient.sendSms(telephone, smsMessage, driverId);
-      } catch (err) {
-        console.error('[CreateDriver] Erreur envoi SMS :', err);
-      }
+    const smsMessage = `Camion Uber: Compte créé. Email: ${email} | MDP: ${plainPassword} | App: ${APP_DOWNLOAD_LINK}`;
+    try {
+      await this.notificationClient.sendSms(telephone, smsMessage, driverId);
+    } catch (err) {
+      console.error('[CreateDriver] Erreur envoi SMS :', err);
     }
   }
 }

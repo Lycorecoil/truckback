@@ -4,6 +4,11 @@ import { INotificationClient } from '../ports/INotificationClient';
 import { User, UserRole } from '../../domain/entities/User';
 import { UserAlreadyExistsError } from '../../domain/errors/DomainError';
 
+// Mock du publisher BullMQ — évite une connexion Redis dans les tests
+jest.mock('../../infrastructure/queue/DriverCreatedPublisher', () => ({
+  publishDriverCreated: jest.fn().mockResolvedValue(undefined),
+}));
+
 const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
   findById:       jest.fn(),
   findByEmail:    jest.fn(),
@@ -14,8 +19,18 @@ const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
 
 const makeNotificationMock = (): jest.Mocked<INotificationClient> => ({
   sendEmail: jest.fn().mockResolvedValue(undefined),
-  sendSms: jest.fn().mockResolvedValue(undefined),
+  sendSms:   jest.fn().mockResolvedValue(undefined),
 });
+
+const baseDTO = {
+  email:        'driver@example.com',
+  password:     'password123',
+  tenantId:     'tenant-1',
+  telephone:    '+237600000001',
+  nom:          'Dupont',
+  prenom:       'Jean',
+  numeroPermis: 'PERMIS-001',
+};
 
 describe('CreateDriverUseCase', () => {
   let userRepository: jest.Mocked<IUserRepository>;
@@ -38,13 +53,7 @@ describe('CreateDriverUseCase', () => {
     });
     userRepository.save.mockResolvedValue(savedUser);
 
-    const result = await useCase.execute({
-      email: 'driver@example.com',
-      password: 'password123',
-      tenantId: 'tenant-1',
-      transporterId: 'transporter-1',
-      telephone: '+237600000001',
-    });
+    const result = await useCase.execute(baseDTO);
 
     expect(result.email).toBe('driver@example.com');
     expect(result.role).toBe('DRIVER');
@@ -63,28 +72,6 @@ describe('CreateDriverUseCase', () => {
     );
   });
 
-  it('devrait créer un chauffeur sans SMS si telephone absent', async () => {
-    userRepository.findByEmail.mockResolvedValue(null);
-    const savedUser = new User({
-      tenantId: 'tenant-1',
-      email: 'driver@example.com',
-      password: 'hashed',
-      role: UserRole.DRIVER,
-    });
-    userRepository.save.mockResolvedValue(savedUser);
-
-    await useCase.execute({
-      email: 'driver@example.com',
-      password: 'password123',
-      tenantId: 'tenant-1',
-      transporterId: 'transporter-1',
-    });
-
-    await new Promise((r) => setTimeout(r, 50));
-    expect(notificationClient.sendEmail).toHaveBeenCalledTimes(1);
-    expect(notificationClient.sendSms).not.toHaveBeenCalled();
-  });
-
   it("devrait lever UserAlreadyExistsError si l'email existe déjà", async () => {
     const existing = new User({
       tenantId: 'tenant-1',
@@ -94,14 +81,7 @@ describe('CreateDriverUseCase', () => {
     });
     userRepository.findByEmail.mockResolvedValue(existing);
 
-    await expect(
-      useCase.execute({
-        email: 'driver@example.com',
-        password: 'password123',
-        tenantId: 'tenant-1',
-        transporterId: 'transporter-1',
-      }),
-    ).rejects.toThrow(UserAlreadyExistsError);
+    await expect(useCase.execute(baseDTO)).rejects.toThrow(UserAlreadyExistsError);
 
     expect(userRepository.save).not.toHaveBeenCalled();
   });
@@ -110,12 +90,7 @@ describe('CreateDriverUseCase', () => {
     userRepository.findByEmail.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({
-        email: 'driver@example.com',
-        password: '123',
-        tenantId: 'tenant-1',
-        transporterId: 'transporter-1',
-      }),
+      useCase.execute({ ...baseDTO, password: '123' }),
     ).rejects.toThrow();
 
     expect(userRepository.save).not.toHaveBeenCalled();
@@ -125,12 +100,7 @@ describe('CreateDriverUseCase', () => {
     userRepository.findByEmail.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({
-        email: 'email-invalide',
-        password: 'password123',
-        tenantId: 'tenant-1',
-        transporterId: 'transporter-1',
-      }),
+      useCase.execute({ ...baseDTO, email: 'email-invalide' }),
     ).rejects.toThrow();
   });
 });
