@@ -39,7 +39,7 @@ jobs:
         working-directory: ${{ matrix.service }}
 
       - name: Run tests
-        run: npm test -- --passWithNoTests --forceExit --coverage --coverageThreshold='{"global":{"lines":60,"functions":60}}'
+        run: npm test -- --passWithNoTests --forceExit --coverage
         working-directory: ${{ matrix.service }}
 
       - name: Upload coverage

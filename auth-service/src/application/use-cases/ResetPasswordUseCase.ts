@@ -1,7 +1,6 @@
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IJwtService } from '../ports/IJwtService';
 import { INotificationClient } from '../ports/INotificationClient';
-import { UserNotFoundError } from '../../domain/errors/DomainError';
 
 export interface ResetPasswordDTO {
   email: string;
