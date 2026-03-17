@@ -1,7 +1,7 @@
 import { MongoNotificationRepository } from '../repositories/MongoNotificationRepository';
 import { MongoTemplateRepository } from '../repositories/MongoTemplateRepository';
 import { NodemailerEmailProvider } from '../providers/NodemailerEmailProvider';
-import { TwilioSmsProvider } from '../providers/TwilioSmsProvider';
+import { getWhatsAppProvider } from '../providers/WhatsAppProvider';
 import { StubPushProvider } from '../providers/StubPushProvider';
 import { SendEmailUseCase } from '../../application/use-cases/SendEmailUseCase';
 import { SendSmsUseCase } from '../../application/use-cases/SendSmsUseCase';
@@ -13,7 +13,7 @@ const notificationRepository = new MongoNotificationRepository();
 const templateRepository = new MongoTemplateRepository();
 
 const emailProvider = new NodemailerEmailProvider();
-const smsProvider = new TwilioSmsProvider();
+const smsProvider = getWhatsAppProvider();
 const pushProvider = new StubPushProvider();
 
 export const container = {

@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
 import { NodemailerEmailProvider } from '../providers/NodemailerEmailProvider';
-import { TwilioSmsProvider } from '../providers/TwilioSmsProvider';
+import { getWhatsAppProvider } from '../providers/WhatsAppProvider';
 import { MongoNotificationRepository } from '../repositories/MongoNotificationRepository';
 import { Notification, NotificationChannel, NotificationStatus } from '../../domain/entities/Notification';
 import { logger } from '../../utils/logger';
@@ -9,7 +9,7 @@ import type { SendEmailDTO } from '../../application/dtos/SendEmailDTO';
 import type { SendSmsDTO } from '../../application/dtos/SendSmsDTO';
 
 const emailProvider  = new NodemailerEmailProvider();
-const smsProvider    = new TwilioSmsProvider();
+const smsProvider    = getWhatsAppProvider();
 const notifRepo      = new MongoNotificationRepository();
 
 // ─── Email worker ─────────────────────────────────────────────────────────────

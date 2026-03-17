@@ -10,6 +10,16 @@ import './infrastructure/queue/notificationWorker';
 
 process.env['SERVICE_NAME'] = 'notification-service';
 
+// ─── Fail-fast : SMTP non configuré ───────────────────────────────────────────
+const smtpUser = process.env['SMTP_USER'] ?? '';
+const smtpPass = process.env['SMTP_PASS'] ?? '';
+if (!smtpUser || smtpUser.includes('change_me') || !smtpPass || smtpPass.includes('change_me')) {
+  console.warn(
+    '[notification-service] ⚠️  SMTP non configuré (SMTP_USER / SMTP_PASS manquants).' +
+    ' Les emails seront logués mais non envoyés.',
+  );
+}
+
 const PORT   = process.env['PORT'] ?? 3005;
 const app    = createApp();
 const server = createServer(app);

@@ -11,7 +11,12 @@ export interface JwtPayload {
   exp?: number;
 }
 
-const PUBLIC_PATHS = ['/v1/auth/signup', '/v1/auth/login'];
+const PUBLIC_PATHS = [
+  '/v1/auth/signup',
+  '/v1/auth/login',
+  '/v1/auth/refresh',
+  '/v1/auth/reset-password',
+];
 
 /** Hash d'un token pour la blacklist Redis (évite de stocker le token brut). */
 export function tokenHash(token: string): string {
