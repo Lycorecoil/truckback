@@ -13,7 +13,7 @@ const service = new OrganizationService(repository);
 /**
  * Factory : crée un router Express filtré par type d'organisation.
  * Utilisé dans app.ts :
- *   app.use("/company", createOrganizationRouter("COMPANY"))
+ *   app.use("/company", createOrganizationRouter("EXPEDITEUR"))
  *   app.use("/transporter", createOrganizationRouter("TRANSPORTER"))
  */
 export const createOrganizationRouter = (type: OrganizationType): Router => {
@@ -68,7 +68,7 @@ export const createOrganizationRouter = (type: OrganizationType): Router => {
   /**
    * POST /company  ou  POST /transporter
    * Crée une nouvelle organisation.
-   * Le type (COMPANY ou TRANSPORTER) est injecté automatiquement depuis la route.
+   * Le type (EXPEDITEUR ou TRANSPORTER) est injecté automatiquement depuis la route.
    */
   router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     try {

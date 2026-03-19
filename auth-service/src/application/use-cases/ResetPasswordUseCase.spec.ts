@@ -44,7 +44,7 @@ describe('ResetPasswordUseCase', () => {
       tenantId: 'tenant-1',
       email: 'test@example.com',
       password: 'hashed',
-      role: UserRole.COMPANY,
+      role: UserRole.EXPEDITEUR,
     });
     userRepository.findByEmail.mockResolvedValue(user);
 

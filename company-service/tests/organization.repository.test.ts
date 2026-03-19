@@ -15,7 +15,7 @@ let repository: OrganizationRepository;
 // Données de base pour les tests
 const baseData: Omit<Organization, "id"> = {
   tenantId: "tenant-test-001",
-  type: "COMPANY",
+  type: "EXPEDITEUR",
   statut: "ACTIVE",
   raisonSociale: "Test Sarl",
   formeJuridique: "SARL",
@@ -113,13 +113,13 @@ describe("OrganizationRepository", () => {
     });
 
     it("filtre par type", async () => {
-      await repository.create({ ...baseData, tenantId: "t1", type: "COMPANY" });
+      await repository.create({ ...baseData, tenantId: "t1", type: "EXPEDITEUR" });
       await repository.create({ ...baseData, tenantId: "t2", type: "TRANSPORTER" });
 
-      const result = await repository.findAll({ page: 1, limit: 10, filters: { type: "COMPANY" } });
+      const result = await repository.findAll({ page: 1, limit: 10, filters: { type: "EXPEDITEUR" } });
 
       expect(result.total).toBe(1);
-      expect(result.data[0]!.type).toBe("COMPANY");
+      expect(result.data[0]!.type).toBe("EXPEDITEUR");
     });
   });
 

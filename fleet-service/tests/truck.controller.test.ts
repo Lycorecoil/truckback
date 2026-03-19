@@ -27,10 +27,10 @@ describe("TruckController — RBAC & tenant isolation", () => {
 
   // ─── POST /fleet/trucks ───
   describe("POST /fleet/trucks", () => {
-    it("403 si rôle COMPANY", async () => {
+    it("403 si rôle EXPEDITEUR", async () => {
       const res = await request(app)
         .post("/fleet/trucks")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-tenant-id", "tenant-1")
         .send({ immatriculation: "AB-001" });
       expect(res.status).toBe(403);
@@ -138,10 +138,10 @@ describe("TruckController — RBAC & tenant isolation", () => {
 
   // ─── PUT /fleet/trucks/:id ───
   describe("PUT /fleet/trucks/:id", () => {
-    it("403 si rôle COMPANY", async () => {
+    it("403 si rôle EXPEDITEUR", async () => {
       const res = await request(app)
         .put("/fleet/trucks/uuid-1")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .send({ marque: "Volvo" });
       expect(res.status).toBe(403);
     });
@@ -180,10 +180,10 @@ describe("TruckController — RBAC & tenant isolation", () => {
 
   // ─── POST /fleet/trucks/assign-driver ───
   describe("POST /fleet/trucks/assign-driver", () => {
-    it("403 si rôle COMPANY", async () => {
+    it("403 si rôle EXPEDITEUR", async () => {
       const res = await request(app)
         .post("/fleet/trucks/assign-driver")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .send({ truckId: "t1", driverId: "d1" });
       expect(res.status).toBe(403);
     });

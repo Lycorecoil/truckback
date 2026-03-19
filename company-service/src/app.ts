@@ -35,7 +35,7 @@ app.get("/metrics", metricsHandler);
 
 app.use(jwtVerifyMiddleware);
 
-app.use("/company",     createOrganizationRouter("COMPANY"));
+app.use("/company",     createOrganizationRouter("EXPEDITEUR"));
 app.use("/transporter", createOrganizationRouter("TRANSPORTER"));
 app.use(errorMiddleware);
 

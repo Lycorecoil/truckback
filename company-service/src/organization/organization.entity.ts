@@ -1,6 +1,6 @@
 import { BaseEntity } from "@jb226/generic-service";
 
-export type OrganizationType = "COMPANY" | "TRANSPORTER";
+export type OrganizationType = "EXPEDITEUR" | "TRANSPORTER";
 export type OrganizationStatut = "ACTIVE" | "SUSPENDED";
 
 export interface Organization extends BaseEntity {

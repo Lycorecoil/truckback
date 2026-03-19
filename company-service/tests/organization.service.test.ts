@@ -16,7 +16,7 @@ jest.mock("../src/organization/organization.repository");
 const mockOrg: Organization = {
   id: "uuid-1234",
   tenantId: "tenant-abc",
-  type: "COMPANY",
+  type: "EXPEDITEUR",
   statut: "ACTIVE",
   raisonSociale: "ACME Sarl",
   formeJuridique: "SARL",
@@ -173,7 +173,7 @@ describe("OrganizationService", () => {
   // ─── getByType ──────────────────────────────────────────────────────────────
 
   describe("getByType", () => {
-    it("filtre les organisations par type COMPANY", async () => {
+    it("filtre les organisations par type EXPEDITEUR", async () => {
       const paginated: PaginatedResult<Organization> = {
         data: [mockOrg],
         total: 1,
@@ -183,12 +183,12 @@ describe("OrganizationService", () => {
       };
       repository.findAll.mockResolvedValue(paginated);
 
-      const result = await service.getByType("COMPANY", mockQueryOptions);
+      const result = await service.getByType("EXPEDITEUR", mockQueryOptions);
 
       expect(result.success).toBe(true);
       // Vérifie que findAll a bien été appelé avec le filtre type
       expect(repository.findAll).toHaveBeenCalledWith(
-        expect.objectContaining({ filters: expect.objectContaining({ type: "COMPANY" }) })
+        expect.objectContaining({ filters: expect.objectContaining({ type: "EXPEDITEUR" }) })
       );
     });
   });

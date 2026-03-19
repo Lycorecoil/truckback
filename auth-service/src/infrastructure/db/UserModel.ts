@@ -15,7 +15,7 @@ const UserSchema = new Schema<UserDocument>(
     tenantId: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, enum: ["ADMIN", "COMPANY", "TRANSPORTER", "DRIVER"] },
+    role: { type: String, required: true, enum: ["ADMIN", "EXPEDITEUR", "TRANSPORTER", "DRIVER"] },
     createdAt: { type: Date, default: Date.now },
   },
   { versionKey: false },

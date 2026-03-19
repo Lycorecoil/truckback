@@ -4,7 +4,7 @@ import { CreateShipmentSchema } from "./schemas";
 import type { ShipmentService } from "./shipment.service";
 import type { ShipmentStatus } from "./shipment.entity";
 
-type Role = "ADMIN" | "COMPANY" | "TRANSPORTER" | "DRIVER";
+type Role = "ADMIN" | "EXPEDITEUR" | "TRANSPORTER" | "DRIVER";
 
 function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
@@ -33,7 +33,7 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // POST /shipments/:id/accept — uniquement TRANSPORTER
+  // POST /shipments/:id/accept — uniquement TRANSPORTER (ou ADMIN)
   router.post("/:id/accept", async (req, res, next) => {
     try {
       const role = getHeader(req, "x-user-role") as Role;
@@ -114,8 +114,15 @@ export function createShipmentRouter(service: ShipmentService): Router {
       const role = getHeader(req, "x-user-role") as Role;
       const userId = getHeader(req, "x-user-id");
 
-      if (role === "COMPANY") {
-        res.json(await service.findByCompanyId(userId));
+      if (role === "EXPEDITEUR") {
+        // Expéditions créées par cet expéditeur + expéditions PENDING disponibles
+        const [mine, pending] = await Promise.all([
+          service.findByCompanyId(userId),
+          service.findByStatut("PENDING"),
+        ]);
+        const ids = new Set((mine as Array<{ id: string }>).map((s) => s.id));
+        const all = [...mine, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
+        res.json(all);
         return;
       }
       if (role === "TRANSPORTER") {
@@ -130,8 +137,14 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "DRIVER") {
-        // Un chauffeur ne voit que les expéditions où il est assigné
-        res.json(await service.findByDriverId(userId));
+        // Un chauffeur ne voit que les expéditions où il est assigné + PENDING
+        const [mine, pending] = await Promise.all([
+          service.findByDriverId(userId),
+          service.findByStatut("PENDING"),
+        ]);
+        const ids = new Set((mine as Array<{ id: string }>).map((s) => s.id));
+        const all = [...mine, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
+        res.json(all);
         return;
       }
 
@@ -150,20 +163,24 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // GET /shipments/:id
+  // GET /shipments/:id — TRANSPORTER (propre ou PENDING) + ADMIN uniquement
   router.get("/:id", async (req, res, next) => {
     try {
       const role   = getHeader(req, "x-user-role") as Role;
       const userId = getHeader(req, "x-user-id");
+
+      if (role !== "TRANSPORTER" && role !== "ADMIN") {
+        res.status(403).json({ error: "Accès refusé à cette expédition" });
+        return;
+      }
+
       const result = await service.getById(req.params["id"] as string);
 
-      if (role !== "ADMIN") {
-        const s = (result as { data?: { companyId?: string; transporterId?: string; driverId?: string } }).data ?? result as { companyId?: string; transporterId?: string; driverId?: string };
-        const hasAccess =
-          s.companyId     === userId ||
-          s.transporterId === userId ||
-          s.driverId      === userId;
-        if (!hasAccess) {
+      if (role === "TRANSPORTER") {
+        const s = (result as { data?: { transporterId?: string; statut?: string } }).data ?? result as { transporterId?: string; statut?: string };
+        const isOwn    = s.transporterId === userId;
+        const isPending = s.statut === "PENDING";
+        if (!isOwn && !isPending) {
           res.status(403).json({ error: "Accès refusé à cette expédition" });
           return;
         }
@@ -175,12 +192,12 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // POST /shipments — uniquement COMPANY (ou ADMIN)
+  // POST /shipments — uniquement EXPEDITEUR (ou ADMIN)
   router.post("/",
     (req: import("express").Request, res: import("express").Response, next: import("express").NextFunction) => {
       const role = (req.headers["x-user-role"] as string | undefined) ?? "";
-      if (role !== "COMPANY" && role !== "ADMIN") {
-        res.status(403).json({ error: "Seul une entreprise peut créer une expédition" });
+      if (role !== "EXPEDITEUR" && role !== "ADMIN") {
+        res.status(403).json({ error: "Seul un expéditeur peut créer une expédition" });
         return;
       }
       next();
@@ -227,16 +244,16 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // DELETE /shipments/:id — soft delete (CANCELLED) — COMPANY propriétaire ou ADMIN
+  // DELETE /shipments/:id — soft delete (CANCELLED) — EXPEDITEUR propriétaire ou ADMIN
   router.delete("/:id", async (req, res, next) => {
     try {
       const role   = getHeader(req, "x-user-role") as Role;
       const userId = getHeader(req, "x-user-id");
-      if (role !== "COMPANY" && role !== "ADMIN") {
-        res.status(403).json({ error: "Seul une entreprise peut annuler une expédition" });
+      if (role !== "EXPEDITEUR" && role !== "ADMIN") {
+        res.status(403).json({ error: "Seul un expéditeur peut annuler une expédition" });
         return;
       }
-      if (role === "COMPANY") {
+      if (role === "EXPEDITEUR") {
         const existing = await service.getById(req.params["id"] as string) as { data?: { companyId?: string }; companyId?: string };
         const existingData = existing.data ?? existing;
         if (existingData.companyId !== userId) {

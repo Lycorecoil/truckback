@@ -27,7 +27,7 @@ export class AuthController {
         password: (v) => (!v || String(v).length < 6 ? 'password doit faire au moins 6 caractères' : null),
         tenantId: (v) => (!v ? 'tenantId est requis' : null),
         role: (v) => {
-          const valid = ['ADMIN', 'COMPANY', 'TRANSPORTER', 'DRIVER'];
+          const valid = ['ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'];
           return !v || !valid.includes(String(v)) ? `role doit être parmi : ${valid.join(', ')}` : null;
         },
       });

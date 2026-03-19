@@ -15,7 +15,7 @@ const OrganizationSchema = new Schema<Organization>(
     tenantId: { type: String, required: true, unique: true },
 
     // Type d'organisation : expéditeur ou transporteur
-    type: { type: String, enum: ["COMPANY", "TRANSPORTER"], required: true },
+    type: { type: String, enum: ["EXPEDITEUR", "TRANSPORTER"], required: true },
 
     // Statut du compte : actif ou suspendu (ACTIVE par défaut)
     statut: { type: String, enum: ["ACTIVE", "SUSPENDED"], default: "ACTIVE" },

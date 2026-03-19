@@ -44,7 +44,7 @@ export class OrganizationService extends GenericService<Organization> {
 
   /**
    * Méthode métier custom :
-   * Récupère toutes les organisations filtrées par type (COMPANY ou TRANSPORTER).
+   * Récupère toutes les organisations filtrées par type (EXPEDITEUR ou TRANSPORTER).
    */
   async getByType(
     type: Organization["type"],

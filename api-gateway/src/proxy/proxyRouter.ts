@@ -46,19 +46,19 @@ export function createProxyRouter(services: ServiceUrls, redisClient?: RedisClie
   router.use('/v1/auth', proxy(services.auth, '/v1/auth'));
 
   // Company — tous les rôles authentifiés
-  router.use('/v1/company', requireRoles('ADMIN', 'COMPANY', 'TRANSPORTER', 'DRIVER'), proxy(services.company, '/v1/company'));
+  router.use('/v1/company', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.company, '/v1/company'));
 
-  // Fleet — TRANSPORTER gère sa flotte, COMPANY et DRIVER peuvent consulter
-  router.use('/v1/fleet', requireRoles('ADMIN', 'TRANSPORTER', 'COMPANY', 'DRIVER'), proxy(services.fleet, '/v1/fleet'));
+  // Fleet — TRANSPORTER gère sa flotte, EXPEDITEUR et DRIVER peuvent consulter
+  router.use('/v1/fleet', requireRoles('ADMIN', 'TRANSPORTER', 'EXPEDITEUR', 'DRIVER'), proxy(services.fleet, '/v1/fleet'));
 
-  // Shipment — COMPANY crée/annule, TRANSPORTER accepte, DRIVER démarre/livre
-  router.use('/v1/shipments', requireRoles('ADMIN', 'COMPANY', 'TRANSPORTER', 'DRIVER'), proxy(services.shipment, '/v1/shipments'));
+  // Shipment — EXPEDITEUR crée/annule, TRANSPORTER accepte, DRIVER démarre/livre
+  router.use('/v1/shipments', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.shipment, '/v1/shipments'));
 
   // Notification — tous les rôles authentifiés
-  router.use('/v1/notification', requireRoles('ADMIN', 'COMPANY', 'TRANSPORTER', 'DRIVER'), proxy(services.notification, '/v1/notification'));
+  router.use('/v1/notification', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.notification, '/v1/notification'));
 
-  // Tracking — DRIVER envoie, COMPANY/TRANSPORTER/ADMIN consulte
-  router.use('/v1/tracking', requireRoles('ADMIN', 'COMPANY', 'TRANSPORTER', 'DRIVER'), proxy(services.tracking, '/v1/tracking'));
+  // Tracking — DRIVER envoie, EXPEDITEUR/TRANSPORTER/ADMIN consulte
+  router.use('/v1/tracking', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.tracking, '/v1/tracking'));
 
   return router;
 }

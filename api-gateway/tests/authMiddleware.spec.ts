@@ -71,7 +71,7 @@ describe('authMiddleware', () => {
     it('should return 401 with { error: "Invalid token" } when token is expired', () => {
       const { req, res, next } = makeMocks();
       const expiredToken = jwt.sign(
-        { sub: 'user-1', role: 'COMPANY', tenantId: 'tenant-1' },
+        { sub: 'user-1', role: 'EXPEDITEUR', tenantId: 'tenant-1' },
         privateKey,
         { algorithm: 'RS256', expiresIn: -1 } as jwt.SignOptions,
       );

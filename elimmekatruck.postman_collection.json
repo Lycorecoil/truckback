@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "elimmekatruck-v1",
     "name": "Elimmekatruck — Camion Uber API",
-    "description": "Collection organisée par rôle.\n\n**Flux de test recommandé :**\n1. 🔐 Auth → Signup Company\n2. 🔐 Auth → Signup Transporter\n3. 🔐 Auth → Login Company (token auto-sauvegardé → token_company)\n4. 🔐 Auth → Login Transporter (token auto-sauvegardé → token_transporter)\n5. 🏢 COMPANY → Créer une entreprise\n6. 🚛 TRANSPORTER → Créer un profil transporteur\n7. 🚛 TRANSPORTER → Créer un camion\n8. 🏢 COMPANY → Créer une expédition\n9. 🚛 TRANSPORTER → Accepter une expédition\n10. 🚗 DRIVER → Démarrer une mission\n11. 🚗 DRIVER → Envoyer position GPS\n12. 🚗 DRIVER → Livrer une mission\n\n**Variables auto-remplies par les scripts Tests :**\n`token_company`, `token_transporter`, `token_driver`, `truck_id`, `driver_id`, `shipment_id`, `company_id`",
+    "description": "Collection organisée par rôle.\n\n**Flux de test recommandé :**\n1. 🔐 Auth → Signup Company\n2. 🔐 Auth → Signup Transporter\n3. 🔐 Auth → Login Company (token auto-sauvegardé → token_company)\n4. 🔐 Auth → Login Transporter (token auto-sauvegardé → token_transporter)\n5. 🏢 EXPEDITEUR → Créer une entreprise\n6. 🚛 TRANSPORTER → Créer un profil transporteur\n7. 🚛 TRANSPORTER → Créer un camion\n8. 🏢 EXPEDITEUR → Créer une expédition\n9. 🚛 TRANSPORTER → Accepter une expédition\n10. 🚗 DRIVER → Démarrer une mission\n11. 🚗 DRIVER → Envoyer position GPS\n12. 🚗 DRIVER → Livrer une mission\n\n**Variables auto-remplies par les scripts Tests :**\n`token_company`, `token_transporter`, `token_driver`, `truck_id`, `driver_id`, `shipment_id`, `company_id`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -120,7 +120,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"company@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"tenant-company-001\"\n}"
+              "raw": "{\n  \"email\": \"company@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"EXPEDITEUR\",\n  \"tenantId\": \"tenant-company-001\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/v1/auth/signup",
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "name": "🏢 COMPANY",
+      "name": "🏢 EXPEDITEUR",
       "item": [
         {
           "name": "Créer une entreprise",

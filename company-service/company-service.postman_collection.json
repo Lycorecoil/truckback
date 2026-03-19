@@ -29,7 +29,7 @@
                   "pm.test('Statut 201', () => pm.response.to.have.status(201));",
                   "pm.test('success = true', () => pm.expect(res.success).to.be.true);",
                   "pm.test('id présent', () => pm.expect(res.data.id).to.be.a('string'));",
-                  "pm.test('type = COMPANY', () => pm.expect(res.data.type).to.eql('COMPANY'));",
+                  "pm.test('type = EXPEDITEUR', () => pm.expect(res.data.type).to.eql('EXPEDITEUR'));",
                   "pm.test('statut = ACTIVE', () => pm.expect(res.data.statut).to.eql('ACTIVE'));"
                 ]
               }

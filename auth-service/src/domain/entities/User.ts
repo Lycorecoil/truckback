@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 
 export enum UserRole {
   ADMIN = 'ADMIN',
-  COMPANY = 'COMPANY',
+  EXPEDITEUR = 'EXPEDITEUR',
   TRANSPORTER = 'TRANSPORTER',
   DRIVER = 'DRIVER',
 }

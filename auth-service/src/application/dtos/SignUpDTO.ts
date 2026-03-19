@@ -1,7 +1,7 @@
 export interface SignUpDTO {
   email: string;
   password: string;
-  role: 'COMPANY' | 'TRANSPORTER';
+  role: 'EXPEDITEUR' | 'TRANSPORTER';
   tenantId: string;
 }
 

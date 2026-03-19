@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { TruckService } from "./truck.service";
 
-type Role = "ADMIN" | "TRANSPORTER" | "COMPANY" | "DRIVER";
+type Role = "ADMIN" | "TRANSPORTER" | "EXPEDITEUR" | "DRIVER";
 
 function getHeader(req: import("express").Request, name: string): string {
   return (req.headers[name] as string | undefined) ?? "";
@@ -48,9 +48,14 @@ export function createTruckRouter(service: TruckService): Router {
     }
   });
 
-  // GET /trucks/match?poids=3000&villeDepart=Cotonou&paysDepart=Bénin
+  // GET /trucks/match?poids=3000&villeDepart=Cotonou&paysDepart=Bénin — TRANSPORTER + ADMIN uniquement
   router.get("/match", async (req, res, next) => {
     try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role === "EXPEDITEUR") {
+        res.status(403).json({ error: "Les expéditeurs n'ont pas accès à la recherche de camions" });
+        return;
+      }
       const { poids, typeVehicule, villeDepart, paysDepart } = req.query as Record<string, string>;
       if (!poids || !villeDepart || !paysDepart) {
         res.status(400).json({ error: "poids, villeDepart et paysDepart sont requis" });

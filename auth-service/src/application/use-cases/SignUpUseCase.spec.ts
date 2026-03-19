@@ -9,7 +9,7 @@ const makeUser = (): User =>
     tenantId: 'tenant-1',
     email: 'test@example.com',
     password: 'hashed',
-    role: UserRole.COMPANY,
+    role: UserRole.EXPEDITEUR,
   });
 
 const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
@@ -48,7 +48,7 @@ describe('SignUpUseCase', () => {
     const result = await useCase.execute({
       email: 'test@example.com',
       password: 'password123',
-      role: 'COMPANY',
+      role: 'EXPEDITEUR',
       tenantId: 'tenant-1',
     });
 
@@ -57,7 +57,7 @@ describe('SignUpUseCase', () => {
     expect(jwtService.sign).toHaveBeenCalledTimes(1);
     expect(result.token).toBe('fake-jwt-token');
     expect(result.email).toBe('test@example.com');
-    expect(result.role).toBe(UserRole.COMPANY);
+    expect(result.role).toBe(UserRole.EXPEDITEUR);
   });
 
   it("devrait lever UserAlreadyExistsError si l'email existe déjà", async () => {
@@ -67,7 +67,7 @@ describe('SignUpUseCase', () => {
       useCase.execute({
         email: 'test@example.com',
         password: 'password123',
-        role: 'COMPANY',
+        role: 'EXPEDITEUR',
         tenantId: 'tenant-1',
       }),
     ).rejects.toThrow(UserAlreadyExistsError);
@@ -82,7 +82,7 @@ describe('SignUpUseCase', () => {
       useCase.execute({
         email: 'test@example.com',
         password: '123',
-        role: 'COMPANY',
+        role: 'EXPEDITEUR',
         tenantId: 'tenant-1',
       }),
     ).rejects.toThrow();
@@ -97,7 +97,7 @@ describe('SignUpUseCase', () => {
       useCase.execute({
         email: 'email-invalide',
         password: 'password123',
-        role: 'COMPANY',
+        role: 'EXPEDITEUR',
         tenantId: 'tenant-1',
       }),
     ).rejects.toThrow();

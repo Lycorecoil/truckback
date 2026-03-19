@@ -43,7 +43,7 @@ describe('LoginUseCase', () => {
       tenantId: 'tenant-1',
       email: 'test@example.com',
       password: validPasswordHash,
-      role: UserRole.COMPANY,
+      role: UserRole.EXPEDITEUR,
     });
     userRepository.findByEmail.mockResolvedValue(user);
 
@@ -55,7 +55,7 @@ describe('LoginUseCase', () => {
     expect(result.token).toBe('fake-jwt-token');
     expect(result.refreshToken).toBe('fake-refresh-token');
     expect(result.user.email).toBe('test@example.com');
-    expect(result.user.role).toBe(UserRole.COMPANY);
+    expect(result.user.role).toBe(UserRole.EXPEDITEUR);
     expect(result.user.tenantId).toBe('tenant-1');
   });
 
@@ -72,7 +72,7 @@ describe('LoginUseCase', () => {
       tenantId: 'tenant-1',
       email: 'test@example.com',
       password: validPasswordHash,
-      role: UserRole.COMPANY,
+      role: UserRole.EXPEDITEUR,
     });
     userRepository.findByEmail.mockResolvedValue(user);
 

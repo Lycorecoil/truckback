@@ -43,10 +43,10 @@ describe("TrackingController - RBAC", () => {
       vitesse: 80,
     };
 
-    it("403 si role COMPANY", async () => {
+    it("403 si role EXPEDITEUR", async () => {
       const res = await request(app)
         .post("/tracking")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1")
         .send(validBody);
       expect(res.status).toBe(403);
@@ -103,11 +103,11 @@ describe("TrackingController - RBAC", () => {
   });
 
   describe("GET /tracking/truck/:truckId (tous roles)", () => {
-    it("200 si role COMPANY", async () => {
+    it("200 si role EXPEDITEUR", async () => {
       (mockService.getLatestByTruck as jest.Mock).mockResolvedValue(mockPoint);
       const res = await request(app)
         .get("/tracking/truck/truck-1")
-        .set("x-user-role", "COMPANY");
+        .set("x-user-role", "EXPEDITEUR");
       expect(res.status).toBe(200);
     });
 
@@ -131,17 +131,17 @@ describe("TrackingController - RBAC", () => {
       (mockService.getLatestByTruck as jest.Mock).mockResolvedValue(null);
       const res = await request(app)
         .get("/tracking/truck/truck-inconnu")
-        .set("x-user-role", "COMPANY");
+        .set("x-user-role", "EXPEDITEUR");
       expect(res.status).toBe(404);
     });
   });
 
   describe("GET /tracking/truck/:truckId/history (tous roles)", () => {
-    it("200 si role COMPANY avec historique", async () => {
+    it("200 si role EXPEDITEUR avec historique", async () => {
       (mockService.getHistoryByTruck as jest.Mock).mockResolvedValue([mockPoint, mockPoint]);
       const res = await request(app)
         .get("/tracking/truck/truck-1/history")
-        .set("x-user-role", "COMPANY");
+        .set("x-user-role", "EXPEDITEUR");
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
     });

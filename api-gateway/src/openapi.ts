@@ -32,7 +32,7 @@ export const openApiSpec = {
         properties: {
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 8 },
-          role: { type: 'string', enum: ['COMPANY', 'TRANSPORTER'] },
+          role: { type: 'string', enum: ['EXPEDITEUR', 'TRANSPORTER'] },
           tenantId: { type: 'string' },
         },
       },
@@ -220,7 +220,7 @@ export const openApiSpec = {
       },
       post: {
         tags: ['Shipments'],
-        summary: 'Créer une expédition (COMPANY uniquement)',
+        summary: 'Créer une expédition (EXPEDITEUR uniquement)',
         requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateShipmentRequest' } } } },
         responses: {
           201: { description: 'Expédition créée', content: { 'application/json': { schema: { $ref: '#/components/schemas/Shipment' } } } },
@@ -257,7 +257,7 @@ export const openApiSpec = {
       },
       delete: {
         tags: ['Shipments'],
-        summary: 'Annuler une expédition (soft delete — COMPANY propriétaire)',
+        summary: 'Annuler une expédition (soft delete — EXPEDITEUR propriétaire)',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           200: { description: 'Expédition annulée', content: { 'application/json': { schema: { $ref: '#/components/schemas/Shipment' } } } },

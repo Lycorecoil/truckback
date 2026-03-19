@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Elimmekatruck — Workflow Complet",
-    "description": "Collection complète pour tester le workflow de bout en bout via Nginx → API Gateway.\n\nOrdre d'exécution :\n1. Auth — Inscription & Connexion (COMPANY, TRANSPORTER)\n2. Fleet — Camion, Chauffeur, Assignation\n3. Driver — Créer compte + Connexion\n4. Shipment — Créer → Accepter → Démarrer → Livrer\n5. Tracking — GPS temps réel\n6. Cas annulation\n7. Tests RBAC (403 attendus)\n8. Health Checks\n\nNOTE : companyId et transporterId sont injectés automatiquement depuis le JWT — ne pas les mettre dans les bodies.\nPoint d'entrée : Nginx port 80 → api-gateway-1/2 (least_conn load balancing)",
+    "description": "Collection complète pour tester le workflow de bout en bout via Nginx → API Gateway.\n\nOrdre d'exécution :\n1. Auth — Inscription & Connexion (EXPEDITEUR, TRANSPORTER)\n2. Fleet — Camion, Chauffeur, Assignation\n3. Driver — Créer compte + Connexion\n4. Shipment — Créer → Accepter → Démarrer → Livrer\n5. Tracking — GPS temps réel\n6. Cas annulation\n7. Tests RBAC (403 attendus)\n8. Health Checks\n\nNOTE : companyId et transporterId sont injectés automatiquement depuis le JWT — ne pas les mettre dans les bodies.\nPoint d'entrée : Nginx port 80 → api-gateway-1/2 (least_conn load balancing)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -23,7 +23,7 @@
       "name": "1. Auth — Inscription & Connexion",
       "item": [
         {
-          "name": "1.1 Inscription Expéditeur (COMPANY)",
+          "name": "1.1 Inscription Expéditeur (EXPEDITEUR)",
           "event": [
             {
               "listen": "test",
@@ -46,7 +46,7 @@
             "url": "{{baseUrl}}/auth/signup",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"COMPANY\",\n  \"tenantId\": \"company-tenant-001\"\n}"
+              "raw": "{\n  \"email\": \"expediteur@test.com\",\n  \"password\": \"motdepasse123\",\n  \"role\": \"EXPEDITEUR\",\n  \"tenantId\": \"company-tenant-001\"\n}"
             }
           }
         },
@@ -347,7 +347,7 @@
       "name": "4. Shipment — Workflow annonce",
       "item": [
         {
-          "name": "4.1 Créer une annonce (COMPANY)",
+          "name": "4.1 Créer une annonce (EXPEDITEUR)",
           "event": [
             {
               "listen": "test",
@@ -376,7 +376,7 @@
           }
         },
         {
-          "name": "4.2 Lister mes expéditions (COMPANY — isolation tenant)",
+          "name": "4.2 Lister mes expéditions (EXPEDITEUR — isolation tenant)",
           "event": [
             {
               "listen": "test",
@@ -543,7 +543,7 @@
       "name": "5. Tracking — Historique GPS",
       "item": [
         {
-          "name": "5.1 Dernière position du camion (COMPANY)",
+          "name": "5.1 Dernière position du camion (EXPEDITEUR)",
           "event": [
             {
               "listen": "test",
@@ -585,7 +585,7 @@
           }
         },
         {
-          "name": "5.3 Tous les points GPS de l'expédition (COMPANY)",
+          "name": "5.3 Tous les points GPS de l'expédition (EXPEDITEUR)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{companyToken}}" }],
@@ -593,7 +593,7 @@
           }
         },
         {
-          "name": "5.4 ⛔ RBAC — GPS POST par COMPANY (doit retourner 403)",
+          "name": "5.4 ⛔ RBAC — GPS POST par EXPEDITEUR (doit retourner 403)",
           "event": [
             {
               "listen": "test",
@@ -624,7 +624,7 @@
       "name": "6. Cas annulation",
       "item": [
         {
-          "name": "6.1 Créer une 2e annonce (COMPANY)",
+          "name": "6.1 Créer une 2e annonce (EXPEDITEUR)",
           "event": [
             {
               "listen": "test",
@@ -667,7 +667,7 @@
           }
         },
         {
-          "name": "6.3 Annuler l'expédition (COMPANY) → email auto au transporteur",
+          "name": "6.3 Annuler l'expédition (EXPEDITEUR) → email auto au transporteur",
           "event": [
             {
               "listen": "test",
@@ -710,7 +710,7 @@
       "name": "7. Tests RBAC (403 / 401 attendus)",
       "item": [
         {
-          "name": "7.1 ⛔ COMPANY crée un camion (doit retourner 403)",
+          "name": "7.1 ⛔ EXPEDITEUR crée un camion (doit retourner 403)",
           "event": [
             {
               "listen": "test",
@@ -735,7 +735,7 @@
           }
         },
         {
-          "name": "7.2 ⛔ COMPANY démarre une mission (doit retourner 403)",
+          "name": "7.2 ⛔ EXPEDITEUR démarre une mission (doit retourner 403)",
           "event": [
             {
               "listen": "test",

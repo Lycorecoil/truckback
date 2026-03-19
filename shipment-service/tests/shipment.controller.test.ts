@@ -60,14 +60,14 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
       expect(res.status).toBe(403);
     });
 
-    it("201 COMPANY - companyId injecte depuis x-user-id, pas depuis le body", async () => {
+    it("201 EXPEDITEUR - companyId injecte depuis x-user-id, pas depuis le body", async () => {
       (mockService.createOne as jest.Mock).mockResolvedValue({
         success: true,
         data: { ...mockShipment, companyId: "company-from-jwt" },
       });
       const res = await request(app)
         .post("/shipments")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-from-jwt")
         .send({
           marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",
@@ -83,10 +83,10 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
   });
 
   describe("POST /shipments/:id/accept", () => {
-    it("403 si role COMPANY", async () => {
+    it("403 si role EXPEDITEUR", async () => {
       const res = await request(app)
         .post("/shipments/s-uuid-1/accept")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1")
         .send({ truckId: "t1", driverId: "d1" });
       expect(res.status).toBe(403);
@@ -117,10 +117,10 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
   });
 
   describe("POST /shipments/:id/start", () => {
-    it("403 si role COMPANY", async () => {
+    it("403 si role EXPEDITEUR", async () => {
       const res = await request(app)
         .post("/shipments/s-uuid-1/start")
-        .set("x-user-role", "COMPANY");
+        .set("x-user-role", "EXPEDITEUR");
       expect(res.status).toBe(403);
     });
 
@@ -176,23 +176,23 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
       expect(res.status).toBe(403);
     });
 
-    it("200 si role COMPANY", async () => {
+    it("200 si role EXPEDITEUR", async () => {
       (mockService.getById as jest.Mock).mockResolvedValue({ ...mockShipment, companyId: "company-1" });
       (mockService.cancelShipment as jest.Mock).mockResolvedValue({ ...mockShipment, statut: "CANCELLED" });
       const res = await request(app)
         .delete("/shipments/s-uuid-1")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1");
       expect(res.status).toBe(200);
     });
   });
 
   describe("GET /shipments - isolation automatique", () => {
-    it("COMPANY voit uniquement ses expeditions (findByCompanyId avec x-user-id)", async () => {
+    it("EXPEDITEUR voit uniquement ses expeditions (findByCompanyId avec x-user-id)", async () => {
       (mockService.findByCompanyId as jest.Mock).mockResolvedValue([mockShipment]);
       const res = await request(app)
         .get("/shipments")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-jwt");
       expect(res.status).toBe(200);
       expect(mockService.findByCompanyId).toHaveBeenCalledWith("company-jwt");
@@ -211,10 +211,10 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
   });
 
   describe("PUT /shipments/:id - ADMIN seulement", () => {
-    it("403 si role COMPANY", async () => {
+    it("403 si role EXPEDITEUR", async () => {
       const res = await request(app)
         .put("/shipments/s-uuid-1")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .send({ poids: 9999 });
       expect(res.status).toBe(403);
     });
@@ -231,10 +231,10 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
 
   // ─── Validation des entrées ───
   describe("POST /shipments — validation des champs requis", () => {
-    it("400 si champs requis manquants (COMPANY)", async () => {
+    it("400 si champs requis manquants (EXPEDITEUR)", async () => {
       const res = await request(app)
         .post("/shipments")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1")
         .send({ poids: 5000 }); // marchandise, villeDepart, etc. manquants
       expect(res.status).toBe(400);
@@ -244,7 +244,7 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
     it("400 si poids invalide (négatif)", async () => {
       const res = await request(app)
         .post("/shipments")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1")
         .send({
           marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",
@@ -256,13 +256,13 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
       expect(res.body.error).toMatch(/poids/);
     });
 
-    it("201 COMPANY avec tous les champs valides", async () => {
+    it("201 EXPEDITEUR avec tous les champs valides", async () => {
       (mockService.createOne as jest.Mock).mockResolvedValue({
         success: true, data: { ...mockShipment, companyId: "company-1" },
       });
       const res = await request(app)
         .post("/shipments")
-        .set("x-user-role", "COMPANY")
+        .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-1")
         .send({
           marchandise: "Ciment", villeDepart: "Douala", paysDepart: "Cameroun",

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { DriverService } from "./driver.service";
 
-type Role = "ADMIN" | "TRANSPORTER" | "COMPANY" | "DRIVER";
+type Role = "ADMIN" | "TRANSPORTER" | "EXPEDITEUR" | "DRIVER";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
