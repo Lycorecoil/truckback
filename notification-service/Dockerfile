@@ -5,6 +5,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN npm prune --production
 
 # Production stage
 FROM node:22-alpine AS runner
@@ -25,8 +26,8 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
-RUN npm ci --omit=dev
 
 # Dossier de session WhatsApp (persisté via volume Docker)
 RUN mkdir -p .wwebjs_auth/session && chown -R appuser:appgroup /app
