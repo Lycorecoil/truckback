@@ -8,6 +8,7 @@ RUN npm run build
 
 # Production stage
 FROM node:20-alpine AS runner
+RUN apk update && apk upgrade --no-cache
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 

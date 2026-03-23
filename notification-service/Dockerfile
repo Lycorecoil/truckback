@@ -9,8 +9,8 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine AS runner
 
-# Chromium requis par whatsapp-web.js (Puppeteer)
-RUN apk add --no-cache \
+# Mise à jour des packages OS + Chromium requis par whatsapp-web.js (Puppeteer)
+RUN apk update && apk upgrade --no-cache && apk add --no-cache \
       chromium \
       nss \
       freetype \
