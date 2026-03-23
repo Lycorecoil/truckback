@@ -13,8 +13,8 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
+RUN npm ci --omit=dev
 
 USER appuser
 ENV NODE_ENV=production

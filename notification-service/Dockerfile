@@ -25,8 +25,8 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
+RUN npm ci --omit=dev
 
 # Dossier de session WhatsApp (persisté via volume Docker)
 RUN mkdir -p .wwebjs_auth/session && chown -R appuser:appgroup /app
