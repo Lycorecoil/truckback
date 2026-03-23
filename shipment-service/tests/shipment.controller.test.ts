@@ -188,25 +188,29 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
   });
 
   describe("GET /shipments - isolation automatique", () => {
-    it("EXPEDITEUR voit uniquement ses expeditions (findByCompanyId avec x-user-id)", async () => {
+    it("EXPEDITEUR voit ses expeditions + les PENDING (findByCompanyId + findByStatut)", async () => {
       (mockService.findByCompanyId as jest.Mock).mockResolvedValue([mockShipment]);
+      (mockService.findByStatut as jest.Mock).mockResolvedValue([]);
       const res = await request(app)
         .get("/shipments")
         .set("x-user-role", "EXPEDITEUR")
         .set("x-user-id", "company-jwt");
       expect(res.status).toBe(200);
       expect(mockService.findByCompanyId).toHaveBeenCalledWith("company-jwt");
+      expect(mockService.findByStatut).toHaveBeenCalledWith("PENDING");
       expect(mockService.getAll).not.toHaveBeenCalled();
     });
 
-    it("TRANSPORTER voit uniquement ses missions (findByTransporterId avec x-user-id)", async () => {
+    it("TRANSPORTER voit ses missions + les PENDING (findByTransporterId + findByStatut)", async () => {
       (mockService.findByTransporterId as jest.Mock).mockResolvedValue([]);
+      (mockService.findByStatut as jest.Mock).mockResolvedValue([mockShipment]);
       const res = await request(app)
         .get("/shipments")
         .set("x-user-role", "TRANSPORTER")
         .set("x-user-id", "trans-jwt");
       expect(res.status).toBe(200);
       expect(mockService.findByTransporterId).toHaveBeenCalledWith("trans-jwt");
+      expect(mockService.findByStatut).toHaveBeenCalledWith("PENDING");
     });
   });
 
@@ -276,14 +280,16 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
 
   // ─── DRIVER isolation ───
   describe("GET /shipments — DRIVER voit uniquement ses expéditions", () => {
-    it("DRIVER voit uniquement ses missions (findByDriverId avec x-user-id)", async () => {
+    it("DRIVER voit ses missions + les PENDING (findByDriverId + findByStatut)", async () => {
       (mockService.findByDriverId as jest.Mock).mockResolvedValue([mockShipment]);
+      (mockService.findByStatut as jest.Mock).mockResolvedValue([]);
       const res = await request(app)
         .get("/shipments")
         .set("x-user-role", "DRIVER")
         .set("x-user-id", "driver-jwt");
       expect(res.status).toBe(200);
       expect(mockService.findByDriverId).toHaveBeenCalledWith("driver-jwt");
+      expect(mockService.findByStatut).toHaveBeenCalledWith("PENDING");
       expect(mockService.getAll).not.toHaveBeenCalled();
       expect(mockService.findByCompanyId).not.toHaveBeenCalled();
     });

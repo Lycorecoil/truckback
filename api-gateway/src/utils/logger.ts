@@ -10,7 +10,7 @@ export const logger = pino({
     level(label) { return { level: label }; },
   },
   // En dev : sortie lisible. En prod : JSON pur pour l'agrégateur.
-  transport: process.env["NODE_ENV"] !== "production"
+  transport: process.env["NODE_ENV"] !== "production" && process.env["NODE_ENV"] !== "test"
     ? { target: "pino-pretty", options: { colorize: true, translateTime: "SYS:standard" } }
     : undefined,
 });

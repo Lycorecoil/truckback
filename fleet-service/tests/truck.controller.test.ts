@@ -71,7 +71,7 @@ describe("TruckController — RBAC & tenant isolation", () => {
         success: true, data: { id: "uuid-1", tenantId: "tenant-jwt", immatriculation: "AB-001" },
       });
       const validTruck = {
-        immatriculation: "AB-001", marque: "Mercedes", modele: "Actros",
+        immatriculation: "AB-001", chassis: "VIN1234567890ABC", marque: "Mercedes", modele: "Actros",
         typeVehicule: "BENNE", villeBase: "Cotonou", paysBase: "Benin",
         capaciteMax: 15000, tenantId: "tenant-forged", // tentative de forge
       };
@@ -94,7 +94,7 @@ describe("TruckController — RBAC & tenant isolation", () => {
         .set("x-user-role", "ADMIN")
         .set("x-tenant-id", "tenant-admin")
         .send({
-          immatriculation: "AB-002", marque: "Volvo", modele: "FH16",
+          immatriculation: "AB-002", chassis: "VIN0987654321XYZ", marque: "Volvo", modele: "FH16",
           typeVehicule: "BENNE", villeBase: "Douala", paysBase: "Cameroun",
           capaciteMax: 20000, tenantId: "tenant-1",
         });
