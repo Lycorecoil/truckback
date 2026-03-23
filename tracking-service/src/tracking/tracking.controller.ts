@@ -7,8 +7,8 @@ function getHeader(req: import("express").Request, name: string): string {
 }
 
 const TrackingPointSchema = z.object({
-  truckId:    z.string().min(1, "truckId est requis"),
-  shipmentId: z.string().min(1, "shipmentId est requis"),
+  truckId:    z.string({ required_error: "truckId est requis" }).min(1, "truckId est requis"),
+  shipmentId: z.string({ required_error: "shipmentId est requis" }).min(1, "shipmentId est requis"),
   latitude:   z.number({ invalid_type_error: "latitude doit être un nombre" }).min(-90).max(90),
   longitude:  z.number({ invalid_type_error: "longitude doit être un nombre" }).min(-180).max(180),
   vitesse:    z.number().nonnegative().optional(),
