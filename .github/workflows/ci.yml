@@ -167,7 +167,6 @@ jobs:
   trivy:
     name: Trivy scan — ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: [docker-build]
 
     strategy:
       fail-fast: false
