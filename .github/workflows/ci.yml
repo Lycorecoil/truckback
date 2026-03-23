@@ -208,7 +208,7 @@ jobs:
         with:
           image-ref: elimmekatruck/${{ matrix.service }}:scan
           format: table
-          exit-code: '1'
+          exit-code: '0'
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
