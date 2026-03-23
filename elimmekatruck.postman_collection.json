@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "elimmekatruck-v1",
     "name": "Elimmekatruck — Camion Uber API",
-    "description": "Collection organisée par rôle.\n\n**Flux de test recommandé :**\n1. 🔐 Auth → Signup Company\n2. 🔐 Auth → Signup Transporter\n3. 🔐 Auth → Login Company (token auto-sauvegardé → token_company)\n4. 🔐 Auth → Login Transporter (token auto-sauvegardé → token_transporter)\n5. 🏢 EXPEDITEUR → Créer une entreprise\n6. 🚛 TRANSPORTER → Créer un profil transporteur\n7. 🚛 TRANSPORTER → Créer un camion\n8. 🏢 EXPEDITEUR → Créer une expédition\n9. 🚛 TRANSPORTER → Accepter une expédition\n10. 🚗 DRIVER → Démarrer une mission\n11. 🚗 DRIVER → Envoyer position GPS\n12. 🚗 DRIVER → Livrer une mission\n\n**Variables auto-remplies par les scripts Tests :**\n`token_company`, `token_transporter`, `token_driver`, `truck_id`, `driver_id`, `shipment_id`, `company_id`",
+    "description": "Collection organisée par rôle.\n\n**Flux de test recommandé :**\n1. 🔐 Auth → Signup Company\n2. 🔐 Auth → Signup Transporter\n3. 🔐 Auth → Login Company (token auto-sauvegardé → token_expediteur)\n4. 🔐 Auth → Login Transporter (token auto-sauvegardé → token_transporter)\n5. 🏢 EXPEDITEUR → Créer une entreprise\n6. 🚛 TRANSPORTER → Créer un profil transporteur\n7. 🚛 TRANSPORTER → Créer un camion\n8. 🏢 EXPEDITEUR → Créer une expédition\n9. 🚛 TRANSPORTER → Accepter une expédition\n10. 🚗 DRIVER → Démarrer une mission\n11. 🚗 DRIVER → Envoyer position GPS\n12. 🚗 DRIVER → Livrer une mission\n\n**Variables auto-remplies par les scripts Tests :**\n`token_expediteur`, `token_transporter`, `token_driver`, `truck_id`, `driver_id`, `shipment_id`, `expediteur_id`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,7 +17,7 @@
       "type": "secret"
     },
     {
-      "key": "token_company",
+      "key": "token_expediteur",
       "value": "",
       "type": "secret"
     },
@@ -37,7 +37,7 @@
       "type": "secret"
     },
     {
-      "key": "refresh_token_company",
+      "key": "refresh_token_expediteur",
       "value": "",
       "type": "secret"
     },
@@ -57,7 +57,7 @@
       "type": "default"
     },
     {
-      "key": "company_id",
+      "key": "expediteur_id",
       "value": "",
       "type": "default"
     },
@@ -92,7 +92,7 @@
       "name": "🔐 Auth (no token required)",
       "item": [
         {
-          "name": "Signup — Company",
+          "name": "Signup — Expéditeur",
           "event": [
             {
               "listen": "test",
@@ -102,7 +102,7 @@
                   "const res = pm.response.json();",
                   "if (res.id) pm.collectionVariables.set('company_user_id', res.id);",
                   "if (res.token) {",
-                  "  pm.collectionVariables.set('token_company', res.token);",
+                  "  pm.collectionVariables.set('token_expediteur', res.token);",
                   "  pm.collectionVariables.set('token', res.token);",
                   "}"
                 ],
@@ -176,7 +176,7 @@
           }
         },
         {
-          "name": "Login — Company ⭐",
+          "name": "Login — Expéditeur ⭐",
           "event": [
             {
               "listen": "test",
@@ -185,9 +185,9 @@
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "pm.test('Token présent', () => pm.expect(pm.response.json()).to.have.property('token'));",
                   "const res = pm.response.json();",
-                  "pm.collectionVariables.set('token_company', res.token);",
+                  "pm.collectionVariables.set('token_expediteur', res.token);",
                   "pm.collectionVariables.set('token', res.token);",
-                  "if (res.refreshToken) pm.collectionVariables.set('refresh_token_company', res.refreshToken);",
+                  "if (res.refreshToken) pm.collectionVariables.set('refresh_token_expediteur', res.refreshToken);",
                   "console.log('Token Company sauvegardé ✓');"
                 ],
                 "type": "text/javascript"
@@ -389,7 +389,7 @@
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
                   "const res = pm.response.json();",
-                  "const companyId = (res.data && res.data.id) || res.id; if (companyId) { pm.collectionVariables.set('company_id', companyId); console.log('company_id sauvegardé:', companyId); }"
+                  "const companyId = (res.data && res.data.id) || res.id; if (companyId) { pm.collectionVariables.set('expediteur_id', companyId); console.log('expediteur_id sauvegardé:', companyId); }"
                 ],
                 "type": "text/javascript"
               }
@@ -404,7 +404,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
@@ -432,12 +432,12 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/company/company/{{company_id}}",
+              "raw": "{{base_url}}/v1/company/company/{{expediteur_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -445,7 +445,7 @@
                 "v1",
                 "company",
                 "company",
-                "{{company_id}}"
+                "{{expediteur_id}}"
               ]
             }
           }
@@ -461,7 +461,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
@@ -470,7 +470,7 @@
               "raw": "{\n  \"ville\": \"Porto-Novo\",\n  \"telephone\": \"+22901020399\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/v1/company/company/{{company_id}}",
+              "raw": "{{base_url}}/v1/company/company/{{expediteur_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -478,7 +478,7 @@
                 "v1",
                 "company",
                 "company",
-                "{{company_id}}"
+                "{{expediteur_id}}"
               ]
             }
           }
@@ -508,7 +508,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
@@ -536,7 +536,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
@@ -564,32 +564,7 @@
           }
         },
         {
-          "name": "Obtenir une expédition par ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token_company}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "v1",
-                "shipments",
-                "shipments",
-                "{{shipment_id}}"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Annuler une expédition (Company)",
+          "name": "Annuler une expédition (Expéditeur)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -599,7 +574,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
@@ -622,18 +597,18 @@
           }
         },
         {
-          "name": "Rechercher camions disponibles ⭐",
+          "name": "⛔ 403 — Voir détail expédition (interdit à Expéditeur)",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token_company}}",
+                "value": "Bearer {{token_expediteur}}",
                 "type": "text"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/shipments/shipments/search?poids=10000&villeDepart=Cotonou&paysDepart=Bénin",
+              "raw": "{{base_url}}/v1/shipments/shipments/{{shipment_id}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -641,21 +616,32 @@
                 "v1",
                 "shipments",
                 "shipments",
-                "search"
+                "{{shipment_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "⛔ 403 — Rechercher camions (interdit à Expéditeur)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_expediteur}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks/match?poids=5000&villeDepart=Cotonou&paysDepart=Bénin",
+              "host": [
+                "{{base_url}}"
               ],
-              "query": [
-                {
-                  "key": "poids",
-                  "value": "10000"
-                },
-                {
-                  "key": "villeDepart",
-                  "value": "Cotonou"
-                },
-                {
-                  "key": "paysDepart",
-                  "value": "Bénin"
-                }
+              "path": [
+                "v1",
+                "fleet",
+                "trucks",
+                "match"
               ]
             }
           }
@@ -1083,6 +1069,31 @@
               ]
             }
           }
+        },
+        {
+          "name": "Rechercher camions disponibles ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_transporter}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/fleet/trucks/match?poids=5000&villeDepart=Cotonou&paysDepart=Bénin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "fleet",
+                "trucks",
+                "match"
+              ]
+            }
+          }
         }
       ]
     },
@@ -1486,7 +1497,7 @@
           }
         },
         {
-          "name": "Company Service — Health (direct)",
+          "name": "Expéditeur Service — Health (direct)",
           "request": {
             "method": "GET",
             "header": [],
