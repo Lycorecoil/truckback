@@ -9,19 +9,19 @@ function getHeader(req: import("express").Request, name: string): string {
 }
 
 const TruckCreateSchema = z.object({
-  immatriculation: z.string().min(1, "immatriculation est requise"),
-  chassis:         z.string().min(1, "chassis est requis"),
-  marque:          z.string().min(1, "marque est requise"),
-  modele:          z.string().min(1, "modele est requis"),
-  typeVehicule:    z.string().min(1, "typeVehicule est requis"),
+  immatriculation: z.string({ required_error: "immatriculation est requise" }).min(1, "immatriculation est requise"),
+  chassis:         z.string({ required_error: "chassis est requis" }).min(1, "chassis est requis"),
+  marque:          z.string({ required_error: "marque est requise" }).min(1, "marque est requise"),
+  modele:          z.string({ required_error: "modele est requis" }).min(1, "modele est requis"),
+  typeVehicule:    z.string({ required_error: "typeVehicule est requis" }).min(1, "typeVehicule est requis"),
   carrosserie:     z.string().optional(),
   gabarit:         z.string().optional(),
-  capaciteMax:     z.number({ invalid_type_error: "capaciteMax doit être un nombre" }).positive("capaciteMax doit être un nombre positif"),
+  capaciteMax:     z.number({ required_error: "capaciteMax est requis", invalid_type_error: "capaciteMax doit être un nombre" }).positive("capaciteMax doit être un nombre positif"),
   photoUrl:        z.string().url().optional(),
   statut:          z.enum(["AVAILABLE", "BUSY", "MAINTENANCE"]).optional(),
   driverId:        z.string().optional(),
-  villeBase:       z.string().min(1, "villeBase est requise"),
-  paysBase:        z.string().min(1, "paysBase est requis"),
+  villeBase:       z.string({ required_error: "villeBase est requise" }).min(1, "villeBase est requise"),
+  paysBase:        z.string({ required_error: "paysBase est requis" }).min(1, "paysBase est requis"),
   tenantId:        z.string().optional(),
 });
 
