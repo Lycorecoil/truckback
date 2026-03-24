@@ -13,6 +13,7 @@ import { openApiSpec } from './openapi';
 
 export function createApp(redisClient?: RedisClientType): Application {
   const app = express();
+  app.set('trust proxy', true); // respect X-Forwarded-For for rate limiting per-IP
 
   const allowedOrigins = process.env['ALLOWED_ORIGINS']?.split(',') ?? ['http://localhost:3000'];
 

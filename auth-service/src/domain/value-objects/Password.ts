@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = parseInt(process.env['BCRYPT_ROUNDS'] ?? '12', 10);
 const MIN_LENGTH = 8;
 
 export class Password {

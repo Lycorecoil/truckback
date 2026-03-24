@@ -14,6 +14,8 @@ x-gateway-env: &gateway-env
   TRACKING_SERVICE_URL: http://tracking-service:3004
   NOTIFICATION_SERVICE_URL: http://notification-service:3005
   OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+  RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+  RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-2000}
 
 x-gateway-depends: &gateway-depends
   auth-service:
@@ -56,7 +58,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.00"
+          cpus: "2.00"
           memory: 512M
     restart: unless-stopped
     command: ["--replSet", "rs0", "--bind_ip_all", "--keyFile", "/keyfile/mongo.key"]
@@ -243,8 +245,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.50"
-          memory: 384M
+          cpus: "2.00"
+          memory: 512M
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -260,6 +262,9 @@ services:
       REDIS_URL: redis://redis:6379
       NOTIFICATION_SERVICE_URL: http://notification-service:3005
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-20}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      UV_THREADPOOL_SIZE: "4"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -280,7 +285,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
+          cpus: "0.75"
           memory: 256M
     restart: unless-stopped
     ports:
@@ -291,6 +296,7 @@ services:
       SERVICE_NAME: company-service
       MONGO_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/company-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -309,7 +315,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
+          cpus: "0.75"
           memory: 256M
     restart: unless-stopped
     ports:
@@ -321,6 +327,7 @@ services:
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/fleet-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       REDIS_URL: redis://redis:6379
+      INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -356,6 +363,7 @@ services:
       COMPANY_SERVICE_URL: http://company-service:3001
       FALLBACK_EMAIL: ${FALLBACK_EMAIL:-ilboudojeanbaptiste41@gmail.com}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
     depends_on:
       fleet-service:
         condition: service_healthy
@@ -387,6 +395,7 @@ services:
       SERVICE_NAME: tracking-service
       MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD}@mongodb:27017/tracking-service?authSource=admin&replicaSet=rs0&serverSelectionTimeoutMS=5000
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -487,7 +496,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.50"
+          cpus: "1.00"
           memory: 256M
     restart: unless-stopped
     environment:
@@ -507,7 +516,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.50"
+          cpus: "1.00"
           memory: 256M
     restart: unless-stopped
     environment:

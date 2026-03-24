@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 /** Rate limiter par défaut pour les services internes (moins strict que le gateway). */
 export const internalRateLimiter = rateLimit({
   windowMs: 60_000,   // 1 minute
-  max: 300,           // 300 req/min par IP
+  max: parseInt(process.env["INTERNAL_RATE_LIMIT_MAX"] ?? "300", 10),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Trop de requêtes, réessayez dans une minute." },

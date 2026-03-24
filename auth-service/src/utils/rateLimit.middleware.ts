@@ -11,8 +11,8 @@ export const internalRateLimiter = rateLimit({
 
 /** Rate limiter strict pour les endpoints d'authentification. */
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60_000, // 15 minutes
-  max: 20,               // 20 tentatives max
+  windowMs: 15 * 60_000,
+  max: parseInt(process.env['AUTH_RATE_LIMIT_MAX'] ?? '20', 10),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Trop de tentatives de connexion, réessayez dans 15 minutes." },

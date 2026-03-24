@@ -2,6 +2,7 @@ import { MongoUserRepository } from '../repositories/MongoUserRepository';
 import { MongoRevokedTokenRepository } from '../repositories/MongoRevokedTokenRepository';
 import { NotificationClient } from '../clients/NotificationClient';
 import { JwtService } from '../services/JwtService';
+import { getRedisConnection } from '../queue/redisConnection';
 import { SignUpUseCase } from '../../application/use-cases/SignUpUseCase';
 import { LoginUseCase } from '../../application/use-cases/LoginUseCase';
 import { CreateDriverUseCase } from '../../application/use-cases/CreateDriverUseCase';
@@ -29,9 +30,11 @@ const jwtService = new JwtService(
   process.env['JWT_EXPIRES_IN'] ?? '1h',
 );
 
+const redisCache = process.env['REDIS_URL'] ? getRedisConnection() : undefined;
+
 export const container = {
   signUpUseCase:      new SignUpUseCase(userRepository, jwtService),
-  loginUseCase:       new LoginUseCase(userRepository, jwtService),
+  loginUseCase:       new LoginUseCase(userRepository, jwtService, redisCache),
   createDriverUseCase: new CreateDriverUseCase(userRepository, notificationClient),
   logoutUseCase:      new LogoutUseCase(revokedTokenRepository, jwtService),
   resetPasswordUseCase: new ResetPasswordUseCase(userRepository, jwtService, notificationClient),
