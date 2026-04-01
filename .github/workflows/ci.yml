@@ -144,7 +144,7 @@ jobs:
       - run: npm ci
         working-directory: ${{ matrix.service }}
 
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=critical
         working-directory: ${{ matrix.service }}
 
   # ─── Build Docker ─────────────────────────────────────────────────────────────

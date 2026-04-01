@@ -28,6 +28,7 @@ const mockRepo = {
   findByTenantId: jest.fn(),
   findAvailable: jest.fn(),
   findMatching: jest.fn(),
+  findByDriverId: jest.fn(),
 } as unknown as TruckRepository;
 
 const service = new TruckService(mockRepo);
@@ -72,21 +73,32 @@ describe("TruckService", () => {
     expect(result[0]?.villeBase).toBe("Cotonou");
   });
 
-  it("assignDriver met a jour le driverId et le statut BUSY", async () => {
-    const updated = { ...mockTruck, driverId: "driver-1", statut: "BUSY" as const };
+  it("assignDriver met a jour le driverId du camion", async () => {
+    const updated = { ...mockTruck, driverId: "driver-1" };
+    (mockRepo.findByDriverId as jest.Mock).mockResolvedValue(null); // driver pas encore assigné
+    (mockRepo.findById as jest.Mock).mockResolvedValue(mockTruck);  // camion sans driver
     (mockRepo.update as jest.Mock).mockResolvedValue(updated);
     const result = await service.assignDriver("uuid-1", "driver-1");
-    expect(result.statut).toBe("BUSY");
     expect(result.driverId).toBe("driver-1");
-    expect(mockRepo.update).toHaveBeenCalledWith("uuid-1", { driverId: "driver-1", statut: "BUSY" });
+    expect(mockRepo.update).toHaveBeenCalledWith("uuid-1", { driverId: "driver-1" });
   });
 
-  it("unassignDriver remet le statut AVAILABLE", async () => {
-    const updated = { ...mockTruck, driverId: undefined, statut: "AVAILABLE" as const };
+  it("assignDriver leve 409 si le chauffeur est deja assigne a un autre camion", async () => {
+    (mockRepo.findByDriverId as jest.Mock).mockResolvedValue({ ...mockTruck, id: "autre-camion" });
+    await expect(service.assignDriver("uuid-1", "driver-1")).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("unassignDriver retire le driverId du camion", async () => {
+    const updated = { ...mockTruck, driverId: undefined };
+    (mockRepo.findById as jest.Mock).mockResolvedValue(mockTruck); // statut AVAILABLE → ok
     (mockRepo.update as jest.Mock).mockResolvedValue(updated);
     const result = await service.unassignDriver("uuid-1");
-    expect(result.statut).toBe("AVAILABLE");
     expect(result.driverId).toBeUndefined();
+  });
+
+  it("unassignDriver leve 409 si le camion est en mission", async () => {
+    (mockRepo.findById as jest.Mock).mockResolvedValue({ ...mockTruck, statut: "BUSY" as const });
+    await expect(service.unassignDriver("uuid-1")).rejects.toMatchObject({ statusCode: 409 });
   });
 
   it("updateOne (soft delete) passe le statut MAINTENANCE", async () => {
