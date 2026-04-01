@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Compléter mon profil | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f5f7fb; }
+
+    .onboarding-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 16px 60px;
+    }
+
+    .onboarding-header { text-align: center; margin-bottom: 36px; }
+    .onboarding-header .brand { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
+    .onboarding-header .subtitle { color: #6c757d; margin-top: 4px; font-size: 0.95rem; }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      gap: 0;
+      width: 100%;
+      max-width: 540px;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: calc(50% + 20px);
+      right: calc(-50% + 20px);
+      height: 2px;
+      background: #dee2e6;
+      transition: background .4s;
+      z-index: 0;
+    }
+    .step-item.done:not(:last-child)::after { background: #3b7ddd; }
+
+    .step-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem;
+      background: #e9ecef; color: #6c757d;
+      border: 2px solid #dee2e6;
+      transition: all .3s;
+      position: relative; z-index: 1;
+    }
+    .step-item.active .step-circle {
+      background: #3b7ddd; color: #fff;
+      border-color: #3b7ddd;
+      box-shadow: 0 0 0 4px rgba(59,125,221,0.2);
+    }
+    .step-item.done .step-circle {
+      background: #28a745; color: #fff;
+      border-color: #28a745;
+    }
+    .step-item.done .step-circle::after { content: '✓'; }
+    .step-item.done .step-num { display: none; }
+    .step-label {
+      margin-top: 8px; font-size: 0.72rem;
+      font-weight: 600; color: #6c757d;
+      text-align: center; white-space: nowrap;
+    }
+    .step-item.active .step-label { color: #3b7ddd; }
+    .step-item.done  .step-label { color: #28a745; }
+
+    /* Card step */
+    .step-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+      padding: 36px 40px;
+      width: 100%; max-width: 580px;
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+    .step-card-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+    }
+    .step-card-icon.blue  { background: rgba(59,125,221,0.12); }
+    .step-card-icon.green { background: rgba(40,167,69,0.12); }
+    .step-card-icon.purple{ background: rgba(111,66,193,0.12); }
+
+    .step-card h4 { font-weight: 700; margin-bottom: 4px; }
+    .step-card .desc { color: #6c757d; font-size: 0.875rem; margin-bottom: 28px; }
+
+    .form-label { font-weight: 500; font-size: 0.83rem; color: #495057; margin-bottom: 4px; }
+    .form-control, .form-select {
+      border-radius: 10px; border: 1.5px solid #e0e0e0;
+      padding: 10px 14px; font-size: 0.9rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #3b7ddd;
+      box-shadow: 0 0 0 3px rgba(59,125,221,0.15);
+    }
+    .form-control.is-invalid { border-color: #dc3545; }
+
+    .input-hint { font-size: 0.75rem; color: #adb5bd; margin-top: 3px; }
+
+    .btn-next {
+      background: #3b7ddd; color: #fff;
+      border: none; border-radius: 10px;
+      padding: 12px 32px; font-weight: 600;
+      font-size: 0.95rem; width: 100%;
+      transition: background .2s, transform .1s;
+    }
+    .btn-next:hover { background: #2f6abf; transform: translateY(-1px); }
+    .btn-next:active { transform: none; }
+
+    .btn-back {
+      background: transparent; color: #6c757d;
+      border: none; font-size: 0.875rem;
+      padding: 8px 0; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-back:hover { color: #343a40; }
+
+    .btn-finish {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 14px 32px; font-weight: 700;
+      font-size: 1rem; width: 100%;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-finish:hover { opacity: .92; transform: translateY(-1px); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) {
+      .field-row { grid-template-columns: 1fr; }
+      .step-card { padding: 24px 20px; }
+    }
+
+    .alert { border-radius: 10px; font-size: 0.875rem; }
+
+    /* Badge rôle */
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(59,125,221,0.1); color: #3b7ddd;
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="onboarding-wrap">
+
+  <!-- Header -->
+  <div class="onboarding-header">
+    <div class="brand">🚛 Elimmekatruck</div>
+    <div class="subtitle">Configurez votre espace en quelques minutes</div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper" id="stepper">
+    <div class="step-item active" id="si-1">
+      <div class="step-circle"><span class="step-num">1</span></div>
+      <div class="step-label">Entreprise</div>
+    </div>
+    <div class="step-item" id="si-2">
+      <div class="step-circle"><span class="step-num">2</span></div>
+      <div class="step-label">Coordonnées</div>
+    </div>
+    <div class="step-item" id="si-3">
+      <div class="step-circle"><span class="step-num">3</span></div>
+      <div class="step-label">Représentant</div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:580px">
+    <div id="alert-container" class="mb-3"></div>
+  </div>
+
+  <form id="form-onboarding" style="width:100%;max-width:580px">
+
+    <!-- ── ÉTAPE 1 ── -->
+    <div class="step-card" id="step-1">
+      <div class="step-card-icon blue">📋</div>
+      <h4>Informations légales</h4>
+      <p class="desc">Ces informations permettent d'identifier officiellement votre entreprise sur la plateforme.</p>
+
+      <div id="role-badge-wrap"></div>
+
+      <div class="mb-3">
+        <label class="form-label" for="raisonSociale">Raison sociale *</label>
+        <input id="raisonSociale" class="form-control" placeholder="Ma Société SARL" required />
+      </div>
+
+      <div class="field-row mb-3">
+        <div>
+          <label class="form-label" for="formeJuridique">Forme juridique *</label>
+          <select id="formeJuridique" class="form-select" required>
+            <option value="">Choisir</option>
+            <option>SARL</option><option>SA</option><option>SAS</option>
+            <option>EI</option><option>EURL</option><option>GIE</option><option>Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="secteurActivite">Secteur d'activité *</label>
+          <select id="secteurActivite" class="form-select" required>
+            <option value="">Choisir</option>
+            <option>Transport & Logistique</option><option>Agriculture</option>
+            <option>BTP</option><option>Commerce</option><option>Industrie</option>
+            <option>Mines & Carrières</option><option>Pétrole & Gaz</option><option>Autre</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row mb-4">
+        <div>
+          <label class="form-label" for="rccm">N° RCCM *</label>
+          <input id="rccm" class="form-control" placeholder="BF-OUA-2024-B-1234" required />
+          <div class="input-hint">Registre du Commerce</div>
+        </div>
+        <div>
+          <label class="form-label" for="ifu">N° IFU *</label>
+          <input id="ifu" class="form-control" placeholder="00012345678" required />
+          <div class="input-hint">Identifiant Fiscal Unique</div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-next" onclick="goStep(2)">
+        Continuer <span style="margin-left:4px">→</span>
+      </button>
+    </div>
+
+    <!-- ── ÉTAPE 2 ── -->
+    <div class="step-card d-none" id="step-2">
+      <div class="step-card-icon green">📍</div>
+      <h4>Localisation & Contact</h4>
+      <p class="desc">Comment peut-on joindre votre entreprise et où êtes-vous basés ?</p>
+
+      <div class="field-row mb-3">
+        <div>
+          <label class="form-label" for="pays">Pays *</label>
+          <select id="pays" class="form-select" required>
+            <option value="">Choisir</option>
+            <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
+            <option>Niger</option><option>Ghana</option><option>Togo</option>
+            <option>Bénin</option><option>Sénégal</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="ville">Ville *</label>
+          <input id="ville" class="form-control" placeholder="Ouagadougou" required />
+        </div>
+      </div>
+
+      <div class="field-row mb-3">
+        <div>
+          <label class="form-label" for="email">Email entreprise *</label>
+          <input id="email" type="email" class="form-control" placeholder="contact@societe.com" required />
+        </div>
+        <div>
+          <label class="form-label" for="telephone">Téléphone *</label>
+          <input id="telephone" class="form-control" placeholder="+226 70 00 00 00" required />
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="boitePostale">Boîte postale <span class="text-muted fw-normal">(optionnel)</span></label>
+        <input id="boitePostale" class="form-control" placeholder="BP 1234" />
+      </div>
+
+      <button type="button" class="btn-next" onclick="goStep(3)">
+        Continuer <span style="margin-left:4px">→</span>
+      </button>
+      <div class="text-center mt-3">
+        <a class="btn-back" onclick="goStep(1)">← Retour</a>
+      </div>
+    </div>
+
+    <!-- ── ÉTAPE 3 ── -->
+    <div class="step-card d-none" id="step-3">
+      <div class="step-card-icon purple">👤</div>
+      <h4>Représentant légal</h4>
+      <p class="desc">La personne responsable légalement de l'entreprise sur la plateforme.</p>
+
+      <div class="field-row mb-3">
+        <div>
+          <label class="form-label" for="prenomRepresentant">Prénom *</label>
+          <input id="prenomRepresentant" class="form-control" placeholder="Jean" required />
+        </div>
+        <div>
+          <label class="form-label" for="nomRepresentant">Nom *</label>
+          <input id="nomRepresentant" class="form-control" placeholder="Dupont" required />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="fonctionRepresentant">Fonction *</label>
+        <input id="fonctionRepresentant" class="form-control" placeholder="Directeur Général" required />
+      </div>
+
+
+      <button id="btn-submit" type="submit" class="btn-finish">
+        🎉 Finaliser mon inscription
+      </button>
+      <div class="text-center mt-3">
+        <a class="btn-back" onclick="goStep(2)">← Retour</a>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let currentStep = 1;
+
+function updateStepper(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById(`si-${i}`);
+    el.classList.remove('active', 'done');
+    if (i < n)  el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+}
+
+function goStep(n) {
+  if (n > currentStep) {
+    const stepEl = document.getElementById(`step-${currentStep}`);
+    let valid = true;
+    stepEl.querySelectorAll('[required]').forEach(input => {
+      if (!input.value.trim()) {
+        input.classList.add('is-invalid');
+        input.addEventListener('input', () => input.classList.remove('is-invalid'), { once: true });
+        valid = false;
+      }
+    });
+    if (!valid) return;
+  }
+
+  document.getElementById(`step-${currentStep}`).classList.add('d-none');
+  document.getElementById(`step-${n}`).classList.remove('d-none');
+  currentStep = n;
+  updateStepper(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Onboarding : on vérifie juste la connexion, PAS le profil (sinon boucle infinie)
+  if (!Auth.isLoggedIn()) { window.location.href = 'pages-sign-in.html'; return; }
+
+  const user = Auth.getUser();
+  if (user?.orgId) { Auth.redirectByRole(); return; }
+
+  // Badge rôle
+  const roleLabel = user?.role === 'EXPEDITEUR' ? '🏭 Expéditeur' : '🚛 Transporteur';
+  document.getElementById('role-badge-wrap').innerHTML =
+    `<div class="role-badge">${roleLabel}</div>`;
+
+  // Pré-remplir depuis la session
+  const emailInput = document.getElementById('email');
+  if (emailInput && user?.email) emailInput.value = user.email;
+
+document.getElementById('form-onboarding').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    UI.loading(btn, true);
+
+    const route = user?.role === 'EXPEDITEUR' ? 'company' : 'transporter';
+    const payload = {
+      raisonSociale:         document.getElementById('raisonSociale').value.trim(),
+      formeJuridique:        document.getElementById('formeJuridique').value,
+      secteurActivite:       document.getElementById('secteurActivite').value,
+      rccm:                  document.getElementById('rccm').value.trim(),
+      ifu:                   document.getElementById('ifu').value.trim(),
+      pays:                  document.getElementById('pays').value,
+      ville:                 document.getElementById('ville').value.trim(),
+      email:                 document.getElementById('email').value.trim(),
+      telephone:             document.getElementById('telephone').value.trim(),
+      boitePostale:          document.getElementById('boitePostale').value.trim() || undefined,
+      nomRepresentant:       document.getElementById('nomRepresentant').value.trim(),
+      prenomRepresentant:    document.getElementById('prenomRepresentant').value.trim(),
+      fonctionRepresentant:  document.getElementById('fonctionRepresentant').value.trim(),
+    };
+
+    try {
+      let orgData;
+      try {
+        const res = await api.post(`/company/${route}`, payload);
+        orgData = res.data ?? res;
+      } catch (_) {
+        // Doublon (E11000) — l'org existe déjà, on la récupère
+        const res = await api.get(`/company/${route}/tenant/${user.tenantId}`);
+        orgData = res?.data ?? res;
+        if (!orgData) throw _;
+      }
+      const session = Auth.getUser();
+      session.raisonSociale = orgData.raisonSociale;
+      session.logo          = orgData.logo ?? null;
+      session.orgId         = orgData.id;
+      localStorage.setItem('cu_user', JSON.stringify(session));
+      Auth.redirectByRole();
+    } catch (err) {
+      UI.alert(err.error ?? err.message ?? JSON.stringify(err));
+      UI.loading(btn, false);
+    }
+  });
+});
+</script>
+</body>
+</html>

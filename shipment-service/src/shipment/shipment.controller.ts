@@ -244,7 +244,40 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // DELETE /shipments/:id — soft delete (CANCELLED) — EXPEDITEUR propriétaire ou ADMIN
+  // POST /shipments/:id/cancel — EXPEDITEUR propriétaire ou ADMIN
+  router.post("/:id/cancel", async (req, res, next) => {
+    try {
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
+      if (role !== "EXPEDITEUR" && role !== "ADMIN") {
+        res.status(403).json({ error: "Seul un expéditeur peut annuler une expédition" });
+        return;
+      }
+      if (role === "EXPEDITEUR") {
+        const existing = await service.getById(req.params["id"] as string) as { data?: { companyId?: string; statut?: string }; companyId?: string; statut?: string };
+        const existingData = existing.data ?? existing;
+        if (existingData.companyId !== userId) {
+          res.status(403).json({ error: "Vous ne pouvez annuler que vos propres expéditions" });
+          return;
+        }
+        if (!["PENDING", "ACCEPTED"].includes(existingData.statut ?? "")) {
+          res.status(400).json({ error: "Cette expédition ne peut plus être annulée" });
+          return;
+        }
+      }
+      const { commentaireAnnulation } = req.body as { commentaireAnnulation?: string };
+      if (!commentaireAnnulation?.trim()) {
+        res.status(400).json({ error: "La raison de l'annulation est obligatoire" });
+        return;
+      }
+      const result = await service.cancelShipment(req.params["id"] as string, commentaireAnnulation.trim());
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // DELETE /shipments/:id — conservé pour rétrocompatibilité (sans raison)
   router.delete("/:id", async (req, res, next) => {
     try {
       const role   = getHeader(req, "x-user-role") as Role;

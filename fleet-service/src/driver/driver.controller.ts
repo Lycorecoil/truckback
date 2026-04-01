@@ -1,5 +1,13 @@
-import { Router } from "express";
+import { randomBytes }  from "crypto";
+import { Router }       from "express";
 import type { DriverService } from "./driver.service";
+import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import { logger }           from "../utils/logger";
+
+function generateTempPassword(): string {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  return Array.from(randomBytes(10)).map(b => chars[b % chars.length]).join('');
+}
 
 type Role = "ADMIN" | "TRANSPORTER" | "EXPEDITEUR" | "DRIVER";
 
@@ -16,7 +24,7 @@ function validateDriver(body: Record<string, unknown>): string[] {
   if (!body["email"] || !EMAIL_REGEX.test(String(body["email"])))    errors.push("email invalide");
   if (!body["telephone"])                                             errors.push("telephone est requis");
   if (!body["numeroPermis"])                                          errors.push("numeroPermis est requis");
-  const validStatuts = ["AVAILABLE", "BUSY", "SUSPENDED"];
+  const validStatuts = ["AVAILABLE", "BUSY", "SUSPENDED", "DELETED"];
   if (body["statut"] && !validStatuts.includes(String(body["statut"])))
     errors.push(`statut doit être parmi : ${validStatuts.join(", ")}`);
   return errors;
@@ -32,7 +40,7 @@ export function createDriverRouter(service: DriverService): Router {
       const tenantId = getHeader(req, "x-tenant-id");
 
       if (role === "TRANSPORTER") {
-        res.json(await service.findByTenantId(tenantId));
+        res.json(await service.findByTenantId(tenantId, true));
         return;
       }
 
@@ -84,6 +92,43 @@ export function createDriverRouter(service: DriverService): Router {
 
       const result = await service.createOne(payload as Parameters<typeof service.createOne>[0]);
       res.status(201).json(result);
+
+      // Fire-and-forget : création du compte auth DRIVER
+      // POST /auth/drivers gère la création + notifications (email + WhatsApp) en interne
+      const tempPassword  = generateTempPassword();
+      const authorization = req.headers['authorization'] ?? '';
+      setImmediate(() => {
+        void (async () => {
+          try {
+            const authUrl = process.env['AUTH_SERVICE_URL'] ?? 'http://auth-service:3000';
+            const authRes = await fetchWithTimeout(`${authUrl}/drivers`, {
+              method:  'POST',
+              headers: {
+                'Content-Type':  'application/json',
+                'Authorization': authorization,
+              },
+              body: JSON.stringify({
+                email:        body['email'],
+                password:     tempPassword,
+                tenantId:     payload['tenantId'],
+                telephone:    body['telephone'],
+                nom:          body['nom'],
+                prenom:       body['prenom'],
+                numeroPermis: body['numeroPermis'],
+              }),
+            }, 8_000);
+
+            if (!authRes.ok) {
+              const err = await authRes.json().catch(() => ({}));
+              logger.warn({ status: authRes.status, err, email: body['email'] }, '[fleet-service] Compte auth chauffeur non créé');
+            } else {
+              logger.info({ email: body['email'] }, '[fleet-service] Compte auth + credentials chauffeur créés');
+            }
+          } catch (authErr) {
+            logger.warn({ authErr }, '[fleet-service] Erreur appel auth-service pour le chauffeur');
+          }
+        })();
+      });
     } catch (err) {
       next(err);
     }
@@ -109,15 +154,18 @@ export function createDriverRouter(service: DriverService): Router {
     }
   });
 
-  // DELETE /fleet/drivers/:id — soft delete (SUSPENDED) — uniquement TRANSPORTER (ou ADMIN)
+  // DELETE /fleet/drivers/:id
+  // TRANSPORTER → SUSPENDED (visible côté transporteur avec badge orange)
+  // ADMIN       → DELETED   (disparaît de la vue transporteur, visible admin uniquement)
   router.delete("/:id", async (req, res, next) => {
     try {
       const role = getHeader(req, "x-user-role") as Role;
       if (role !== "TRANSPORTER" && role !== "ADMIN") {
-        res.status(403).json({ error: "Seul un transporteur peut suspendre un chauffeur" });
+        res.status(403).json({ error: "Action non autorisée" });
         return;
       }
-      const result = await service.updateOne(req.params["id"] as string, { statut: "SUSPENDED" });
+      const newStatut = role === "ADMIN" ? "DELETED" : "SUSPENDED";
+      const result = await service.updateOne(req.params["id"] as string, { statut: newStatut });
       res.json(result);
     } catch (err) {
       next(err);

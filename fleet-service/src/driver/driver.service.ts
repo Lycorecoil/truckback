@@ -7,7 +7,7 @@ export class DriverService extends GenericService<Driver> {
     super(driverRepo);
   }
 
-  async findByTenantId(tenantId: string): Promise<Driver[]> {
-    return this.driverRepo.findByTenantId(tenantId);
+  async findByTenantId(tenantId: string, excludeDeleted = false): Promise<Driver[]> {
+    return this.driverRepo.findByTenantId(tenantId, excludeDeleted);
   }
 }

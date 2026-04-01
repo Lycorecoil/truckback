@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Elimmekatruck — Le fret intelligent à portée de main</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+
+    /* Navbar public */
+    .navbar-public {
+      background: #fff;
+      border-bottom: 1px solid #e9ecef;
+      padding: 0 2rem;
+      height: 64px;
+    }
+    .navbar-brand-custom {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #293241;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+    .navbar-brand-custom span { color: #3b7ddd; }
+
+    /* Hero */
+    .hero-section {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+      padding: 80px 0 70px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(59,125,221,0.12);
+      color: #3b7ddd;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .hero-section h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #293241;
+    }
+    .hero-section h1 .accent { color: #3b7ddd; }
+    .hero-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-visual img {
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      filter: drop-shadow(0 20px 40px rgba(59,125,221,0.2));
+    }
+
+    /* Features bar */
+    .features-bar {
+      background: #293241;
+      padding: 28px 0;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    /* Sections */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3b7ddd;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #293241;
+      line-height: 1.3;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #495057;
+      margin-bottom: 14px;
+    }
+    .check-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #3b7ddd;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* Cards visuelles */
+    .img-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .img-box img {
+      width: 100%;
+      max-width: 460px;
+      height: auto;
+      filter: drop-shadow(0 12px 30px rgba(0,0,0,0.15));
+    }
+
+    /* Stat badge */
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      margin-top: 16px;
+    }
+    .stat-num { font-size: 1.6rem; font-weight: 800; color: #3b7ddd; line-height: 1; }
+    .stat-lbl { font-size: 0.75rem; color: #6c757d; }
+
+    /* Footer */
+    .footer-dark {
+      background: #0f2640;
+      padding: 50px 0 28px;
+    }
+    .footer-dark .footer-brand { font-size: 1rem; font-weight: 800; color: #fff; }
+    .footer-dark .footer-brand span { color: #4da9e8; }
+    .footer-dark .footer-desc { font-size: 0.82rem; line-height: 1.8; color: #5c7d99; margin-top: 8px; }
+    .footer-dark h6 { color: #fff; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+    .footer-dark .footer-link { display: block; color: #5c7d99; font-size: 0.82rem; text-decoration: none; margin-bottom: 10px; }
+    .footer-dark .footer-link:hover { color: #4da9e8; }
+    .footer-dark .footer-bottom { border-top: 1px solid #1e3a56; padding-top: 22px; font-size: 0.78rem; color: #3d5a72; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand navbar-public sticky-top">
+  <div class="container-xl">
+    <a href="index.html" class="navbar-brand-custom me-4">ELIMMEKA<span>TRUCK</span></a>
+
+    <ul class="navbar-nav me-auto d-none d-md-flex gap-3">
+      <li class="nav-item"><a class="nav-link text-muted" href="#expediteur">Expéditeurs</a></li>
+      <li class="nav-item"><a class="nav-link text-muted" href="#transporteur">Transporteurs</a></li>
+      <li class="nav-item"><a class="nav-link text-muted" href="#about">À propos</a></li>
+    </ul>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <a href="pages-sign-in.html" class="btn btn-outline-primary btn-sm px-3">Se connecter</a>
+      <a href="pages-sign-up.html" class="btn btn-primary btn-sm px-3">Créer un compte</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ───────────────────────────────────────────────────────────────── -->
+<section class="hero-section">
+  <div class="container-xl">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-badge">Expéditeurs &amp; Transporteurs</div>
+        <h1>Le fret intelligent à<br><span class="accent">portée de main</span></h1>
+        <p class="text-muted mt-3 mb-4" style="font-size:0.95rem;line-height:1.75;max-width:460px">
+          Connectez-vous à un réseau de transporteurs certifiés, gérez vos envois
+          et réduisez vos coûts logistiques. Simple, rapide et transparent.
+        </p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="pages-sign-up.html" class="btn btn-primary btn-lg px-4">Commencer gratuitement</a>
+          <a href="#about" class="btn btn-outline-secondary btn-lg px-4">En savoir plus</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-visual">
+          <img src="img/photos/alle.png" alt="Plateforme logistique Elimmekatruck">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES BAR ───────────────────────────────────────────────────────── -->
+<div class="features-bar">
+  <div class="container-xl">
+    <div class="row justify-content-center g-4">
+      <div class="col-auto">
+        <div class="feature-item">
+          <div class="feature-icon">🔒</div>
+          <span>Paiement Garanti</span>
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="feature-item">
+          <div class="feature-icon">💬</div>
+          <span>Support WhatsApp 24/7</span>
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="feature-item">
+          <div class="feature-icon">✅</div>
+          <span>Transporteurs Certifiés</span>
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="feature-item">
+          <div class="feature-icon">📍</div>
+          <span>Suivi GPS en Temps Réel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ABOUT ──────────────────────────────────────────────────────────────── -->
+<section class="py-5 bg-light" id="about">
+  <div class="container-xl py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="section-label">À propos de nous</div>
+        <h2 class="section-title mb-3">La logistique simplifiée pour l'Afrique de l'Ouest</h2>
+        <p class="text-muted mb-4" style="line-height:1.75;font-size:0.9rem">
+          Nous connectons le marché du transport au Burkina Faso et dans toute l'Afrique
+          de l'Ouest. Trouvez un transporteur fiable et négociez en toute transparence.
+        </p>
+        <div class="check-item"><div class="check-dot">✓</div> Transport vers les principales villes</div>
+        <div class="check-item"><div class="check-dot">✓</div> Agréé et enregistré officiellement</div>
+        <div class="check-item"><div class="check-dot">✓</div> Tarification transparente basée sur le marché</div>
+        <div class="check-item"><div class="check-dot">✓</div> Rapide, fiable et sécurisé</div>
+      </div>
+      <div class="col-lg-6 text-center">
+        <div class="img-box">
+          <img src="img/photos/warehouse.png" alt="Entrepôt logistique">
+        </div>
+        <div class="stat-badge">
+          <div>
+            <div class="stat-num">15k+</div>
+            <div class="stat-lbl">Expéditions réalisées</div>
+          </div>
+          <div class="ms-3">
+            <div class="stat-num">200+</div>
+            <div class="stat-lbl">Transporteurs actifs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── POUR LES EXPÉDITEURS ───────────────────────────────────────────────── -->
+<section class="py-5" id="expediteur">
+  <div class="container-xl py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="img-box">
+          <img src="img/photos/camion.png" alt="Camion de transport">
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="section-label">Pour les expéditeurs</div>
+        <h2 class="section-title mb-3">Vous avez de la marchandise à expédier, nous trouvons des camions.</h2>
+        <p class="text-muted mb-4" style="font-size:0.9rem;line-height:1.75">
+          Publiez votre annonce en quelques clics et recevez des offres de transporteurs
+          certifiés. Suivez vos expéditions en temps réel depuis votre tableau de bord.
+        </p>
+        <div class="check-item"><div class="check-dot">✓</div> Création d'annonce en moins de 2 minutes</div>
+        <div class="check-item"><div class="check-dot">✓</div> Mise en relation instantanée avec des transporteurs</div>
+        <div class="check-item"><div class="check-dot">✓</div> Suivi GPS de chaque expédition</div>
+        <a href="pages-sign-up.html" class="btn btn-primary mt-3 px-4">Rejoignez-nous →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── POUR LES TRANSPORTEURS ────────────────────────────────────────────── -->
+<section class="py-5 bg-light" id="transporteur">
+  <div class="container-xl py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="section-label">Pour les transporteurs</div>
+        <h2 class="section-title mb-3">Vous avez des camions, nous avons des expéditions.</h2>
+        <p class="text-muted mb-4" style="font-size:0.9rem;line-height:1.75">
+          Accédez à des milliers d'annonces d'expéditeurs, acceptez les missions qui vous
+          conviennent et gérez votre flotte depuis un seul endroit.
+        </p>
+        <div class="check-item"><div class="check-dot">✓</div> Accès à toutes les annonces disponibles</div>
+        <div class="check-item"><div class="check-dot">✓</div> Gestion de flotte et de chauffeurs intégrée</div>
+        <div class="check-item"><div class="check-dot">✓</div> Revenus suivis en temps réel</div>
+        <a href="pages-sign-up.html" class="btn btn-primary mt-3 px-4">Rejoignez-nous →</a>
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA FINAL ──────────────────────────────────────────────────────────── -->
+<section class="py-5">
+  <div class="container-xl py-3">
+    <div class="card border-0 text-center" style="background:linear-gradient(135deg,#3b7ddd,#1a5cb5);border-radius:20px">
+      <div class="card-body py-5 px-4">
+        <h2 class="text-white fw-bold mb-3">Prêt à démarrer ?</h2>
+        <p class="text-white mb-4" style="opacity:0.85;font-size:0.95rem">
+          Rejoignez des centaines d'entreprises qui font confiance à Elimmekatruck.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="pages-sign-up.html" class="btn btn-light btn-lg px-5 fw-bold">Créer un compte gratuit</a>
+          <a href="pages-sign-in.html" class="btn btn-outline-light btn-lg px-5">Se connecter</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
+<footer class="footer-dark">
+  <div class="container-xl">
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="footer-brand">ELIMMEKA<span>TRUCK</span></div>
+        <p class="footer-desc">La plateforme de fret intelligente qui connecte expéditeurs et transporteurs en Afrique de l'Ouest.</p>
+      </div>
+      <div class="col-lg-3 col-6">
+        <h6>Plateforme</h6>
+        <a href="pages-sign-up.html" class="footer-link">Créer un compte</a>
+        <a href="pages-sign-in.html" class="footer-link">Se connecter</a>
+        <a href="#expediteur" class="footer-link">Pour les expéditeurs</a>
+        <a href="#transporteur" class="footer-link">Pour les transporteurs</a>
+      </div>
+      <div class="col-lg-3 col-6">
+        <h6>Contact</h6>
+        <a href="#" class="footer-link">Support WhatsApp</a>
+        <a href="#" class="footer-link">contact@elimmekatruck.com</a>
+        <a href="#" class="footer-link">Ouagadougou, Burkina Faso</a>
+      </div>
+    </div>
+    <div class="footer-bottom d-flex justify-content-between flex-wrap gap-2">
+      <span>© 2026 Elimmekatruck. Tous droits réservés.</span>
+      <span>Fait avec ❤️ en Afrique de l'Ouest</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Si déjà connecté avec profil complet → rediriger vers dashboard
+  if (Auth.isLoggedIn() && Auth.hasProfile()) {
+    Auth.redirectByRole();
+  }
+});
+</script>
+</body>
+</html>

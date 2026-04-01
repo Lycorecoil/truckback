@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Ajouter un chauffeur | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="transporteur-chauffeurs.html">Mes Chauffeurs</a></li>
+            <li class="breadcrumb-item active">Ajouter un chauffeur</li>
+          </ol>
+        </nav>
+
+        <div class="d-flex align-items-center mb-4 gap-3">
+          <a href="transporteur-chauffeurs.html" class="btn btn-light">
+            <i class="align-middle" data-feather="arrow-left" style="width:16px"></i>
+          </a>
+          <div>
+            <h1 class="h3 mb-1"><strong>Ajouter un chauffeur</strong></h1>
+            <p class="text-muted mb-0">Renseignez les informations du nouveau chauffeur</p>
+          </div>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="form-driver" novalidate>
+          <div class="row">
+            <div class="col-lg-8">
+
+              <!-- Identité -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="align-middle me-2" data-feather="user" style="width:16px"></i>
+                    Identité
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label" for="d-prenom">Prénom <span class="text-danger">*</span></label>
+                      <input id="d-prenom" class="form-control form-control-lg" placeholder="Jean" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="d-nom">Nom <span class="text-danger">*</span></label>
+                      <input id="d-nom" class="form-control form-control-lg" placeholder="Dupont" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="align-middle me-2" data-feather="phone" style="width:16px"></i>
+                    Contact
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-12">
+                      <label class="form-label" for="d-email">Adresse email <span class="text-danger">*</span></label>
+                      <input id="d-email" type="email" class="form-control" placeholder="jean.dupont@example.com" />
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label" for="d-tel">Numéro de téléphone <span class="text-danger">*</span></label>
+                      <input id="d-tel" class="form-control" placeholder="+226 70 00 00 00" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Permis -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="align-middle me-2" data-feather="credit-card" style="width:16px"></i>
+                    Permis de conduire
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label" for="d-permis">Numéro de permis <span class="text-danger">*</span></label>
+                      <input id="d-permis" class="form-control" placeholder="BF-123456" />
+                      <div class="form-text">Numéro officiel du permis de conduire poids lourd</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Sidebar recap -->
+            <div class="col-lg-4">
+              <div class="card mb-4" style="position:sticky;top:24px">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Récapitulatif</h5>
+                </div>
+                <div class="card-body">
+                  <!-- Avatar preview -->
+                  <div class="text-center mb-4">
+                    <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;background:#e8f0fe;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#3b7ddd;font-size:1.4rem">
+                      ?
+                    </div>
+                    <div class="mt-2 fw-semibold" id="recap-nom">—</div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-muted small mb-1">Email</div>
+                    <div class="fw-semibold text-truncate" id="recap-email">—</div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-muted small mb-1">Téléphone</div>
+                    <div class="fw-semibold" id="recap-tel">—</div>
+                  </div>
+                  <div class="mb-0">
+                    <div class="text-muted small mb-1">N° Permis</div>
+                    <div class="fw-semibold" id="recap-permis">—</div>
+                  </div>
+                </div>
+                <div class="card-footer d-grid gap-2">
+                  <button type="submit" id="btn-save-driver" class="btn btn-primary btn-lg">
+                    <i class="align-middle me-1" data-feather="save"></i> Enregistrer le chauffeur
+                  </button>
+                  <a href="transporteur-chauffeurs.html" class="btn btn-light">Annuler</a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.requireAuth()) return;
+
+  function updateAvatar() {
+    const p = document.getElementById('d-prenom').value.trim();
+    const n = document.getElementById('d-nom').value.trim();
+    const initials = [(p[0] ?? ''), (n[0] ?? '')].join('').toUpperCase() || '?';
+    document.getElementById('avatar-preview').textContent = initials;
+    document.getElementById('recap-nom').textContent = [p, n].filter(Boolean).join(' ') || '—';
+  }
+
+  document.getElementById('d-prenom').addEventListener('input', updateAvatar);
+  document.getElementById('d-nom').addEventListener('input', updateAvatar);
+
+  document.getElementById('d-email').addEventListener('input', () => {
+    document.getElementById('recap-email').textContent = document.getElementById('d-email').value.trim() || '—';
+  });
+  document.getElementById('d-tel').addEventListener('input', () => {
+    document.getElementById('recap-tel').textContent = document.getElementById('d-tel').value.trim() || '—';
+  });
+  document.getElementById('d-permis').addEventListener('input', () => {
+    document.getElementById('recap-permis').textContent = document.getElementById('d-permis').value.trim() || '—';
+  });
+
+  document.getElementById('form-driver').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      prenom:       document.getElementById('d-prenom').value.trim(),
+      nom:          document.getElementById('d-nom').value.trim(),
+      email:        document.getElementById('d-email').value.trim(),
+      telephone:    document.getElementById('d-tel').value.trim(),
+      numeroPermis: document.getElementById('d-permis').value.trim(),
+    };
+
+    if (!payload.prenom || !payload.nom || !payload.email || !payload.telephone || !payload.numeroPermis) {
+      UI.alert('Veuillez remplir tous les champs obligatoires.', 'warning');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-driver');
+    UI.loading(btn, true);
+    try {
+      await api.post('/fleet/drivers', payload);
+      UI.toast('Chauffeur ajouté avec succès !', 'success');
+      setTimeout(() => { window.location.href = 'transporteur-chauffeurs.html'; }, 800);
+    } catch (err) {
+      UI.alert(err.error ?? err.message ?? 'Erreur lors de l\'enregistrement');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      UI.loading(btn, false);
+    }
+  });
+});
+</script>
+</body>
+</html>

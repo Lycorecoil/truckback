@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Ma Flotte | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h3 mb-1"><strong>Ma Flotte</strong></h1>
+            <p class="text-muted mb-0">Gérez vos camions et leur disponibilité</p>
+          </div>
+          <a href="transporteur-flotte-add.html" class="btn btn-primary">
+            <i class="align-middle me-1" data-feather="plus"></i> Ajouter un camion
+          </a>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="align-middle me-2" data-feather="truck"></i>
+              Véhicules enregistrés
+            </h5>
+            <span class="badge bg-primary rounded-pill" id="truck-count">0</span>
+          </div>
+
+          <div id="empty-state" class="text-center py-5 d-none">
+            <div style="font-size:3rem;margin-bottom:12px">🚚</div>
+            <h5 class="text-muted">Aucun camion dans votre flotte</h5>
+            <p class="text-muted small mb-3">Ajoutez votre premier véhicule pour commencer à recevoir des missions.</p>
+            <a href="transporteur-flotte-add.html" class="btn btn-primary btn-sm">
+              <i class="align-middle me-1" data-feather="plus"></i> Ajouter un camion
+            </a>
+          </div>
+
+          <div class="table-responsive" id="table-wrap">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Véhicule</th>
+                  <th>Type</th>
+                  <th class="d-none d-md-table-cell">Capacité</th>
+                  <th class="d-none d-lg-table-cell">Base</th>
+                  <th>Chauffeur</th>
+                  <th>Statut</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-trucks">
+                <tr><td colspan="7" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- Overlay : Assigner un chauffeur -->
+<div id="assign-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,38,64,.6);backdrop-filter:blur(3px);z-index:1055;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s" onclick="if(event.target===this)closeAssignOverlay()">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:460px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
+
+    <div class="d-flex align-items-start justify-content-between mb-3">
+      <div>
+        <h5 class="fw-bold mb-1">Assigner un chauffeur</h5>
+        <p class="text-muted small mb-0" id="assign-truck-label">—</p>
+      </div>
+      <button onclick="closeAssignOverlay()" style="background:none;border:none;font-size:1.2rem;color:#adb5bd;cursor:pointer;padding:0;line-height:1">&times;</button>
+    </div>
+
+    <div id="assign-alert"></div>
+    <input id="assign-search" class="form-control form-control-sm mb-3" placeholder="Rechercher par nom ou prénom…" autocomplete="off">
+    <div id="assign-driver-list" style="overflow-y:auto;flex:1;min-height:0"></div>
+
+    <div class="d-flex gap-2 justify-content-end mt-3 pt-3" style="border-top:1px solid #e9ecef">
+      <button class="btn btn-light btn-sm" onclick="closeAssignOverlay()">Annuler</button>
+      <button id="btn-confirm-assign" class="btn btn-primary btn-sm px-4" disabled>
+        <i class="align-middle me-1" data-feather="link" style="width:13px"></i> Assigner
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.picker-card { border:2px solid #e9ecef; border-radius:10px; padding:12px 14px; cursor:pointer; transition:border-color .15s,background .15s; margin-bottom:8px; user-select:none; }
+.picker-card:hover { border-color:#adb5bd; background:#f8f9fa; }
+.picker-card.selected { border-color:#3b7ddd; background:#eef3fb; }
+.picker-card.selected .picker-check { display:flex !important; }
+.picker-check { display:none; width:20px; height:20px; border-radius:50%; background:#3b7ddd; align-items:center; justify-content:center; flex-shrink:0; }
+.picker-avatar { width:36px; height:36px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; font-weight:700; color:#3b7ddd; font-size:.82rem; flex-shrink:0; }
+</style>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let trucks = [], drivers = [], assignTruckId = null, assignDriverId = null;
+
+function driverName(id) {
+  if (!id) return null;
+  const d = drivers.find(d => d.id === id);
+  return d ? `${d.prenom} ${d.nom}` : null;
+}
+
+function renderTrucks() {
+  const tbody     = document.getElementById('tbody-trucks');
+  const empty     = document.getElementById('empty-state');
+  const tableWrap = document.getElementById('table-wrap');
+  const countEl   = document.getElementById('truck-count');
+
+  countEl.textContent = trucks.length;
+
+  if (trucks.length === 0) {
+    empty.classList.remove('d-none');
+    tableWrap.classList.add('d-none');
+    return;
+  }
+  empty.classList.add('d-none');
+  tableWrap.classList.remove('d-none');
+
+  tbody.innerHTML = trucks.map(t => {
+    const name = driverName(t.driverId);
+    const driverCell = name
+      ? `<div class="d-flex align-items-center gap-1">
+           <div class="picker-avatar" style="width:28px;height:28px;font-size:.7rem">${name.split(' ').map(w=>w[0]).join('').toUpperCase()}</div>
+           <span class="small">${name}</span>
+         </div>`
+      : `<span class="text-muted small fst-italic">Non assigné</span>`;
+    return `
+    <tr>
+      <td>
+        <div class="fw-semibold">${t.immatriculation ?? '—'}</div>
+        <div class="text-muted small">${t.marque ?? ''} ${t.modele ?? ''}</div>
+      </td>
+      <td class="align-middle">
+        <span class="badge bg-light text-dark border">${t.typeVehicule ?? '—'}</span>
+      </td>
+      <td class="align-middle d-none d-md-table-cell">
+        <strong>${t.capaciteMax ?? '?'}</strong> <span class="text-muted small">T</span>
+      </td>
+      <td class="align-middle d-none d-lg-table-cell text-muted small">
+        ${t.villeBase ?? ''}, ${t.paysBase ?? ''}
+      </td>
+      <td class="align-middle">${driverCell}</td>
+      <td class="align-middle">${UI.truckBadge(t.statut)}</td>
+      <td class="align-middle text-end">
+        <div class="d-flex gap-1 justify-content-end">
+          ${t.driverId
+            ? (t.statut === 'BUSY'
+                ? `<button class="btn btn-sm btn-outline-secondary" disabled title="En mission — désassignation impossible">
+                    <i class="align-middle" data-feather="user-x" style="width:14px"></i>
+                   </button>`
+                : `<button class="btn btn-sm btn-outline-warning" onclick="unassignDriver('${t.id}')" title="Désassigner le chauffeur">
+                    <i class="align-middle" data-feather="user-x" style="width:14px"></i>
+                   </button>`)
+            : `<button class="btn btn-sm btn-outline-primary" onclick="openAssignModal('${t.id}')" title="Assigner un chauffeur">
+                <i class="align-middle" data-feather="user-check" style="width:14px"></i>
+               </button>`
+          }
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteTruck('${t.id}')" title="Supprimer">
+            <i class="align-middle" data-feather="trash-2" style="width:14px"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function openAssignModal(truckId) {
+  assignTruckId  = truckId;
+  assignDriverId = null;
+  const truck = trucks.find(t => t.id === truckId);
+  document.getElementById('assign-truck-label').textContent = truck
+    ? `${truck.immatriculation} — ${truck.marque ?? ''} ${truck.modele ?? ''}`.trim()
+    : '';
+  document.getElementById('assign-alert').innerHTML = '';
+  document.getElementById('assign-search').value = '';
+  document.getElementById('btn-confirm-assign').disabled = true;
+
+  const assignedDriverIds = new Set(trucks.filter(t => t.id !== truckId && t.driverId).map(t => t.driverId));
+  const available = drivers.filter(d => d.statut === 'AVAILABLE' && !assignedDriverIds.has(d.id));
+  renderAssignDrivers(available);
+
+  document.getElementById('assign-search').oninput = (e) => {
+    const q = e.target.value.toLowerCase();
+    renderAssignDrivers(available.filter(d =>
+      [d.prenom, d.nom].some(v => v?.toLowerCase().includes(q))
+    ));
+  };
+
+  const el = document.getElementById('assign-overlay');
+  el.style.opacity = '0';
+  el.style.display = 'flex';
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+  setTimeout(() => document.getElementById('assign-search').focus(), 150);
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeAssignOverlay() {
+  const el = document.getElementById('assign-overlay');
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 200);
+}
+
+function renderAssignDrivers(list) {
+  const el = document.getElementById('assign-driver-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="text-center text-muted py-4 small">Aucun chauffeur disponible.</div>';
+    return;
+  }
+  el.innerHTML = list.map(d => {
+    const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase();
+    return `
+    <div class="picker-card ${assignDriverId === d.id ? 'selected' : ''}" onclick="pickDriver('${d.id}')">
+      <div class="d-flex align-items-center gap-3">
+        <div class="picker-avatar">${initials}</div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${d.prenom} ${d.nom}</div>
+          <div class="text-muted small">${d.telephone ?? ''}</div>
+        </div>
+        <div class="picker-check"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pickDriver(id) {
+  assignDriverId = assignDriverId === id ? null : id;
+  document.querySelectorAll('#assign-driver-list .picker-card').forEach(c => c.classList.remove('selected'));
+  if (assignDriverId) document.querySelector(`#assign-driver-list .picker-card[onclick="pickDriver('${id}')"]`)?.classList.add('selected');
+  document.getElementById('btn-confirm-assign').disabled = !assignDriverId;
+}
+
+async function unassignDriver(truckId) {
+  try {
+    await api.put(`/fleet/trucks/${truckId}`, { driverId: null });
+    const t = trucks.find(t => t.id === truckId);
+    if (t) t.driverId = null;
+    renderTrucks();
+    UI.toast('Chauffeur désassigné.', 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function deleteTruck(id) {
+  if (!confirm('Supprimer ce camion de votre flotte ?')) return;
+  try {
+    await api.delete(`/fleet/trucks/${id}`);
+    trucks = trucks.filter(t => t.id !== id);
+    renderTrucks();
+    UI.toast('Camion supprimé.', 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur lors de la suppression', 'danger'); }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAssignOverlay(); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+
+  const [trucksRes, driversRes] = await Promise.all([
+    api.get('/fleet/trucks'),
+    api.get('/fleet/drivers'),
+  ]);
+  const rawT = trucksRes?.data ?? trucksRes ?? [];
+  const rawD = driversRes?.data ?? driversRes ?? [];
+  trucks  = Array.isArray(rawT) ? rawT : (rawT.items ?? []);
+  drivers = Array.isArray(rawD) ? rawD : (rawD.items ?? []);
+  renderTrucks();
+
+  document.getElementById('btn-confirm-assign').addEventListener('click', async () => {
+    if (!assignTruckId || !assignDriverId) return;
+    const btn = document.getElementById('btn-confirm-assign');
+    UI.loading(btn, true);
+    try {
+      await api.put(`/fleet/trucks/${assignTruckId}`, { driverId: assignDriverId });
+      const t = trucks.find(t => t.id === assignTruckId);
+      if (t) t.driverId = assignDriverId;
+      renderTrucks();
+      closeAssignOverlay();
+      UI.toast('Chauffeur assigné avec succès.', 'success');
+    } catch (err) {
+      document.getElementById('assign-alert').innerHTML = `<div class="alert alert-danger py-2 small">${err.error ?? 'Erreur'}</div>`;
+    } finally { UI.loading(btn, false); }
+  });
+});
+</script>
+</body>
+</html>

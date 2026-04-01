@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Missions | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h3 mb-1"><strong>Missions</strong></h1>
+            <p class="text-muted mb-0">Consultez les missions disponibles et suivez vos missions en cours</p>
+          </div>
+        </div>
+        <div id="alert-container"></div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="missionTabs">
+          <li class="nav-item">
+            <button type="button" class="nav-link active" data-tab="pending">
+              <i class="align-middle me-1" data-feather="inbox" style="width:14px"></i>
+              Disponibles <span class="badge bg-warning text-dark ms-1" id="tab-badge-pending">0</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" data-tab="mine">
+              <i class="align-middle me-1" data-feather="list" style="width:14px"></i>
+              Mes missions <span class="badge bg-primary ms-1" id="tab-badge-mine">0</span>
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab: Disponibles (PENDING) -->
+        <div id="tab-pending">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Missions à accepter</h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Réf.</th><th>Trajet</th><th>Marchandise</th>
+                    <th class="d-none d-md-table-cell">Date</th><th>Prix</th><th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-pending">
+                  <tr><td colspan="6" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Mes missions -->
+        <div id="tab-mine" class="d-none">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Mes missions actives &amp; historique</h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Réf.</th><th>Trajet</th><th>Marchandise</th>
+                    <th class="d-none d-md-table-cell">Date</th><th>Statut</th><th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-mine">
+                  <tr><td colspan="6" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- Overlay alerte ressources manquantes -->
+<div id="resource-alert-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1055;align-items:center;justify-content:center;opacity:0;transition:opacity .2s" onclick="if(event.target===this)closeResourceAlert()">
+  <div style="background:#fff;border-radius:12px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center" onclick="event.stopPropagation()">
+    <div style="width:56px;height:56px;border-radius:50%;background:#fff3cd;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h6 class="fw-bold mb-2">Ressources manquantes</h6>
+    <p class="text-muted mb-4" id="resource-alert-msg"></p>
+    <div id="resource-alert-actions" class="mb-3"></div>
+    <button class="btn btn-light btn-sm" onclick="closeResourceAlert()">Fermer</button>
+  </div>
+</div>
+
+<!-- Modal Accepter Mission -->
+<div class="modal fade" id="modalAccept" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header border-bottom">
+        <div>
+          <h5 class="modal-title fw-bold">Accepter la mission</h5>
+          <p class="text-muted small mb-0" id="modal-mission-info">Sélectionnez un camion et un chauffeur disponibles</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div id="modal-alert" class="px-4 pt-3"></div>
+
+        <div class="row g-0" style="min-height:420px">
+
+          <!-- ── CAMIONS ───────────────────────────────────────────── -->
+          <div class="col-lg-6 border-end d-flex flex-column">
+            <div class="px-4 pt-4 pb-3 border-bottom bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-semibold"><i class="align-middle me-1" data-feather="truck" style="width:15px"></i> Camion</span>
+                <span class="badge bg-light text-dark border" id="truck-count-badge">0 disponible(s)</span>
+              </div>
+              <input id="search-truck" class="form-control form-control-sm" placeholder="Rechercher par immatriculation, marque, modèle ou capacité…" autocomplete="off">
+            </div>
+            <div id="truck-list" class="flex-grow-1 overflow-auto p-3" style="max-height:340px"></div>
+          </div>
+
+          <!-- ── CHAUFFEURS ─────────────────────────────────────────── -->
+          <div class="col-lg-6 d-flex flex-column">
+            <div class="px-4 pt-4 pb-3 border-bottom bg-light">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-semibold"><i class="align-middle me-1" data-feather="user" style="width:15px"></i> Chauffeur</span>
+                <span class="badge bg-light text-dark border" id="driver-count-badge">0 disponible(s)</span>
+              </div>
+              <input id="search-driver" class="form-control form-control-sm" placeholder="Rechercher par nom ou prénom…" autocomplete="off">
+            </div>
+            <div id="driver-list" class="flex-grow-1 overflow-auto p-3" style="max-height:340px"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BARRE DE RÉCAP + ACTION ──────────────────────────────── -->
+      <div class="modal-footer border-top bg-light d-block px-4 py-3">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div id="recap-truck" class="d-flex align-items-center gap-2 text-muted small">
+                <i data-feather="truck" style="width:14px"></i> <em>Aucun camion sélectionné</em>
+              </div>
+              <span class="text-muted">+</span>
+              <div id="recap-driver" class="d-flex align-items-center gap-2 text-muted small">
+                <i data-feather="user" style="width:14px"></i> <em>Aucun chauffeur sélectionné</em>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button id="btn-assign-fleet" class="btn btn-outline-secondary btn-sm d-none" title="Enregistrer cette paire dans la flotte">
+              <i class="align-middle me-1" data-feather="link" style="width:13px"></i> Assigner dans la flotte
+            </button>
+            <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Annuler</button>
+            <button id="btn-confirm-accept" class="btn btn-success btn-sm px-4" disabled>
+              <i class="align-middle me-1" data-feather="check-circle" style="width:13px"></i> Confirmer l'acceptation
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.picker-card {
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  margin-bottom: 8px;
+  user-select: none;
+}
+.picker-card:hover { border-color: #adb5bd; background: #f8f9fa; }
+.picker-card.selected { border-color: #3b7ddd; background: #eef3fb; }
+.picker-card.selected .picker-check { display:flex !important; }
+.picker-check { display:none; width:20px; height:20px; border-radius:50%; background:#3b7ddd; align-items:center; justify-content:center; flex-shrink:0; }
+.picker-avatar { width:36px; height:36px; border-radius:50%; background:#e8f0fe; display:flex; align-items:center; justify-content:center; font-weight:700; color:#3b7ddd; font-size:.82rem; flex-shrink:0; }
+</style>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let trucks = [], drivers = [], allShipments = [], selectedMissionId = null;
+
+function closeResourceAlert() {
+  const el = document.getElementById('resource-alert-overlay');
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 200);
+}
+
+// Fermer sur Échap
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeResourceAlert(); });
+
+function renderPending(list) {
+  const tbody = document.getElementById('tbody-pending');
+  const pending = list.filter(s => s.statut === 'PENDING');
+  const badgeEl = document.getElementById('tab-badge-pending');
+  if (badgeEl) badgeEl.textContent = pending.length;
+  if (pending.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">📋</div><div>Aucune mission disponible pour le moment.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = pending.map(s => `
+    <tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>
+        <div class="fw-semibold">${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</div>
+        <div class="text-muted small">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
+      </td>
+      <td class="text-muted small">${s.marchandise ?? '—'} — ${s.poids ?? '?'}T</td>
+      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+      <td><strong>${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</strong></td>
+      <td class="text-end"><button class="btn btn-sm btn-success" onclick="openAcceptModal('${s.id}')">
+        <i class="align-middle me-1" data-feather="check-circle" style="width:13px"></i>Accepter
+      </button></td>
+    </tr>
+  `).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function renderMine(list) {
+  const tbody = document.getElementById('tbody-mine');
+  const mine = list.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'].includes(s.statut));
+  const badgeEl = document.getElementById('tab-badge-mine');
+  if (badgeEl) badgeEl.textContent = mine.length;
+  if (mine.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune mission.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = mine.map(s => `
+    <tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</td>
+      <td class="text-muted small">${s.marchandise ?? '—'} — ${s.poids ?? '?'}T</td>
+      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+      <td class="align-middle">${UI.shipmentBadge(s.statut)}</td>
+      <td class="align-middle text-end">
+        ${s.statut === 'ACCEPTED' ? `<button class="btn btn-sm btn-primary" onclick="startMission('${s.id}')"><i class="align-middle" data-feather="play" style="width:13px"></i> Démarrer</button>` : ''}
+        ${s.statut === 'IN_PROGRESS' ? `<button class="btn btn-sm btn-success" onclick="deliverMission('${s.id}')"><i class="align-middle" data-feather="check" style="width:13px"></i> Livré</button>` : ''}
+        ${['DELIVERED','CANCELLED'].includes(s.statut) ? '<span class="text-muted small">—</span>' : ''}
+      </td>
+    </tr>
+  `).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+let selectedTruckId = null, selectedDriverId = null;
+
+function openAcceptModal(id) {
+  selectedMissionId = id;
+  selectedTruckId   = null;
+  selectedDriverId  = null;
+
+  const available     = trucks.filter(t => t.statut === 'AVAILABLE');
+  const availDrivers  = drivers.filter(d => d.statut === 'AVAILABLE');
+
+  if (trucks.length === 0 && drivers.length === 0) {
+    showResourceAlert('Vous n\'avez pas encore de camion ni de chauffeur enregistrés.',
+      '<a href="transporteur-flotte-add.html" class="btn btn-sm btn-primary me-2">Ajouter un camion</a><a href="transporteur-chauffeurs-add.html" class="btn btn-sm btn-outline-primary">Ajouter un chauffeur</a>');
+    return;
+  }
+  if (available.length === 0) {
+    showResourceAlert('Aucun camion disponible — tous vos camions sont en mission.');
+    return;
+  }
+  if (availDrivers.length === 0) {
+    showResourceAlert('Aucun chauffeur disponible — tous vos chauffeurs sont en mission.');
+    return;
+  }
+
+  // Mission info
+  const mission = allShipments.find(s => s.id === id);
+  if (mission) {
+    document.getElementById('modal-mission-info').textContent =
+      `Mission #${id.slice(0,8)} — ${mission.villeDepart} → ${mission.villeArrivee} — ${mission.marchandise} (${mission.poids}T)`;
+  }
+
+  document.getElementById('modal-alert').innerHTML = '';
+  document.getElementById('search-truck').value  = '';
+  document.getElementById('search-driver').value = '';
+  document.getElementById('truck-count-badge').textContent  = `${available.length} disponible(s)`;
+  document.getElementById('driver-count-badge').textContent = `${availDrivers.length} disponible(s)`;
+
+  renderTruckCards(available);
+  renderDriverCards(availDrivers);
+  updateRecap();
+
+  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAccept'));
+  modal.show();
+
+  // Recherche live
+  document.getElementById('search-truck').oninput = (e) => {
+    const q = e.target.value.toLowerCase();
+    renderTruckCards(available.filter(t =>
+      [t.immatriculation, t.marque, t.modele, String(t.capaciteMax)].some(v => v?.toLowerCase().includes(q))
+    ));
+  };
+  document.getElementById('search-driver').oninput = (e) => {
+    const q = e.target.value.toLowerCase();
+    renderDriverCards(availDrivers.filter(d =>
+      [d.prenom, d.nom].some(v => v?.toLowerCase().includes(q))
+    ));
+  };
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function renderTruckCards(list) {
+  const el = document.getElementById('truck-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="text-center text-muted py-4 small">Aucun camion correspond à votre recherche.</div>';
+    return;
+  }
+  el.innerHTML = list.map(t => `
+    <div class="picker-card ${selectedTruckId === t.id ? 'selected' : ''}" onclick="selectTruck('${t.id}')">
+      <div class="d-flex align-items-center gap-3">
+        <div class="picker-avatar" style="background:#fff3e0;color:#e65100;font-size:.75rem">🚛</div>
+        <div class="flex-grow-1 overflow-hidden">
+          <div class="fw-semibold">${t.immatriculation}</div>
+          <div class="text-muted small">${t.marque ?? ''} ${t.modele ?? ''}</div>
+          <div class="mt-1 d-flex gap-1 flex-wrap">
+            <span class="badge bg-light text-dark border" style="font-size:.72rem">${t.typeVehicule}</span>
+            <span class="badge bg-light text-dark border" style="font-size:.72rem">${t.capaciteMax} T</span>
+            <span class="badge bg-light text-dark border" style="font-size:.72rem">${t.villeBase}</span>
+          </div>
+        </div>
+        <div class="picker-check"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDriverCards(list) {
+  const el = document.getElementById('driver-list');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="text-center text-muted py-4 small">Aucun chauffeur correspond à votre recherche.</div>';
+    return;
+  }
+  el.innerHTML = list.map(d => {
+    const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase();
+    return `
+    <div class="picker-card ${selectedDriverId === d.id ? 'selected' : ''}" onclick="selectDriver('${d.id}')">
+      <div class="d-flex align-items-center gap-3">
+        <div class="picker-avatar">${initials}</div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${d.prenom} ${d.nom}</div>
+          <div class="text-muted small">${d.telephone ?? ''}</div>
+          <div class="mt-1"><span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.72rem">Disponible</span></div>
+        </div>
+        <div class="picker-check"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectTruck(id) {
+  selectedTruckId = selectedTruckId === id ? null : id;
+  document.querySelectorAll('#truck-list .picker-card').forEach(c => c.classList.remove('selected'));
+  if (selectedTruckId) document.querySelector(`#truck-list .picker-card[onclick="selectTruck('${id}')"]`)?.classList.add('selected');
+  updateRecap();
+}
+
+function selectDriver(id) {
+  selectedDriverId = selectedDriverId === id ? null : id;
+  document.querySelectorAll('#driver-list .picker-card').forEach(c => c.classList.remove('selected'));
+  if (selectedDriverId) document.querySelector(`#driver-list .picker-card[onclick="selectDriver('${id}')"]`)?.classList.add('selected');
+  updateRecap();
+}
+
+function updateRecap() {
+  const truck  = trucks.find(t => t.id === selectedTruckId);
+  const driver = drivers.find(d => d.id === selectedDriverId);
+  const confirmBtn   = document.getElementById('btn-confirm-accept');
+  const assignBtn    = document.getElementById('btn-assign-fleet');
+  const recapTruck   = document.getElementById('recap-truck');
+  const recapDriver  = document.getElementById('recap-driver');
+
+  recapTruck.innerHTML  = truck
+    ? `<i data-feather="truck" style="width:14px"></i> <strong>${truck.immatriculation}</strong> <span class="text-muted">(${truck.capaciteMax}T)</span>`
+    : `<i data-feather="truck" style="width:14px"></i> <em class="text-muted">Aucun camion sélectionné</em>`;
+  recapDriver.innerHTML = driver
+    ? `<i data-feather="user" style="width:14px"></i> <strong>${driver.prenom} ${driver.nom}</strong>`
+    : `<i data-feather="user" style="width:14px"></i> <em class="text-muted">Aucun chauffeur sélectionné</em>`;
+
+  confirmBtn.disabled = !(selectedTruckId && selectedDriverId);
+  if (selectedTruckId && selectedDriverId) assignBtn.classList.remove('d-none');
+  else assignBtn.classList.add('d-none');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function showResourceAlert(msg, actions = '') {
+  const el = document.getElementById('resource-alert-overlay');
+  document.getElementById('resource-alert-msg').textContent = msg;
+  document.getElementById('resource-alert-actions').innerHTML = actions;
+  el.style.opacity = '0';
+  el.style.display = 'flex';
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+}
+
+async function startMission(id) {
+  try {
+    await api.post(`/shipments/${id}/start`, {});
+    UI.toast('Mission démarrée !', 'success');
+    const res = await api.get('/shipments');
+    allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+    renderPending(allShipments); renderMine(allShipments);
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function deliverMission(id) {
+  try {
+    await api.post(`/shipments/${id}/deliver`, {});
+    UI.toast('Mission livrée !', 'success');
+    const res = await api.get('/shipments');
+    allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+    renderPending(allShipments); renderMine(allShipments);
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  // Tabs
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-pending').classList.add('d-none');
+      document.getElementById('tab-mine').classList.add('d-none');
+      document.getElementById('tab-' + btn.dataset.tab).classList.remove('d-none');
+    });
+  });
+  if (typeof feather !== 'undefined') feather.replace();
+
+  // Charger données
+  const [trucksRes, driversRes, shipmentsRes] = await Promise.all([
+    api.get('/fleet/trucks'),
+    api.get('/fleet/drivers'),
+    api.get('/shipments'),
+  ]);
+  trucks  = Array.isArray(trucksRes)  ? trucksRes  : (trucksRes?.data  ?? []);
+  drivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
+  allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+
+  renderPending(allShipments);
+  renderMine(allShipments);
+
+  // Confirm accept
+  document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
+    if (!selectedTruckId || !selectedDriverId) {
+      document.getElementById('modal-alert').innerHTML = '<div class="alert alert-danger py-2">Sélectionnez un camion et un chauffeur.</div>';
+      return;
+    }
+    const btn = document.getElementById('btn-confirm-accept');
+    UI.loading(btn, true);
+    try {
+      await api.post(`/shipments/${selectedMissionId}/accept`, { truckId: selectedTruckId, driverId: selectedDriverId });
+      bootstrap.Modal.getInstance(document.getElementById('modalAccept')).hide();
+      UI.toast('Mission acceptée !', 'success');
+      const res = await api.get('/shipments');
+      allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+      renderPending(allShipments); renderMine(allShipments);
+    } catch (err) {
+      document.getElementById('modal-alert').innerHTML = `<div class="alert alert-danger py-2">${err.error ?? 'Erreur'}</div>`;
+    } finally { UI.loading(btn, false); }
+  });
+
+  // Assigner chauffeur au camion dans la flotte (persistant)
+  document.getElementById('btn-assign-fleet').addEventListener('click', async () => {
+    if (!selectedTruckId || !selectedDriverId) return;
+    try {
+      await api.put(`/fleet/trucks/${selectedTruckId}`, { driverId: selectedDriverId });
+      UI.toast('Chauffeur assigné au camion dans la flotte.', 'success');
+      // Mettre à jour localement
+      const t = trucks.find(t => t.id === selectedTruckId);
+      if (t) t.driverId = selectedDriverId;
+    } catch (err) {
+      document.getElementById('modal-alert').innerHTML = `<div class="alert alert-danger py-2">${err.error ?? 'Erreur lors de l\'assignation'}</div>`;
+    }
+  });
+});
+</script>
+</body>
+</html>

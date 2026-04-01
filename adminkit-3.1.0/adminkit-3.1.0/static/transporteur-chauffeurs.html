@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Mes Chauffeurs | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h3 mb-1"><strong>Mes Chauffeurs</strong></h1>
+            <p class="text-muted mb-0">Gérez les chauffeurs affectés à votre flotte</p>
+          </div>
+          <a href="transporteur-chauffeurs-add.html" class="btn btn-primary">
+            <i class="align-middle me-1" data-feather="user-plus"></i> Ajouter un chauffeur
+          </a>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="align-middle me-2" data-feather="users"></i>
+              Liste des chauffeurs
+            </h5>
+            <span class="badge bg-primary rounded-pill" id="driver-count">0</span>
+          </div>
+          <div id="empty-state" class="text-center py-5 d-none">
+            <div style="font-size:3rem;margin-bottom:12px">👤</div>
+            <h5 class="text-muted">Aucun chauffeur enregistré</h5>
+            <p class="text-muted small mb-3">Ajoutez votre premier chauffeur pour commencer à gérer votre équipe.</p>
+            <a href="transporteur-chauffeurs-add.html" class="btn btn-primary btn-sm">
+              <i class="align-middle me-1" data-feather="user-plus"></i> Ajouter un chauffeur
+            </a>
+          </div>
+          <div class="table-responsive" id="table-wrap">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Chauffeur</th>
+                  <th>Contact</th>
+                  <th class="d-none d-md-table-cell">N° Permis</th>
+                  <th>Statut</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-drivers">
+                <tr><td colspan="5" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- Overlay confirmation -->
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <p id="confirm-msg" class="mb-4 fw-semibold text-center" style="font-size:1rem"></p>
+    <div class="d-flex gap-2 justify-content-center">
+      <button id="confirm-cancel" class="btn btn-light px-4">Annuler</button>
+      <button id="confirm-ok" class="btn btn-danger px-4">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let drivers = [];
+
+function askConfirm(msg, okLabel, okClass) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirm-overlay');
+    document.getElementById('confirm-msg').textContent = msg;
+    const okBtn = document.getElementById('confirm-ok');
+    okBtn.textContent = okLabel ?? 'Confirmer';
+    okBtn.className = `btn px-4 ${okClass ?? 'btn-danger'}`;
+    overlay.style.display = 'flex';
+    const close = (val) => {
+      overlay.style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      document.getElementById('confirm-cancel').removeEventListener('click', onCancel);
+      resolve(val);
+    };
+    const onOk = () => close(true);
+    const onCancel = () => close(false);
+    okBtn.addEventListener('click', onOk);
+    document.getElementById('confirm-cancel').addEventListener('click', onCancel);
+  });
+}
+
+function renderDrivers() {
+  const tbody    = document.getElementById('tbody-drivers');
+  const empty    = document.getElementById('empty-state');
+  const tableWrap = document.getElementById('table-wrap');
+  const countEl  = document.getElementById('driver-count');
+
+  countEl.textContent = drivers.length;
+
+  if (drivers.length === 0) {
+    empty.classList.remove('d-none');
+    tableWrap.classList.add('d-none');
+    return;
+  }
+  empty.classList.add('d-none');
+  tableWrap.classList.remove('d-none');
+
+  tbody.innerHTML = drivers.map(d => `
+    <tr>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div style="width:36px;height:36px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-weight:700;color:#3b7ddd;font-size:.85rem;flex-shrink:0">
+            ${(d.prenom?.[0] ?? '?')}${(d.nom?.[0] ?? '')}
+          </div>
+          <div>
+            <div class="fw-semibold">${d.prenom ?? ''} ${d.nom ?? ''}</div>
+            <div class="text-muted small">${d.email ?? ''}</div>
+          </div>
+        </div>
+      </td>
+      <td class="align-middle text-muted small">${d.telephone ?? '—'}</td>
+      <td class="align-middle d-none d-md-table-cell"><code>${d.numeroPermis ?? '—'}</code></td>
+      <td class="align-middle">${UI.driverBadge(d.statut)}</td>
+      <td class="align-middle text-end">
+        <div class="d-flex gap-1 justify-content-end">
+          ${d.statut === 'SUSPENDED'
+            ? `<button class="btn btn-sm btn-outline-success" onclick="reactivateDriver('${d.id}')" title="Réactiver">
+                <i class="align-middle" data-feather="play-circle" style="width:14px"></i>
+              </button>`
+            : `<button class="btn btn-sm btn-outline-warning" onclick="suspendDriver('${d.id}')" title="Suspendre">
+                <i class="align-middle" data-feather="pause-circle" style="width:14px"></i>
+              </button>`
+          }
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteDriver('${d.id}')" title="Supprimer">
+            <i class="align-middle" data-feather="trash-2" style="width:14px"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+async function deleteDriver(id) {
+  const ok = await askConfirm('Supprimer ce chauffeur ? Il disparaîtra de votre liste définitivement.', 'Supprimer', 'btn-danger');
+  if (!ok) return;
+  try {
+    await api.put(`/fleet/drivers/${id}`, { statut: 'DELETED' });
+    drivers = drivers.filter(d => d.id !== id);
+    renderDrivers();
+    UI.toast('Chauffeur supprimé.', 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function reactivateDriver(id) {
+  try {
+    await api.put(`/fleet/drivers/${id}`, { statut: 'AVAILABLE' });
+    const d = drivers.find(d => d.id === id);
+    if (d) d.statut = 'AVAILABLE';
+    renderDrivers();
+    UI.toast('Chauffeur réactivé.', 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function suspendDriver(id) {
+  const ok = await askConfirm('Suspendre ce chauffeur ? Il restera visible avec le statut "Suspendu".', 'Suspendre', 'btn-warning');
+  if (!ok) return;
+  try {
+    await api.delete(`/fleet/drivers/${id}`);
+    const d = drivers.find(d => d.id === id);
+    if (d) d.statut = 'SUSPENDED';
+    renderDrivers();
+    UI.toast('Chauffeur suspendu.', 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+
+  const res = await api.get('/fleet/drivers');
+  const raw = res?.data ?? res ?? [];
+  drivers = Array.isArray(raw) ? raw : (raw.items ?? []);
+  renderDrivers();
+});
+</script>
+</body>
+</html>

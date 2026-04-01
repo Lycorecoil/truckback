@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Connexion | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<main class="d-flex w-100">
+  <div class="container d-flex flex-column">
+    <div class="row vh-100">
+      <div class="col-sm-10 col-md-8 col-lg-5 mx-auto d-table h-100">
+        <div class="d-table-cell align-middle">
+
+          <div class="text-center mt-4 mb-4">
+            <h1 class="h2">🚛 Elimmekatruck</h1>
+            <p class="lead text-muted">Connectez-vous à votre espace</p>
+          </div>
+
+          <div id="alert-container"></div>
+
+          <div class="card">
+            <div class="card-body">
+              <div class="m-sm-3">
+                <form id="form-login">
+                  <div class="mb-3">
+                    <label class="form-label" for="email">Adresse email</label>
+                    <input id="email" name="email" autocomplete="email" class="form-control form-control-lg" type="email" placeholder="votre@email.com" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="password">Mot de passe</label>
+                    <input id="password" name="password" autocomplete="current-password" class="form-control form-control-lg" type="password" placeholder="••••••••" required />
+                  </div>
+                  <div class="text-center mt-3">
+                    <button id="btn-submit" type="submit" class="btn btn-lg btn-primary w-100">Se connecter</button>
+                  </div>
+                </form>
+                <div class="text-center mt-3">
+                  <small>Pas encore de compte ? <a href="pages-sign-up.html">Créer un compte</a></small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.redirectIfLoggedIn();
+
+  document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    UI.loading(btn, true);
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Identifiants incorrects');
+
+      const u = data.user ?? data;
+      const token = data.token ?? data.accessToken;
+
+      // Récupérer le profil organisation pour avoir raisonSociale + logo
+      let raisonSociale = null, logo = null, orgId = null;
+      if (u.role === 'EXPEDITEUR' || u.role === 'TRANSPORTER') {
+        const route = u.role === 'EXPEDITEUR' ? 'company' : 'transporter';
+        try {
+          const orgRes = await fetch(`${API}/company/${route}/tenant/${u.tenantId}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+          });
+          if (orgRes.ok) {
+            const body = await orgRes.json();
+            const org  = body.data ?? body;
+            raisonSociale = org.raisonSociale ?? null;
+            logo          = org.logo ?? null;
+            orgId         = org.id ?? null;
+          }
+        } catch (_) {}
+      }
+
+      Auth.saveSession(token, {
+        id: u.id ?? u.sub,
+        email: u.email ?? email,
+        role: u.role,
+        tenantId: u.tenantId,
+        raisonSociale,
+        logo,
+        orgId,
+      });
+
+      Auth.redirectByRole();
+    } catch (err) {
+      UI.alert(err.message ?? 'Erreur de connexion');
+      UI.loading(btn, false);
+    }
+  });
+});
+</script>
+</body>
+</html>

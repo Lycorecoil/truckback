@@ -43,11 +43,22 @@ export class TruckRepository implements IRepository<Truck> {
   }
 
   async update(id: string, data: Partial<Truck>): Promise<Truck> {
-    const doc = await TruckModel.findOneAndUpdate(
-      { id },
-      { $set: data },
-      { returnDocument: "after" }
-    );
+    const setFields: Partial<Truck> = {};
+    const unsetFields: Record<string, 1> = {};
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value === null || value === undefined) {
+        unsetFields[key] = 1;
+      } else {
+        (setFields as Record<string, unknown>)[key] = value;
+      }
+    }
+
+    const update: Record<string, unknown> = {};
+    if (Object.keys(setFields).length > 0)  update["$set"]   = setFields;
+    if (Object.keys(unsetFields).length > 0) update["$unset"] = unsetFields;
+
+    const doc = await TruckModel.findOneAndUpdate({ id }, update, { returnDocument: "after" });
     if (!doc) throw new Error(`Truck ${id} not found`);
     return doc.toJSON() as Truck;
   }
@@ -69,6 +80,11 @@ export class TruckRepository implements IRepository<Truck> {
   async findAvailable(tenantId: string): Promise<Truck[]> {
     const docs = await TruckModel.find({ tenantId, statut: "AVAILABLE" });
     return docs.map((d) => d.toJSON() as Truck);
+  }
+
+  async findByDriverId(driverId: string): Promise<Truck | null> {
+    const doc = await TruckModel.findOne({ driverId });
+    return doc ? (doc.toJSON() as Truck) : null;
   }
 
   async findMatching(criteria: MatchCriteria): Promise<Truck[]> {

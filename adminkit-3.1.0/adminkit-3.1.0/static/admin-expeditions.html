@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Toutes les Expéditions | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <h1 class="h3 mb-3"><strong>Toutes les Expéditions</strong></h1>
+
+        <!-- Filtres -->
+        <div class="card mb-3">
+          <div class="card-body py-2">
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn btn-sm btn-primary filter-btn active" data-statut="">Toutes</button>
+              <button class="btn btn-sm btn-outline-warning filter-btn" data-statut="PENDING">En attente</button>
+              <button class="btn btn-sm btn-outline-info filter-btn" data-statut="ACCEPTED">Acceptées</button>
+              <button class="btn btn-sm btn-outline-primary filter-btn" data-statut="IN_PROGRESS">En cours</button>
+              <button class="btn btn-sm btn-outline-success filter-btn" data-statut="DELIVERED">Livrées</button>
+              <button class="btn btn-sm btn-outline-danger filter-btn" data-statut="CANCELLED">Annulées</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <table class="table table-hover my-0">
+            <thead>
+              <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Date</th><th class="d-none d-md-table-cell">Prix</th><th>Statut</th></tr>
+            </thead>
+            <tbody id="tbody-all">
+              <tr><td colspan="6" class="text-center py-4 text-muted">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allShipments = [];
+
+function renderTable(list) {
+  const tbody = document.getElementById('tbody-all');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(s => `
+    <tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${s.villeDepart} → ${s.villeArrivee}</td>
+      <td>${s.marchandise} — ${s.poids}T</td>
+      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+      <td class="d-none d-md-table-cell">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+      <td>${UI.shipmentBadge(s.statut)}</td>
+    </tr>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const res = await api.get('/shipments');
+  allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+  renderTable(allShipments);
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => { b.className = 'btn btn-sm btn-outline-secondary filter-btn'; });
+      btn.classList.add('btn-primary');
+      btn.classList.remove('btn-outline-secondary');
+      const f = btn.dataset.statut;
+      renderTable(f ? allShipments.filter(s => s.statut === f) : allShipments);
+    });
+  });
+});
+</script>
+</body>
+</html>

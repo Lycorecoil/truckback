@@ -1,6 +1,6 @@
 import type { BaseEntity } from "@jb226/generic-service";
 
-export type DriverStatus = "AVAILABLE" | "BUSY" | "SUSPENDED";
+export type DriverStatus = "AVAILABLE" | "BUSY" | "SUSPENDED" | "DELETED";
 
 export interface Driver extends BaseEntity {
   tenantId: string;

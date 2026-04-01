@@ -41,8 +41,13 @@ export function createTruckRouter(service: TruckService): Router {
         res.status(400).json({ error: "truckId et driverId sont requis" });
         return;
       }
-      const truck = await service.assignDriver(truckId, driverId);
-      res.json(truck);
+      try {
+        const truck = await service.assignDriver(truckId, driverId);
+        res.json(truck);
+      } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        res.status(e.statusCode ?? 400).json({ error: e.message ?? "Erreur d'assignation" });
+      }
     } catch (err) {
       next(err);
     }
@@ -159,7 +164,41 @@ export function createTruckRouter(service: TruckService): Router {
         res.status(400).json({ error: "Le corps de la requête ne peut pas être vide" });
         return;
       }
-      const result = await service.updateOne(req.params["id"] as string, body);
+
+      const truckId = req.params["id"] as string;
+
+      // Si le body contient driverId, passer par la validation métier
+      if ("driverId" in body) {
+        const { driverId, ...rest } = body;
+
+        // Mise à jour des autres champs d'abord (si présents)
+        if (Object.keys(rest).length > 0) {
+          await service.updateOne(truckId, rest);
+        }
+
+        // Assignation avec validation
+        if (driverId) {
+          try {
+            const result = await service.assignDriver(truckId, driverId as string);
+            res.json(result);
+          } catch (err: unknown) {
+            const e = err as { statusCode?: number; message?: string };
+            res.status(e.statusCode ?? 400).json({ error: e.message ?? "Erreur d'assignation" });
+          }
+        } else {
+          // driverId null/undefined → désassigner
+          try {
+            const result = await service.unassignDriver(truckId);
+            res.json(result);
+          } catch (err: unknown) {
+            const e = err as { statusCode?: number; message?: string };
+            res.status(e.statusCode ?? 400).json({ error: e.message ?? "Erreur de désassignation" });
+          }
+        }
+        return;
+      }
+
+      const result = await service.updateOne(truckId, body);
       res.json(result);
     } catch (err) {
       next(err);

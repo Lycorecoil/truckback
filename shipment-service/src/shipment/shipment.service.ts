@@ -130,8 +130,10 @@ export class ShipmentService extends GenericService<Shipment> {
     return shipment;
   }
 
-  async cancelShipment(id: string): Promise<Shipment> {
-    const shipment = await this.shipmentRepo.update(id, { statut: "CANCELLED" });
+  async cancelShipment(id: string, commentaireAnnulation?: string): Promise<Shipment> {
+    const updateData: Partial<Shipment> = { statut: "CANCELLED" };
+    if (commentaireAnnulation) updateData.commentaireAnnulation = commentaireAnnulation;
+    const shipment = await this.shipmentRepo.update(id, updateData);
     if (shipment.transporterId) {
       const transporterEmail = await resolveEmail(shipment.transporterTenantId, "transporter");
       void sendEmail(

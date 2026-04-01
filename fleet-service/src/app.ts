@@ -17,7 +17,6 @@ import { internalRateLimiter } from "./utils/rateLimit.middleware";
 import { registerGracefulShutdown } from "./utils/gracefulShutdown";
 import { logger } from "./utils/logger";
 import { metricsMiddleware, metricsHandler } from "./utils/metrics.middleware";
-import { startDriverCreatedWorker } from "./queue/driverCreatedWorker";
 
 process.env["SERVICE_NAME"] = "fleet-service";
 
@@ -52,7 +51,6 @@ const server = createServer(app);
 
 connectDatabase()
   .then(() => {
-    startDriverCreatedWorker(driverService);
     server.listen(PORT, () => {
       logger.info(`Fleet Service démarré sur le port ${PORT}`);
     });

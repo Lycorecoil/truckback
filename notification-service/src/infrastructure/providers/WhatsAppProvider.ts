@@ -31,6 +31,10 @@ export function getWhatsAppProvider(): WhatsAppProvider {
 export class WhatsAppProvider implements ISmsProvider {
   private client: Client;
   private ready = false;
+  private lastQr: string | null = null;
+
+  getQr(): string | null { return this.lastQr; }
+  isReady(): boolean     { return this.ready; }
 
   constructor() {
     const sessionPath = process.env['WHATSAPP_SESSION_PATH'] ?? '.wwebjs_auth';
@@ -53,16 +57,16 @@ export class WhatsAppProvider implements ISmsProvider {
     });
 
     this.client.on('qr', (qr) => {
-      // Affiche le QR code en ASCII dans les logs Docker
-      logger.info({ qr }, '[notification-service][WhatsApp] Scanner ce QR code avec WhatsApp');
-      // Pour un affichage plus lisible en dev :
+      this.lastQr = qr;
+      logger.info('[notification-service][WhatsApp] QR prêt → http://localhost:3005/notification/whatsapp/qr');
       if (process.env['NODE_ENV'] !== 'production') {
         import('qrcode-terminal').then((m) => m.default.generate(qr, { small: true })).catch(() => {});
       }
     });
 
     this.client.on('ready', () => {
-      this.ready = true;
+      this.ready  = true;
+      this.lastQr = null;
       logger.info('[notification-service][WhatsApp] Client prêt — session active');
     });
 
@@ -90,10 +94,18 @@ export class WhatsAppProvider implements ISmsProvider {
       return;
     }
 
-    // Format WhatsApp : "33612345678@c.us" (sans le +)
-    const chatId = `${options.to.replace(/^\+/, '')}@c.us`;
+    // Résoudre le vrai identifiant WhatsApp via getNumberId (évite l'erreur "No LID for user")
+    const phone = options.to.replace(/^\+/, '');
+    const numberId = await (this.client as unknown as {
+      getNumberId(phone: string): Promise<{ _serialized: string } | null>;
+    }).getNumberId(phone);
 
-    await (this.client.sendMessage(chatId, options.message) as Promise<Message>);
+    if (!numberId) {
+      logger.warn({ to: options.to }, '[notification-service][WhatsApp] Numéro non enregistré sur WhatsApp — message ignoré');
+      return;
+    }
+
+    await (this.client.sendMessage(numberId._serialized, options.message) as Promise<Message>);
     logger.info({ to: options.to }, '[notification-service][WhatsApp] Message envoyé');
   }
 

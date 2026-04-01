@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Dashboard Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <h1 class="h3 mb-3"><strong>Dashboard</strong> Global</h1>
+
+        <!-- Alertes opérationnelles -->
+        <div id="alert-container"></div>
+
+        <!-- KPI -->
+        <div class="row">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row"><div class="col mt-0"><h5 class="card-title">Expéditions</h5></div>
+                <div class="col-auto"><div class="stat text-primary"><i class="align-middle" data-feather="package"></i></div></div></div>
+                <h1 class="mt-1 mb-3" id="kpi-shipments">—</h1>
+                <div class="mb-0 text-muted">Total toutes périodes</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row"><div class="col mt-0"><h5 class="card-title">En cours</h5></div>
+                <div class="col-auto"><div class="stat text-warning"><i class="align-middle" data-feather="truck"></i></div></div></div>
+                <h1 class="mt-1 mb-3" id="kpi-active">—</h1>
+                <div class="mb-0 text-muted">Missions actives</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row"><div class="col mt-0"><h5 class="card-title">Camions</h5></div>
+                <div class="col-auto"><div class="stat text-success"><i class="align-middle" data-feather="truck"></i></div></div></div>
+                <h1 class="mt-1 mb-3" id="kpi-trucks">—</h1>
+                <div class="mb-0 text-muted">Dans la plateforme</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row"><div class="col mt-0"><h5 class="card-title">Chauffeurs</h5></div>
+                <div class="col-auto"><div class="stat text-info"><i class="align-middle" data-feather="users"></i></div></div></div>
+                <h1 class="mt-1 mb-3" id="kpi-drivers">—</h1>
+                <div class="mb-0 text-muted">Enregistrés</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUES -->
+        <div class="row">
+          <div class="col-lg-8">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Volume d'expéditions par mois</h5></div>
+              <div class="card-body"><canvas id="chart-volume" height="110"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Répartition par statut</h5></div>
+              <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="chart-donut" height="220"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Valeur totale des transports par mois (FCFA)</h5></div>
+              <div class="card-body"><canvas id="chart-revenue" height="80"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS PLATEFORME -->
+        <div class="row">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title text-muted mb-2">Taux de matching</h6>
+                <h2 class="mb-1" id="stat-matching">—</h2>
+                <small class="text-muted">Expéditions avec transporteur / total</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title text-muted mb-2">Valeur totale (30j)</h6>
+                <h2 class="mb-1" id="stat-value30">—</h2>
+                <small class="text-muted">Somme des prix de transport</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title text-muted mb-2">Délai moyen matching</h6>
+                <h2 class="mb-1" id="stat-delay">—</h2>
+                <small class="text-muted">PENDING → ACCEPTED</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title text-muted mb-2">Organisations actives</h6>
+                <h2 class="mb-1" id="stat-orgs">—</h2>
+                <small class="text-muted">Expéditeurs + Transporteurs</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP ACTEURS -->
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Top 5 expéditeurs</h5></div>
+              <table class="table table-hover my-0">
+                <thead><tr><th>Société</th><th>Expéditions</th><th>Valeur totale</th></tr></thead>
+                <tbody id="tbody-top-expediteurs">
+                  <tr><td colspan="3" class="text-center py-3 text-muted">Chargement...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Top 5 transporteurs</h5></div>
+              <table class="table table-hover my-0">
+                <thead><tr><th>Société</th><th>Missions livrées</th><th>Revenus générés</th></tr></thead>
+                <tbody id="tbody-top-transporteurs">
+                  <tr><td colspan="3" class="text-center py-3 text-muted">Chargement...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- DERNIÈRES EXPÉDITIONS -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Dernières expéditions</h5>
+            <a href="admin-expeditions.html" class="btn btn-sm btn-primary">Voir tout</a>
+          </div>
+          <table class="table table-hover my-0">
+            <thead>
+              <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Date</th><th>Statut</th></tr>
+            </thead>
+            <tbody id="tbody-shipments">
+              <tr><td colspan="5" class="text-center py-4 text-muted">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+function getLast6Months() {
+  const months = [];
+  const d = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    months.push(`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`);
+  }
+  return months;
+}
+
+function monthLabel(ym) {
+  const [y, mo] = ym.split('-');
+  return new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+}
+
+function buildVolumeChart(shipments) {
+  const months = getLast6Months();
+  const counts = months.map(m => shipments.filter(s => (s.dateAnnonce ?? '').startsWith(m)).length);
+  new Chart(document.getElementById('chart-volume'), {
+    type: 'line',
+    data: {
+      labels: months.map(monthLabel),
+      datasets: [{
+        label: 'Expéditions',
+        data: counts,
+        borderColor: '#3b7ddd',
+        backgroundColor: 'rgba(59,125,221,0.12)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+function buildRevenueChart(shipments) {
+  const months = getLast6Months();
+  const revenues = months.map(m =>
+    shipments
+      .filter(s => (s.dateAnnonce ?? '').startsWith(m) && s.prixTransport)
+      .reduce((sum, s) => sum + s.prixTransport, 0)
+  );
+  new Chart(document.getElementById('chart-revenue'), {
+    type: 'bar',
+    data: {
+      labels: months.map(monthLabel),
+      datasets: [{
+        label: 'Valeur (FCFA)',
+        data: revenues,
+        backgroundColor: 'rgba(40,167,69,0.75)',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('fr-FR') } }
+      }
+    }
+  });
+}
+
+function buildDonut(shipments) {
+  const statuts = ['PENDING','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
+  const labels  = ['En attente','Acceptée','En cours','Livrée','Annulée'];
+  const colors  = ['#f0ad4e','#5bc0de','#3b7ddd','#28a745','#dc3545'];
+  const data    = statuts.map(s => shipments.filter(x => x.statut === s).length);
+  if (data.every(v => v === 0)) return;
+  new Chart(document.getElementById('chart-donut'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
+    options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+  });
+}
+
+function buildStats(shipments, expediteurs, transporteurs) {
+  const total = shipments.length;
+
+  // Taux de matching : ont trouvé un transporteur (pas PENDING)
+  const matched = shipments.filter(s => s.statut !== 'PENDING').length;
+  const rate = total > 0 ? Math.round((matched / total) * 100) : 0;
+  document.getElementById('stat-matching').textContent = rate + ' %';
+
+  // Valeur totale 30j
+  const since30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+  const val30 = shipments
+    .filter(s => s.prixTransport && new Date(s.dateAnnonce) >= since30)
+    .reduce((sum, s) => sum + s.prixTransport, 0);
+  document.getElementById('stat-value30').textContent =
+    val30 > 0 ? val30.toLocaleString('fr-FR') + ' FCFA' : '0 FCFA';
+
+  // Délai moyen matching (PENDING→ACCEPTED) — approximé avec updatedAt
+  const accepted = shipments.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut) && s.dateAnnonce && s.updatedAt);
+  if (accepted.length > 0) {
+    const avgMs = accepted.reduce((sum, s) =>
+      sum + (new Date(s.updatedAt) - new Date(s.dateAnnonce)), 0) / accepted.length;
+    const hours = Math.round(avgMs / (1000 * 3600));
+    document.getElementById('stat-delay').textContent = hours < 24 ? hours + ' h' : Math.round(hours / 24) + ' j';
+  } else {
+    document.getElementById('stat-delay').textContent = '—';
+  }
+
+  // Organisations actives
+  document.getElementById('stat-orgs').textContent = expediteurs.length + transporteurs.length;
+}
+
+function buildAlerts(shipments) {
+  const alerts = [];
+
+  // PENDING > 48h
+  const cutoff48 = new Date(Date.now() - 48 * 3600 * 1000);
+  const oldPending = shipments.filter(s => s.statut === 'PENDING' && new Date(s.dateAnnonce) < cutoff48);
+  if (oldPending.length > 0) {
+    alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2" role="alert">
+      <strong>${oldPending.length} expédition${oldPending.length > 1 ? 's' : ''}</strong> en PENDING depuis plus de 48h sans transporteur.
+      <a href="admin-expeditions.html" class="alert-link ms-1">Voir →</a>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`);
+  }
+
+  // IN_PROGRESS > 7 jours (retard potentiel)
+  const cutoff7d = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+  const late = shipments.filter(s => s.statut === 'IN_PROGRESS' && new Date(s.dateAnnonce) < cutoff7d);
+  if (late.length > 0) {
+    alerts.push(`<div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
+      <strong>${late.length} mission${late.length > 1 ? 's' : ''}</strong> en cours depuis plus de 7 jours — retard potentiel.
+      <a href="admin-expeditions.html" class="alert-link ms-1">Voir →</a>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`);
+  }
+
+  if (alerts.length > 0) {
+    document.getElementById('alert-container').innerHTML = alerts.join('');
+  }
+}
+
+function buildTopTables(shipments, expediteurs, transporteurs) {
+  // Top expéditeurs (par companyId ou expediteurId sur les shipments)
+  // On groupe par expediteurId si disponible, sinon par villeDepart comme fallback
+  const expFreq = {};
+  shipments.forEach(s => {
+    const key = s.expediteurId ?? s.companyId ?? null;
+    if (!key) return;
+    if (!expFreq[key]) expFreq[key] = { count: 0, value: 0 };
+    expFreq[key].count++;
+    expFreq[key].value += s.prixTransport ?? 0;
+  });
+
+  const topExp = Object.entries(expFreq)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5);
+
+  const tbodyExp = document.getElementById('tbody-top-expediteurs');
+  if (topExp.length === 0) {
+    tbodyExp.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>';
+  } else {
+    tbodyExp.innerHTML = topExp.map(([id, stats]) => {
+      const org = expediteurs.find(e => e.id === id);
+      const name = org?.companyName ?? org?.name ?? id.slice(0, 8) + '…';
+      return `<tr>
+        <td><strong>${name}</strong></td>
+        <td>${stats.count}</td>
+        <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Top transporteurs (par transporteurId)
+  const transFreq = {};
+  shipments.filter(s => s.statut === 'DELIVERED').forEach(s => {
+    const key = s.transporteurId ?? null;
+    if (!key) return;
+    if (!transFreq[key]) transFreq[key] = { count: 0, value: 0 };
+    transFreq[key].count++;
+    transFreq[key].value += s.prixTransport ?? 0;
+  });
+
+  const topTrans = Object.entries(transFreq)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5);
+
+  const tbodyTrans = document.getElementById('tbody-top-transporteurs');
+  if (topTrans.length === 0) {
+    tbodyTrans.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>';
+  } else {
+    tbodyTrans.innerHTML = topTrans.map(([id, stats]) => {
+      const org = transporteurs.find(t => t.id === id);
+      const name = org?.companyName ?? org?.name ?? id.slice(0, 8) + '…';
+      return `<tr>
+        <td><strong>${name}</strong></td>
+        <td>${stats.count}</td>
+        <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const [shipmentsRes, trucksRes, driversRes, expedRes, transRes] = await Promise.all([
+    api.get('/shipments'),
+    api.get('/fleet/trucks'),
+    api.get('/fleet/drivers'),
+    api.get('/company/company?page=1&limit=200'),
+    api.get('/company/transporter?page=1&limit=200'),
+  ]);
+
+  const shipments    = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+  const trucks       = trucksRes?.data ?? [];
+  const drivers      = driversRes?.data ?? [];
+  const expediteurs  = expedRes?.data ?? expedRes ?? [];
+  const transporteurs = transRes?.data ?? transRes ?? [];
+
+  document.getElementById('kpi-shipments').textContent = shipments.length;
+  document.getElementById('kpi-active').textContent    = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut)).length;
+  document.getElementById('kpi-trucks').textContent    = trucks.length;
+  document.getElementById('kpi-drivers').textContent   = drivers.length;
+
+  buildVolumeChart(shipments);
+  buildRevenueChart(shipments);
+  buildDonut(shipments);
+  buildStats(shipments, expediteurs, transporteurs);
+  buildAlerts(shipments);
+  buildTopTables(shipments, expediteurs, transporteurs);
+
+  const tbody = document.getElementById('tbody-shipments');
+  if (shipments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
+  } else {
+    tbody.innerHTML = shipments.slice(0, 10).map(s => `
+      <tr>
+        <td><strong>#${s.id.slice(0,8)}</strong></td>
+        <td>${s.villeDepart} → ${s.villeArrivee}</td>
+        <td>${s.marchandise} — ${s.poids}T</td>
+        <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+        <td>${UI.shipmentBadge(s.statut)}</td>
+      </tr>
+    `).join('');
+  }
+});
+</script>
+</body>
+</html>

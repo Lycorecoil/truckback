@@ -54,8 +54,10 @@ export class DriverRepository implements IRepository<Driver> {
     return count > 0;
   }
 
-  async findByTenantId(tenantId: string): Promise<Driver[]> {
-    const docs = await DriverModel.find({ tenantId });
+  async findByTenantId(tenantId: string, excludeDeleted = false): Promise<Driver[]> {
+    const query: Record<string, unknown> = { tenantId };
+    if (excludeDeleted) query['statut'] = { $ne: 'DELETED' };
+    const docs = await DriverModel.find(query);
     return docs.map((d) => d.toJSON() as Driver);
   }
 }

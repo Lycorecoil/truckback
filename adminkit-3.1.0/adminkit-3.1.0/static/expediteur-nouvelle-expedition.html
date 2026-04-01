@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Nouvelle Expédition | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="expediteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Expéditeur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="expediteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Tableau de bord</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="expediteur-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Mes Expéditions</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="expediteur-nouvelle-expedition.html"><i class="align-middle" data-feather="plus-circle"></i> <span class="align-middle">Nouvelle Expédition</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <h1 class="h3 mb-3"><strong>Nouvelle Expédition</strong></h1>
+        <div id="alert-container"></div>
+
+        <form id="form-expedition">
+          <div class="row">
+
+            <!-- Colonne gauche -->
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">📦 Marchandise</h5></div>
+                <div class="card-body">
+
+                  <div class="mb-3">
+                    <label class="form-label" for="marchandise">Type de marchandise *</label>
+                    <select id="marchandise" class="form-select" required>
+                      <option value="">-- Choisir --</option>
+                      <option>Agricole</option><option>BTP</option><option>Biens de consommation</option>
+                      <option>Carburant</option><option>Réfrigéré</option><option>Textile</option><option>Autre</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="emballage">Emballage</label>
+                    <select id="emballage" class="form-select">
+                      <option value="">-- Choisir --</option>
+                      <option>Vrac</option><option>Palettes</option><option>Sacs</option>
+                      <option>Caisses</option><option>Fûts</option><option>Conteneur</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="quantite">Quantité *</label>
+                    <input id="quantite" type="number" class="form-control" placeholder="ex: 50" min="1" required />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="poidsValeur">Poids / Volume *</label>
+                    <div class="input-group">
+                      <input id="poidsValeur" type="number" class="form-control" placeholder="ex: 10" min="0.01" step="0.01" required />
+                      <select id="poidsUnite" class="form-select" style="max-width: 85px;">
+                        <option value="T">T</option>
+                        <option value="kg">kg</option>
+                        <option value="m³">m³</option>
+                        <option value="L">L</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="prixTransport">Prix proposé (FCFA)</label>
+                    <input id="prixTransport" type="number" class="form-control" placeholder="Optionnel" min="0" />
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Colonne droite -->
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">📍 Trajet</h5></div>
+                <div class="card-body">
+
+                  <div class="mb-3">
+                    <label class="form-label" for="villeDepart">Ville de départ *</label>
+                    <input id="villeDepart" class="form-control" placeholder="Ouagadougou" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="paysDepart">Pays de départ *</label>
+                    <select id="paysDepart" class="form-select" required>
+                      <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
+                      <option>Niger</option><option>Ghana</option><option>Togo</option><option>Bénin</option><option>Sénégal</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="villeArrivee">Ville d'arrivée *</label>
+                    <input id="villeArrivee" class="form-control" placeholder="Abidjan" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="paysArrivee">Pays d'arrivée *</label>
+                    <select id="paysArrivee" class="form-select" required>
+                      <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
+                      <option>Niger</option><option>Ghana</option><option>Togo</option><option>Bénin</option><option>Sénégal</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="commentaireGeneral">Commentaire</label>
+                    <textarea id="commentaireGeneral" class="form-control" rows="3" placeholder="Instructions particulières, accès, contraintes..."></textarea>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 justify-content-end mt-2">
+                <a href="expediteur-expeditions.html" class="btn btn-secondary">Annuler</a>
+                <button id="btn-submit" type="submit" class="btn btn-primary">Créer l'expédition</button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  document.getElementById('form-expedition').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    UI.loading(btn, true);
+
+    const now = new Date();
+    const poidsValeur = Number(document.getElementById('poidsValeur').value);
+    const poidsUnite  = document.getElementById('poidsUnite').value;
+    // Normalise en tonnes pour le champ poids du backend
+    const poidsEnTonnes = poidsUnite === 'kg' ? poidsValeur / 1000 : poidsValeur;
+
+    const payload = {
+      marchandise: document.getElementById('marchandise').value,
+      emballage: document.getElementById('emballage').value || undefined,
+      quantite: Number(document.getElementById('quantite').value),
+      poids: poidsEnTonnes,
+      uniteQuantite: poidsUnite,
+      villeDepart: document.getElementById('villeDepart').value.trim(),
+      paysDepart: document.getElementById('paysDepart').value,
+      villeArrivee: document.getElementById('villeArrivee').value.trim(),
+      paysArrivee: document.getElementById('paysArrivee').value,
+      dateAnnonce:  now.toISOString().split('T')[0],
+      heureAnnonce: now.toTimeString().slice(0, 5),
+      prixTransport: document.getElementById('prixTransport').value ? Number(document.getElementById('prixTransport').value) : undefined,
+      commentaireGeneral: document.getElementById('commentaireGeneral').value || undefined,
+    };
+
+    console.log('payload envoyé:', JSON.stringify(payload, null, 2));
+    try {
+      await api.post('/shipments', payload);
+      UI.toast('Expédition créée avec succès !', 'success');
+      setTimeout(() => window.location.href = 'expediteur-expeditions.html', 1000);
+    } catch (err) {
+      console.error('erreur backend:', err);
+      UI.alert(err.error ?? err.message ?? JSON.stringify(err));
+      UI.loading(btn, false);
+    }
+  });
+});
+</script>
+</body>
+</html>

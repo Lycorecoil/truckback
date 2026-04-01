@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Tracking | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    #map { height: 520px; width: 100%; border-radius: 6px; z-index: 0; }
+    .tracking-info { font-size: 0.85rem; }
+    .pulse {
+      display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+      background: #3b7ddd; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(59,125,221,0.6); }
+      70%  { box-shadow: 0 0 0 10px rgba(59,125,221,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,125,221,0); }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="expediteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Expéditeur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="expediteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Tableau de bord</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="expediteur-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Mes Expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="expediteur-nouvelle-expedition.html"><i class="align-middle" data-feather="plus-circle"></i> <span class="align-middle">Nouvelle Expédition</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Tracking</strong> <span id="title-ref" class="text-muted fw-normal"></span></h1>
+          <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-secondary">
+            <i class="align-middle me-1" data-feather="arrow-left"></i> Retour
+          </a>
+        </div>
+
+        <!-- Infos expédition -->
+        <div class="row mb-3">
+          <div class="col-md-8">
+            <div class="card h-100">
+              <div class="card-body py-3 tracking-info">
+                <div class="row">
+                  <div class="col-sm-4"><span class="text-muted">Trajet</span><br><strong id="info-trajet">—</strong></div>
+                  <div class="col-sm-4"><span class="text-muted">Marchandise</span><br><strong id="info-marchandise">—</strong></div>
+                  <div class="col-sm-4"><span class="text-muted">Statut</span><br><span id="info-statut">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body py-3 tracking-info">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="pulse"></span>
+                  <strong>Dernière position</strong>
+                </div>
+                <div id="info-position" class="text-muted">En attente de données GPS...</div>
+                <div id="info-vitesse" class="text-muted"></div>
+                <div id="info-lastupdate" class="text-muted" style="font-size:0.75rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carte -->
+        <div class="card">
+          <div class="card-body p-2">
+            <div id="map"></div>
+          </div>
+        </div>
+
+        <div class="text-muted text-end mt-2" style="font-size:0.75rem;">
+          Actualisation automatique toutes les 30s — <span id="next-refresh"></span>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+const shipmentId = new URLSearchParams(window.location.search).get('id');
+let map, routeLine, truckMarker, refreshTimer, countdownTimer, countdown = 30;
+
+// Icône camion personnalisée
+const truckIcon = L.divIcon({
+  html: `<div style="background:#3b7ddd;color:#fff;border-radius:50%;width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.3)">🚛</div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  className: '',
+});
+
+function initMap() {
+  // Centré sur Afrique de l'Ouest par défaut
+  map = L.map('map').setView([12.3714, -1.5197], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18,
+  }).addTo(map);
+}
+
+async function loadTracking() {
+  if (!shipmentId) return;
+
+  const points = await api.get(`/tracking/shipment/${shipmentId}`);
+  if (!points || points.length === 0) {
+    document.getElementById('info-position').textContent = 'Aucune position GPS reçue pour le moment.';
+    return;
+  }
+
+  // Tracer la route
+  const coords = points.map(p => [p.latitude, p.longitude]);
+  if (routeLine) map.removeLayer(routeLine);
+  routeLine = L.polyline(coords, { color: '#3b7ddd', weight: 4, opacity: 0.8 }).addTo(map);
+
+  // Marqueur départ
+  L.circleMarker(coords[0], { radius: 8, color: '#28a745', fillColor: '#28a745', fillOpacity: 1 })
+    .addTo(map).bindPopup('Départ');
+
+  // Marqueur position actuelle (dernier point)
+  const last = points[points.length - 1];
+  if (truckMarker) map.removeLayer(truckMarker);
+  truckMarker = L.marker([last.latitude, last.longitude], { icon: truckIcon })
+    .addTo(map)
+    .bindPopup(`<strong>Position actuelle</strong><br>
+      Lat: ${last.latitude.toFixed(5)}<br>
+      Lng: ${last.longitude.toFixed(5)}<br>
+      ${last.vitesse != null ? `Vitesse: ${last.vitesse} km/h<br>` : ''}
+      ${new Date(last.timestamp).toLocaleString('fr-FR')}`)
+    .openPopup();
+
+  // Centrer la carte sur la position actuelle
+  map.setView([last.latitude, last.longitude], Math.max(map.getZoom(), 8));
+
+  // Infos panneau
+  document.getElementById('info-position').innerHTML =
+    `Lat: <strong>${last.latitude.toFixed(5)}</strong> — Lng: <strong>${last.longitude.toFixed(5)}</strong>`;
+  document.getElementById('info-vitesse').textContent =
+    last.vitesse != null ? `Vitesse : ${last.vitesse} km/h` : '';
+  document.getElementById('info-lastupdate').textContent =
+    `Mis à jour : ${new Date(last.timestamp).toLocaleString('fr-FR')}`;
+}
+
+function startCountdown() {
+  countdown = 30;
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdown--;
+    const el = document.getElementById('next-refresh');
+    if (el) el.textContent = `prochain dans ${countdown}s`;
+    if (countdown <= 0) clearInterval(countdownTimer);
+  }, 1000);
+}
+
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  startCountdown();
+  refreshTimer = setTimeout(async () => {
+    await loadTracking();
+    scheduleRefresh();
+  }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  if (!shipmentId) {
+    document.getElementById('info-trajet').textContent = 'ID manquant dans l\'URL';
+    return;
+  }
+
+  document.getElementById('title-ref').textContent = `#${shipmentId.slice(0, 8)}`;
+
+  // Charger les infos de l'expédition
+  const shipments = await api.get('/shipments');
+  const list = Array.isArray(shipments) ? shipments : (shipments?.data ?? []);
+  const s = list.find(x => x.id === shipmentId);
+  if (s) {
+    document.getElementById('title-ref').textContent   = `#${s.id.slice(0, 8)}`;
+    document.getElementById('info-trajet').textContent = `${s.villeDepart} → ${s.villeArrivee}`;
+    document.getElementById('info-marchandise').textContent = `${s.marchandise} — ${s.poids}T`;
+    document.getElementById('info-statut').innerHTML   = UI.shipmentBadge(s.statut);
+  }
+
+  initMap();
+  await loadTracking();
+  scheduleRefresh();
+});
+</script>
+</body>
+</html>
