@@ -258,12 +258,7 @@
       <div class="field-row mb-3">
         <div>
           <label class="form-label" for="pays">Pays *</label>
-          <select id="pays" class="form-select" required>
-            <option value="">Choisir</option>
-            <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
-            <option>Niger</option><option>Ghana</option><option>Togo</option>
-            <option>Bénin</option><option>Sénégal</option>
-          </select>
+          <select id="pays" class="form-select country-select" required></select>
         </div>
         <div>
           <label class="form-label" for="ville">Ville *</label>
@@ -317,7 +312,6 @@
         <input id="fonctionRepresentant" class="form-control" placeholder="Directeur Général" required />
       </div>
 
-
       <button id="btn-submit" type="submit" class="btn-finish">
         🎉 Finaliser mon inscription
       </button>
@@ -334,6 +328,7 @@
 <script src="js/app-elimmeka.js"></script>
 <script>
 let currentStep = 1;
+
 
 function updateStepper(n) {
   for (let i = 1; i <= 3; i++) {
@@ -368,6 +363,7 @@ function goStep(n) {
 document.addEventListener('DOMContentLoaded', () => {
   // Onboarding : on vérifie juste la connexion, PAS le profil (sinon boucle infinie)
   if (!Auth.isLoggedIn()) { window.location.href = 'pages-sign-in.html'; return; }
+  fillCountrySelects();
 
   const user = Auth.getUser();
   if (user?.orgId) { Auth.redirectByRole(); return; }
@@ -401,6 +397,8 @@ document.getElementById('form-onboarding').addEventListener('submit', async (e) 
       nomRepresentant:       document.getElementById('nomRepresentant').value.trim(),
       prenomRepresentant:    document.getElementById('prenomRepresentant').value.trim(),
       fonctionRepresentant:  document.getElementById('fonctionRepresentant').value.trim(),
+      emailRepresentant:     document.getElementById('email').value.trim(),
+      telephoneRepresentant: document.getElementById('telephone').value.trim(),
     };
 
     try {

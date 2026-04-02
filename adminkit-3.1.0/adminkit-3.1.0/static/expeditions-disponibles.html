@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Expéditions disponibles | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" id="sidebar-brand"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav" id="sidebar-nav"></ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h1 class="h3 mb-1"><strong>Expéditions disponibles</strong></h1>
+            <p class="text-muted mb-0" id="page-subtitle">Chargement...</p>
+          </div>
+          <a id="btn-back" href="#" class="btn btn-light">
+            <i class="align-middle" data-feather="arrow-left" style="width:14px"></i> Retour
+          </a>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Filtres avancés -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body">
+            <div class="row g-2">
+
+              <div class="col-md-4 col-6">
+                <label class="form-label small mb-1">Marchandise</label>
+                <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, ciment, pneu..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-4 col-6">
+                <label class="form-label small mb-1">Pays de départ</label>
+                <select id="f-pays-depart" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+
+              <div class="col-md-4 col-6">
+                <label class="form-label small mb-1">Pays d'arrivée</label>
+                <select id="f-pays-arrivee" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville de départ</label>
+                <input id="f-ville-depart" class="form-control form-control-sm" placeholder="Ouagadougou..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville d'arrivée</label>
+                <input id="f-ville-arrivee" class="form-control form-control-sm" placeholder="Abidjan..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids min (T)</label>
+                <input id="f-poids-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" step="0.1" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids max (T)</label>
+                <input id="f-poids-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" step="0.1" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix min (FCFA)</label>
+                <input id="f-prix-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix max (FCFA)</label>
+                <input id="f-prix-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Du</label>
+                <input id="f-date-debut" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Au</label>
+                <input id="f-date-fin" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="cards-container" class="row g-3">
+          <div class="col-12 text-center py-5 text-muted">
+            <div class="spinner-border me-2"></div> Chargement...
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- ── OVERLAY DÉTAIL ──────────────────────────────────────────────────── -->
+<div id="detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:500px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Détail de l'expédition</h5>
+      <button class="btn btn-sm btn-light" onclick="closeDetail()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div id="detail-content"></div>
+    <div class="d-flex gap-2 justify-content-end mt-4">
+      <button class="btn btn-outline-secondary" onclick="closeDetail()">Fermer</button>
+      <button class="btn btn-success" id="btn-interested">
+        <i class="align-middle me-1" data-feather="check-circle" style="width:14px"></i> Je suis intéressé
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allShipments = [];
+let role = '';
+let filterPanelOpen = true;
+
+// ─── Sidebar ───────────────────────────────────────────────────────────────────
+function buildSidebar(r) {
+  const brand = document.getElementById('sidebar-brand');
+  const nav   = document.getElementById('sidebar-nav');
+  const back  = document.getElementById('btn-back');
+  if (r === 'TRANSPORTER') {
+    brand.href = 'transporteur-dashboard.html';
+    back.href  = 'transporteur-dashboard.html';
+    nav.innerHTML = `
+      <li class="sidebar-header">Portail Transporteur</li>
+      <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+      <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+      <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+      <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+      <li class="sidebar-item active"><a class="sidebar-link" href="expeditions-disponibles.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Expéditions dispo.</span></a></li>
+    `;
+  } else {
+    brand.href = 'expediteur-dashboard.html';
+    back.href  = 'expediteur-dashboard.html';
+    nav.innerHTML = `
+      <li class="sidebar-header">Portail Expéditeur</li>
+      <li class="sidebar-item"><a class="sidebar-link" href="expediteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Tableau de bord</span></a></li>
+      <li class="sidebar-item"><a class="sidebar-link" href="expediteur-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Mes Expéditions</span></a></li>
+      <li class="sidebar-item active"><a class="sidebar-link" href="expeditions-disponibles.html"><i class="align-middle" data-feather="list"></i> <span class="align-middle">Expéditions dispo.</span></a></li>
+    `;
+  }
+}
+
+// ─── Filtres ───────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const marchandise  = document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const paysDepart   = document.getElementById('f-pays-depart').value;
+  const paysArrivee  = document.getElementById('f-pays-arrivee').value;
+  const villeDepart  = document.getElementById('f-ville-depart').value.trim().toLowerCase();
+  const villeArrivee = document.getElementById('f-ville-arrivee').value.trim().toLowerCase();
+  const poidsMin     = document.getElementById('f-poids-min').value ? Number(document.getElementById('f-poids-min').value) : null;
+  const poidsMax     = document.getElementById('f-poids-max').value ? Number(document.getElementById('f-poids-max').value) : null;
+  const prixMin      = document.getElementById('f-prix-min').value  ? Number(document.getElementById('f-prix-min').value)  : null;
+  const prixMax      = document.getElementById('f-prix-max').value  ? Number(document.getElementById('f-prix-max').value)  : null;
+  const dateDebut    = document.getElementById('f-date-debut').value;
+  const dateFin      = document.getElementById('f-date-fin').value;
+
+  const filtered = allShipments.filter(s => {
+    if (marchandise  && !s.marchandise.toLowerCase().includes(marchandise)) return false;
+    if (paysDepart   && s.paysDepart  !== paysDepart)  return false;
+    if (paysArrivee  && s.paysArrivee !== paysArrivee) return false;
+    if (villeDepart  && !s.villeDepart.toLowerCase().includes(villeDepart))   return false;
+    if (villeArrivee && !s.villeArrivee.toLowerCase().includes(villeArrivee)) return false;
+    if (poidsMin !== null && s.poids < poidsMin) return false;
+    if (poidsMax !== null && s.poids > poidsMax) return false;
+    if (prixMin  !== null && (s.prixTransport ?? 0) < prixMin) return false;
+    if (prixMax  !== null && (s.prixTransport ?? 0) > prixMax) return false;
+    if (dateDebut && s.dateAnnonce < dateDebut) return false;
+    if (dateFin   && s.dateAnnonce > dateFin)   return false;
+    return true;
+  });
+
+  renderCards(filtered);
+
+  const activeCount = [marchandise, paysDepart, paysArrivee, villeDepart, villeArrivee,
+    dateDebut, dateFin,
+    poidsMin !== null ? '1' : '', poidsMax !== null ? '1' : '',
+    prixMin  !== null ? '1' : '', prixMax  !== null ? '1' : '',
+  ].filter(Boolean).length;
+
+  const badge = document.getElementById('filter-badge');
+  if (activeCount > 0) { badge.textContent = activeCount; badge.classList.remove('d-none'); }
+  else { badge.classList.add('d-none'); }
+
+  document.getElementById('filter-result-count').textContent =
+    `${filtered.length} annonce${filtered.length !== 1 ? 's' : ''} sur ${allShipments.length}`;
+}
+
+function resetFilters() {
+  ['f-pays-depart','f-pays-arrivee'].forEach(id => document.getElementById(id).value = '');
+  ['f-marchandise','f-ville-depart','f-ville-arrivee',
+   'f-poids-min','f-poids-max','f-prix-min','f-prix-max',
+   'f-date-debut','f-date-fin'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
+
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  document.getElementById('filter-panel').style.display = filterPanelOpen ? '' : 'none';
+  document.getElementById('filter-chevron').style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+}
+
+// ─── Cartes ────────────────────────────────────────────────────────────────────
+function renderCards(list) {
+  const container = document.getElementById('cards-container');
+  if (list.length === 0) {
+    container.innerHTML = `<div class="col-12 text-center py-5"><div style="font-size:3rem;margin-bottom:12px">📦</div><h5 class="text-muted">Aucune expédition trouvée</h5><p class="text-muted small">Essayez de modifier vos filtres.</p></div>`;
+    return;
+  }
+  container.innerHTML = list.map(s => `
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <span class="text-muted small fw-semibold">#${s.id.slice(0,8).toUpperCase()}</span>
+            ${role === 'TRANSPORTER' ? '<span class="badge bg-warning text-dark">Disponible</span>' : UI.shipmentBadge(s.statut)}
+          </div>
+          <h5 class="mb-1">
+            <i class="align-middle me-1" data-feather="map-pin" style="width:15px;color:#3b7ddd"></i>
+            ${s.villeDepart} → ${s.villeArrivee}
+          </h5>
+          <div class="text-muted small mb-3">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
+          <div class="row g-2 mb-2">
+            <div class="col-6"><div class="text-muted small">Marchandise</div><div class="fw-semibold">${s.marchandise}</div></div>
+            <div class="col-6"><div class="text-muted small">Poids</div><div class="fw-semibold">${s.poids} T</div></div>
+            <div class="col-6"><div class="text-muted small">Date</div><div class="fw-semibold">${UI.formatDate(s.dateAnnonce)}</div></div>
+            <div class="col-6">
+              <div class="text-muted small">Prix proposé</div>
+              <div class="fw-semibold ${s.prixTransport ? 'text-success' : 'text-muted'}">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : 'Non défini'}</div>
+            </div>
+            ${s.emballage ? `<div class="col-6"><div class="text-muted small">Emballage</div><div class="fw-semibold">${s.emballage}</div></div>` : ''}
+            ${s.quantite  ? `<div class="col-6"><div class="text-muted small">Quantité</div><div class="fw-semibold">${s.quantite}</div></div>` : ''}
+          </div>
+          ${s.commentaireGeneral ? `<p class="text-muted small mb-0 fst-italic border-top pt-2 mt-2">"${s.commentaireGeneral}"</p>` : ''}
+        </div>
+        <div class="card-footer d-flex gap-2 justify-content-end">
+          ${role === 'TRANSPORTER' ? `
+            <button class="btn btn-sm btn-outline-primary" onclick="openDetail('${s.id}')">
+              <i data-feather="eye" style="width:13px"></i> Détail
+            </button>
+            <button class="btn btn-sm btn-success" id="btn-interest-${s.id}" onclick="expressInterest('${s.id}', this)">
+              <i data-feather="thumbs-up" style="width:13px"></i> Je suis intéressé
+            </button>
+          ` : `
+            <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">
+              <i data-feather="external-link" style="width:13px"></i> Gérer
+            </a>
+          `}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+// ─── Intérêt ───────────────────────────────────────────────────────────────────
+async function expressInterest(id, btn) {
+  UI.loading(btn, true);
+  try {
+    await api.post(`/shipments/${id}/interest`, {});
+    UI.toast('Intérêt enregistré ! L\'équipe Elimmekatruck va examiner votre candidature.', 'success');
+    btn.disabled = true;
+    btn.innerHTML = '<i data-feather="check" style="width:13px"></i> Intérêt envoyé';
+    btn.classList.replace('btn-success', 'btn-secondary');
+    if (typeof feather !== 'undefined') feather.replace();
+  } catch (err) {
+    const msg = err.error ?? err.message ?? 'Erreur';
+    if (msg.includes('déjà')) {
+      UI.toast('Vous avez déjà manifesté votre intérêt pour cette expédition.', 'warning');
+      btn.disabled = true;
+      btn.innerHTML = '<i data-feather="check" style="width:13px"></i> Intérêt envoyé';
+      btn.classList.replace('btn-success', 'btn-secondary');
+    } else {
+      UI.toast(msg, 'danger');
+      UI.loading(btn, false);
+    }
+    if (typeof feather !== 'undefined') feather.replace();
+  }
+}
+
+// ─── Overlay détail ────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const s = allShipments.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('detail-content').innerHTML = `
+    <table class="table table-sm mb-0">
+      <tr><td class="text-muted" style="width:40%">Référence</td><td><strong>#${s.id.slice(0,8).toUpperCase()}</strong></td></tr>
+      <tr><td class="text-muted">Départ</td><td>${s.paysDepart ?? '—'} / ${s.villeDepart}</td></tr>
+      <tr><td class="text-muted">Arrivée</td><td>${s.paysArrivee ?? '—'} / ${s.villeArrivee}</td></tr>
+      <tr><td class="text-muted">Marchandise</td><td>${s.marchandise}</td></tr>
+      <tr><td class="text-muted">Poids</td><td>${s.poids} T</td></tr>
+      ${s.emballage ? `<tr><td class="text-muted">Emballage</td><td>${s.emballage}</td></tr>` : ''}
+      ${s.quantite  ? `<tr><td class="text-muted">Quantité</td><td>${s.quantite}</td></tr>` : ''}
+      ${s.prixTransport ? `<tr><td class="text-muted">Prix proposé</td><td class="fw-semibold text-success">${s.prixTransport.toLocaleString('fr-FR')} FCFA</td></tr>` : ''}
+      <tr><td class="text-muted">Date annonce</td><td>${UI.formatDate(s.dateAnnonce)} à ${s.heureAnnonce ?? '—'}</td></tr>
+      ${s.commentaireGeneral ? `<tr><td class="text-muted">Commentaire</td><td class="fst-italic">"${s.commentaireGeneral}"</td></tr>` : ''}
+    </table>
+  `;
+  document.getElementById('btn-interested').onclick = () => {
+    closeDetail();
+    const btn = document.getElementById(`btn-interest-${id}`);
+    if (btn) expressInterest(id, btn);
+  };
+  document.getElementById('detail-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeDetail() { document.getElementById('detail-overlay').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const user = Auth.getUser();
+  role = user?.role ?? '';
+  buildSidebar(role);
+  fillCountrySelects(true);
+
+  document.getElementById('page-subtitle').textContent =
+    role === 'TRANSPORTER'
+      ? 'Toutes les expéditions en attente d\'un transporteur'
+      : 'Toutes vos expéditions';
+
+  try {
+    const res = await api.get('/shipments');
+    const all = Array.isArray(res) ? res : (res?.data ?? []);
+    allShipments = role === 'TRANSPORTER' ? all.filter(s => s.statut === 'PENDING') : all;
+    applyFilters();
+  } catch (err) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger">Erreur : ${err.error ?? err.message ?? 'Erreur inconnue'}</div>`;
+  }
+});
+</script>
+</body>
+</html>

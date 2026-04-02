@@ -17,7 +17,7 @@
       <ul class="sidebar-nav">
         <li class="sidebar-header">Portail Transporteur</li>
         <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
-        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-warning text-dark ms-1" id="badge-pending">0</span></span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-danger ms-1 d-none" id="badge-pending"></span></span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
       </ul>
@@ -45,18 +45,22 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <h1 class="h3 mb-3"><strong>Dashboard</strong> Transporteur</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Dashboard</strong> Transporteur</h1>
+          <a href="expeditions-disponibles.html" class="btn btn-danger btn-lg px-4 fw-semibold" style="font-size:1.05rem">
+            <i class="align-middle me-2" data-feather="package" style="width:20px;height:20px"></i> Voir les annonces disponibles
+          </a>
+        </div>
 
-        <!-- Alertes -->
         <div id="alert-container"></div>
 
-        <!-- KPI -->
+        <!-- KPI row 1 : Véhicules · Chauffeurs · Annonces disponibles -->
         <div class="row">
-          <div class="col-sm-6 col-xl-3">
+          <div class="col-sm-6 col-xl-4">
             <div class="card">
               <div class="card-body">
                 <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">Camions</h5></div>
+                  <div class="col mt-0"><h5 class="card-title">Véhicules</h5></div>
                   <div class="col-auto"><div class="stat text-primary"><i class="align-middle" data-feather="truck"></i></div></div>
                 </div>
                 <h1 class="mt-1 mb-3" id="kpi-trucks">—</h1>
@@ -64,7 +68,7 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
+          <div class="col-sm-6 col-xl-4">
             <div class="card">
               <div class="card-body">
                 <div class="row">
@@ -76,11 +80,11 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
+          <div class="col-sm-6 col-xl-4">
             <div class="card">
               <div class="card-body">
                 <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">Missions disponibles</h5></div>
+                  <div class="col mt-0"><h5 class="card-title">Annonces disponibles</h5></div>
                   <div class="col-auto"><div class="stat text-warning"><i class="align-middle" data-feather="clipboard"></i></div></div>
                 </div>
                 <h1 class="mt-1 mb-3" id="kpi-pending">—</h1>
@@ -88,15 +92,31 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
+        </div>
+
+        <!-- KPI row 2 : En attente de validation · En cours d'exécution -->
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="card border-start border-warning border-3">
               <div class="card-body">
                 <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">En cours</h5></div>
+                  <div class="col mt-0"><h5 class="card-title">En attente de validation</h5></div>
+                  <div class="col-auto"><div class="stat text-warning"><i class="align-middle" data-feather="clock"></i></div></div>
+                </div>
+                <h1 class="mt-1 mb-3" id="kpi-validation">—</h1>
+                <div class="mb-0 text-muted">En attente de validation de chauffeur</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="card border-start border-info border-3">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col mt-0"><h5 class="card-title">En cours d'exécution</h5></div>
                   <div class="col-auto"><div class="stat text-info"><i class="align-middle" data-feather="map-pin"></i></div></div>
                 </div>
-                <h1 class="mt-1 mb-3" id="kpi-inprogress">—</h1>
-                <div class="mb-0 text-muted">Missions actives</div>
+                <h1 class="mt-1 mb-3" id="kpi-execution">—</h1>
+                <div class="mb-0 text-muted">Missions actives en transit</div>
               </div>
             </div>
           </div>
@@ -125,9 +145,9 @@
           <div class="col-sm-6 col-xl-3">
             <div class="card">
               <div class="card-body">
-                <h6 class="card-title text-muted mb-2">Taux d'utilisation flotte</h6>
+                <h6 class="card-title text-muted mb-2">Taux d'utilisation véhicules</h6>
                 <h2 class="mb-1" id="stat-util">—</h2>
-                <small class="text-muted">Missions actives / camions</small>
+                <small class="text-muted">Missions actives / véhicules</small>
               </div>
             </div>
           </div>
@@ -160,19 +180,33 @@
           </div>
         </div>
 
-        <!-- MISSIONS DISPONIBLES -->
+        <!-- ANNONCES DISPONIBLES avec filtres -->
         <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="card-title mb-0">
               <i class="align-middle me-2" data-feather="clipboard"></i>
-              Missions disponibles
+              Annonces disponibles
             </h5>
-            <a href="transporteur-missions.html" class="btn btn-sm btn-primary">Voir tout</a>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <input id="f-marchandise" class="form-control form-control-sm" style="width:160px" placeholder="Marchandise..." oninput="filterMissions()" />
+              <select id="f-pays-arrivee" class="form-select form-select-sm country-select" style="width:160px" onchange="filterMissions()"></select>
+              <select id="f-poids" class="form-select form-select-sm" style="width:130px" onchange="filterMissions()">
+                <option value="">Tout poids</option>
+                <option value="0-5">0 – 5 T</option>
+                <option value="5-20">5 – 20 T</option>
+                <option value="20-50">20 – 50 T</option>
+                <option value="50+">50 T +</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetMissionFilters()">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+              <a href="transporteur-missions.html" class="btn btn-sm btn-primary">Voir tout</a>
+            </div>
           </div>
           <div class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="table-light">
-                <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Date</th><th>Prix</th><th>Action</th></tr>
+                <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Poids</th><th class="d-none d-md-table-cell">Prix</th><th>Action</th></tr>
               </thead>
               <tbody id="tbody-missions">
                 <tr><td colspan="6" class="text-center py-4 text-muted">
@@ -181,6 +215,7 @@
               </tbody>
             </table>
           </div>
+          <div class="card-footer text-muted small" id="missions-count"></div>
         </div>
 
       </div>
@@ -195,6 +230,8 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
+let allPending = [];
+
 function getLast6Months() {
   const months = [];
   const d = new Date();
@@ -204,7 +241,6 @@ function getLast6Months() {
   }
   return months;
 }
-
 function monthLabel(ym) {
   const [y, mo] = ym.split('-');
   return new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
@@ -213,37 +249,23 @@ function monthLabel(ym) {
 function buildRevenueChart(shipments) {
   const months = getLast6Months();
   const revenues = months.map(m =>
-    shipments
-      .filter(s => s.statut === 'DELIVERED' && (s.dateAnnonce ?? '').startsWith(m) && s.prixTransport)
+    shipments.filter(s => s.statut === 'DELIVERED' && (s.dateAnnonce ?? '').startsWith(m) && s.prixTransport)
       .reduce((sum, s) => sum + s.prixTransport, 0)
   );
   new Chart(document.getElementById('chart-revenue'), {
     type: 'bar',
     data: {
       labels: months.map(monthLabel),
-      datasets: [{
-        label: 'Revenus (FCFA)',
-        data: revenues,
-        backgroundColor: 'rgba(59,125,221,0.75)',
-        borderRadius: 4,
-      }]
+      datasets: [{ label: 'Revenus (FCFA)', data: revenues, backgroundColor: 'rgba(59,125,221,0.75)', borderRadius: 4 }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { callback: v => v.toLocaleString('fr-FR') }
-        }
-      }
-    }
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('fr-FR') } } } }
   });
 }
 
 function buildDonut(shipments) {
   const statuts = ['PENDING','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
-  const labels  = ['Disponible','Acceptée','En cours','Livrée','Annulée'];
-  const colors  = ['#f0ad4e','#5bc0de','#3b7ddd','#28a745','#dc3545'];
+  const labels  = ['Disponible','En attente de validation','En cours d\'exécution','Livrée','Annulée'];
+  const colors  = ['#f0ad4e','#fd7e14','#3b7ddd','#28a745','#dc3545'];
   const data    = statuts.map(s => shipments.filter(x => x.statut === s).length);
   if (data.every(v => v === 0)) return;
   new Chart(document.getElementById('chart-donut'), {
@@ -254,71 +276,92 @@ function buildDonut(shipments) {
 }
 
 function buildStats(shipments, trucks) {
-  const delivered  = shipments.filter(s => s.statut === 'DELIVERED');
-  const active     = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut));
-  const cancelled  = shipments.filter(s => s.statut === 'CANCELLED');
-
-  // Taux utilisation flotte
-  const nbTrucks = trucks.length;
-  const util = nbTrucks > 0 ? Math.min(Math.round((active.length / nbTrucks) * 100), 100) : 0;
-  document.getElementById('stat-util').textContent = util + ' %';
-
-  // Revenu moyen
+  const delivered = shipments.filter(s => s.statut === 'DELIVERED');
+  const active    = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut));
+  const cancelled = shipments.filter(s => s.statut === 'CANCELLED');
+  const nbTrucks  = trucks.length;
+  document.getElementById('stat-util').textContent =
+    nbTrucks > 0 ? Math.min(Math.round((active.length / nbTrucks) * 100), 100) + ' %' : '—';
   const withPrice = delivered.filter(s => s.prixTransport);
-  if (withPrice.length > 0) {
-    const avg = Math.round(withPrice.reduce((sum, s) => sum + s.prixTransport, 0) / withPrice.length);
-    document.getElementById('stat-avg').textContent = avg.toLocaleString('fr-FR') + ' FCFA';
-  } else {
-    document.getElementById('stat-avg').textContent = '—';
-  }
-
-  // Top trajet
+  document.getElementById('stat-avg').textContent = withPrice.length > 0
+    ? Math.round(withPrice.reduce((s, x) => s + x.prixTransport, 0) / withPrice.length).toLocaleString('fr-FR') + ' FCFA' : '—';
   const freq = {};
-  shipments.forEach(s => {
-    if (s.villeDepart && s.villeArrivee) {
-      const key = `${s.villeDepart} → ${s.villeArrivee}`;
-      freq[key] = (freq[key] ?? 0) + 1;
-    }
-  });
+  shipments.forEach(s => { if (s.villeDepart && s.villeArrivee) { const k = `${s.villeDepart} → ${s.villeArrivee}`; freq[k] = (freq[k] ?? 0) + 1; } });
   const top = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
   document.getElementById('stat-route').textContent = top ? top[0] : '—';
-
-  // Taux de réussite
   const denom = delivered.length + cancelled.length;
-  const success = denom > 0 ? Math.round((delivered.length / denom) * 100) : 0;
-  document.getElementById('stat-success').textContent = denom > 0 ? success + ' %' : '—';
+  document.getElementById('stat-success').textContent = denom > 0 ? Math.round((delivered.length / denom) * 100) + ' %' : '—';
 }
 
 function buildAlerts(shipments, trucks, drivers) {
   const alerts = [];
   const pending = shipments.filter(s => s.statut === 'PENDING');
-  if (pending.length > 0) {
-    alerts.push(`<div class="alert alert-info alert-dismissible fade show mb-2" role="alert">
-      <strong>${pending.length} mission${pending.length > 1 ? 's' : ''} disponible${pending.length > 1 ? 's' : ''}</strong> en attente d'acceptation.
-      <a href="transporteur-missions.html" class="alert-link ms-1">Voir les missions →</a>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`);
-  }
-  if (trucks.length === 0) {
-    alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2" role="alert">
-      <strong>Aucun camion</strong> dans votre flotte. <a href="transporteur-flotte.html" class="alert-link">Ajouter un camion →</a>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`);
-  }
-  if (drivers.length === 0) {
-    alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2" role="alert">
-      <strong>Aucun chauffeur</strong> enregistré. <a href="transporteur-chauffeurs.html" class="alert-link">Ajouter un chauffeur →</a>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`);
-  }
+  if (pending.length > 0) alerts.push(`<div class="alert alert-info alert-dismissible fade show mb-2"><strong>${pending.length} annonce${pending.length>1?'s':''} disponible${pending.length>1?'s':''}</strong> en attente. <a href="expeditions-disponibles.html" class="alert-link">Voir →</a><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`);
+  if (trucks.length === 0) alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2"><strong>Aucun véhicule</strong> dans votre flotte. <a href="transporteur-flotte.html" class="alert-link">Ajouter →</a><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`);
+  if (drivers.length === 0) alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2"><strong>Aucun chauffeur</strong> enregistré. <a href="transporteur-chauffeurs.html" class="alert-link">Ajouter →</a><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`);
   if (alerts.length > 0) {
     document.getElementById('alert-container').innerHTML = alerts.join('');
+    document.querySelectorAll('#alert-container .alert').forEach(el => {
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+      }, 5000);
+    });
   }
+}
+
+// ─── Filtres annonces ─────────────────────────────────────────────────────────
+function filterMissions() {
+  const marc   = document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const pays   = document.getElementById('f-pays-arrivee').value;
+  const poids  = document.getElementById('f-poids').value;
+
+  const filtered = allPending.filter(s => {
+    if (marc && !s.marchandise.toLowerCase().includes(marc)) return false;
+    if (pays && s.paysArrivee !== pays) return false;
+    if (poids) {
+      const p = s.poids ?? 0;
+      if (poids === '0-5'   && !(p >= 0  && p <= 5))  return false;
+      if (poids === '5-20'  && !(p > 5   && p <= 20)) return false;
+      if (poids === '20-50' && !(p > 20  && p <= 50)) return false;
+      if (poids === '50+'   && !(p > 50))              return false;
+    }
+    return true;
+  });
+  renderMissions(filtered);
+}
+
+function resetMissionFilters() {
+  document.getElementById('f-marchandise').value = '';
+  document.getElementById('f-pays-arrivee').value = '';
+  document.getElementById('f-poids').value = '';
+  renderMissions(allPending);
+}
+
+function renderMissions(list) {
+  const tbody = document.getElementById('tbody-missions');
+  document.getElementById('missions-count').textContent =
+    `${list.length} annonce${list.length !== 1 ? 's' : ''} affichée${list.length !== 1 ? 's' : ''} sur ${allPending.length}`;
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune annonce correspondante.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.slice(0, 8).map(s => `
+    <tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${s.paysDepart ? s.paysDepart+' / ' : ''}${s.villeDepart} → ${s.paysArrivee ? s.paysArrivee+' / ' : ''}${s.villeArrivee}</td>
+      <td>${s.marchandise}</td>
+      <td class="d-none d-md-table-cell">${s.poids} T</td>
+      <td class="d-none d-md-table-cell">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+      <td><a href="transporteur-missions.html" class="btn btn-sm btn-success">Accepter</a></td>
+    </tr>
+  `).join('');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects(true); // withAll = true pour les filtres
 
   const [trucksRes, driversRes, shipmentsRes] = await Promise.all([
     api.get('/fleet/trucks'),
@@ -326,40 +369,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     api.get('/shipments'),
   ]);
 
-  const trucks    = Array.isArray(trucksRes)  ? trucksRes  : (trucksRes?.data  ?? []);
-  const drivers   = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
+  const trucks    = Array.isArray(trucksRes)    ? trucksRes    : (trucksRes?.data    ?? []);
+  const drivers   = Array.isArray(driversRes)   ? driversRes   : (driversRes?.data   ?? []);
   const shipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
-  const pending   = shipments.filter(s => s.statut === 'PENDING');
-  const inprogress = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut));
+
+  allPending = shipments.filter(s => s.statut === 'PENDING');
+  const validation = shipments.filter(s => s.statut === 'ACCEPTED' || s.statut === 'PROPOSED');
+  const execution  = shipments.filter(s => s.statut === 'IN_PROGRESS');
 
   document.getElementById('kpi-trucks').textContent     = trucks.length;
   document.getElementById('kpi-drivers').textContent    = drivers.length;
-  document.getElementById('kpi-pending').textContent    = pending.length;
-  document.getElementById('kpi-inprogress').textContent = inprogress.length;
+  document.getElementById('kpi-pending').textContent    = allPending.length;
+  document.getElementById('kpi-validation').textContent = validation.length;
+  document.getElementById('kpi-execution').textContent  = execution.length;
 
+  const proposed = shipments.filter(s => s.statut === 'PROPOSED');
   const badgeEl = document.getElementById('badge-pending');
-  if (badgeEl) badgeEl.textContent = pending.length;
+  if (badgeEl) {
+    if (proposed.length > 0) {
+      badgeEl.textContent = proposed.length;
+      badgeEl.classList.remove('d-none');
+    } else {
+      badgeEl.classList.add('d-none');
+    }
+  }
 
   buildRevenueChart(shipments);
   buildDonut(shipments);
   buildStats(shipments, trucks);
   buildAlerts(shipments, trucks, drivers);
-
-  const tbody = document.getElementById('tbody-missions');
-  if (pending.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune mission disponible.</td></tr>';
-  } else {
-    tbody.innerHTML = pending.slice(0, 5).map(s => `
-      <tr>
-        <td><strong>#${s.id.slice(0,8)}</strong></td>
-        <td>${s.villeDepart} → ${s.villeArrivee}</td>
-        <td>${s.marchandise} — ${s.poids}T</td>
-        <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
-        <td>${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
-        <td><a href="transporteur-missions.html" class="btn btn-sm btn-success">Accepter</a></td>
-      </tr>
-    `).join('');
-  }
+  renderMissions(allPending);
 });
 </script>
 </body>

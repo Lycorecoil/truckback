@@ -32,7 +32,7 @@ export class User {
   }
 
   private validate(props: UserProps): void {
-    if (!props.tenantId) {
+    if (!props.tenantId && props.role !== UserRole.ADMIN) {
       throw new Error('Le tenantId est obligatoire.');
     }
     if (!props.password) {

@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         role: data.role,
         tenantId,          // généré localement, le backend ne le renvoie pas
       });
-      Auth.redirectByRole();
+      window.location.href = 'onboarding.html';
     } catch (err) {
       UI.alert(err.message ?? 'Erreur de création de compte');
       UI.loading(btn, false);

@@ -5,6 +5,29 @@
 
 const API = '/v1';
 
+// ─── 17 pays Afrique de l'Ouest ───────────────────────────────────────────────
+const PAYS_AO = [
+  'Bénin','Burkina Faso','Cap-Vert','Côte d\'Ivoire','Gambie','Ghana',
+  'Guinée','Guinée-Bissau','Libéria','Mali','Mauritanie','Niger','Nigéria',
+  'Sénégal','Sierra Leone','Togo','Cameroun'
+];
+
+/**
+ * Remplit tous les <select class="country-select"> de la page.
+ * @param {boolean} withAll - si true, ajoute une option "Tous" en tête (pour les filtres)
+ */
+function fillCountrySelects(withAll = false) {
+  document.querySelectorAll('select.country-select').forEach(sel => {
+    const current = sel.value;
+    const first = withAll
+      ? '<option value="">Tous</option>'
+      : '<option value="">-- Choisir --</option>';
+    sel.innerHTML = first + PAYS_AO.map(p =>
+      `<option${current === p ? ' selected' : ''}>${p}</option>`
+    ).join('');
+  });
+}
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 const Auth = {
@@ -77,6 +100,7 @@ const api = {
   async get(path) {
     const r = await fetch(`${API}${path}`, { headers: Auth.headers() });
     if (r.status === 401) { Auth.logout(); return null; }
+    if (!r.ok) return null;
     return r.json();
   },
   async post(path, body) {
@@ -152,14 +176,15 @@ const UI = {
   /** Badge statut expédition */
   shipmentBadge(statut) {
     const map = {
-      PENDING:     { cls: 'bg-warning text-dark', label: 'En attente' },
+      PENDING:     { cls: 'bg-warning text-dark',  label: 'En attente' },
+      PROPOSED:    { cls: 'text-white',            label: 'Proposée', style: 'background:#6f42c1' },
       ACCEPTED:    { cls: 'bg-info text-dark',    label: 'Acceptée' },
       IN_PROGRESS: { cls: 'bg-primary',           label: 'En cours' },
       DELIVERED:   { cls: 'bg-success',           label: 'Livrée' },
       CANCELLED:   { cls: 'bg-danger',            label: 'Annulée' },
     };
     const s = map[statut] ?? { cls: 'bg-secondary', label: statut };
-    return `<span class="badge ${s.cls}">${s.label}</span>`;
+    return `<span class="badge ${s.cls}"${s.style ? ` style="${s.style}"` : ''}>${s.label}</span>`;
   },
 
   /** Badge statut camion */

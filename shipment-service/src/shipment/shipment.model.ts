@@ -1,6 +1,15 @@
 import { Schema, model } from "mongoose";
 import type { Shipment } from "./shipment.entity";
 
+const interestSchema = new Schema(
+  {
+    transporterId:       { type: String, required: true },
+    transporterTenantId: { type: String },
+    createdAt:           { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const geoPointSchema = new Schema(
   {
     latitude:  { type: Number, required: true },
@@ -33,12 +42,13 @@ const shipmentSchema = new Schema<Shipment>(
     prixTransport:       { type: Number },
     statut: {
       type: String,
-      enum: ["PENDING", "ACCEPTED", "IN_PROGRESS", "DELIVERED", "CANCELLED"],
+      enum: ["PENDING", "PROPOSED", "ACCEPTED", "IN_PROGRESS", "DELIVERED", "CANCELLED"],
       default: "PENDING",
       index: true,
     },
     commentaireGeneral:    { type: String },
     commentaireAnnulation: { type: String },
+    interests:             { type: [interestSchema], default: [] },
   },
   {
     timestamps: true,

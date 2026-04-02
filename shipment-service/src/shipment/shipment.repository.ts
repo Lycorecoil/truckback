@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type { IRepository, PaginatedResult, QueryOptions } from "@jb226/generic-service";
 import { paginate, buildFilters } from "@jb226/generic-service";
 import { ShipmentModel } from "./shipment.model";
-import type { Shipment, ShipmentStatus } from "./shipment.entity";
+import type { Shipment, ShipmentStatus, ShipmentInterest } from "./shipment.entity";
 
 export class ShipmentRepository implements IRepository<Shipment> {
   async findById(id: string): Promise<Shipment | null> {
@@ -53,7 +53,7 @@ export class ShipmentRepository implements IRepository<Shipment> {
   ): Promise<Shipment | null> {
     const doc = await ShipmentModel.findOneAndUpdate(
       { id, statut: "PENDING" },
-      { $set: { ...data, statut: "ACCEPTED" } },
+      { $set: { ...data, statut: "ACCEPTED", interests: [] } },
       { returnDocument: "after" }
     );
     return doc ? (doc.toJSON() as Shipment) : null;
@@ -86,5 +86,55 @@ export class ShipmentRepository implements IRepository<Shipment> {
   async findByDriverId(driverId: string): Promise<Shipment[]> {
     const docs = await ShipmentModel.find({ driverId }).sort({ createdAt: -1 });
     return docs.map((d) => d.toJSON() as Shipment);
+  }
+
+  async findProposedForTransporter(transporterTenantId: string): Promise<Shipment[]> {
+    const docs = await ShipmentModel.find({ statut: "PROPOSED", transporterTenantId }).sort({ createdAt: -1 });
+    return docs.map((d) => d.toJSON() as Shipment);
+  }
+
+  async addInterest(id: string, interest: ShipmentInterest): Promise<Shipment | null> {
+    // Vérifie que ce transporteur n'a pas déjà manifesté son intérêt
+    const doc = await ShipmentModel.findOneAndUpdate(
+      { id, statut: "PENDING", "interests.transporterId": { $ne: interest.transporterId } },
+      { $push: { interests: interest } },
+      { returnDocument: "after" }
+    );
+    return doc ? (doc.toJSON() as Shipment) : null;
+  }
+
+  async proposeToTransporter(
+    id: string,
+    data: { transporterId: string; transporterTenantId?: string }
+  ): Promise<Shipment | null> {
+    const doc = await ShipmentModel.findOneAndUpdate(
+      { id, statut: "PENDING" },
+      { $set: { ...data, statut: "PROPOSED" } },
+      { returnDocument: "after" }
+    );
+    return doc ? (doc.toJSON() as Shipment) : null;
+  }
+
+  async acceptProposal(
+    id: string,
+    transporterTenantId: string,
+    transporterId: string,
+    data: { truckId: string; driverId: string }
+  ): Promise<Shipment | null> {
+    const doc = await ShipmentModel.findOneAndUpdate(
+      { id, statut: "PROPOSED", transporterTenantId },
+      { $set: { ...data, statut: "ACCEPTED", transporterId, interests: [] } },
+      { returnDocument: "after" }
+    );
+    return doc ? (doc.toJSON() as Shipment) : null;
+  }
+
+  async refuseProposal(id: string, transporterTenantId: string): Promise<Shipment | null> {
+    const doc = await ShipmentModel.findOneAndUpdate(
+      { id, statut: "PROPOSED", transporterTenantId },
+      { $set: { statut: "PENDING", transporterId: null, transporterTenantId: null } },
+      { returnDocument: "after" }
+    );
+    return doc ? (doc.toJSON() as Shipment) : null;
   }
 }

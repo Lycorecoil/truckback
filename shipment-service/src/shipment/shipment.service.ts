@@ -16,7 +16,7 @@ async function resolveEmail(tenantId: string | undefined, type: "company" | "tra
 }
 
 export class ShipmentService extends GenericService<Shipment> {
-  constructor(private readonly shipmentRepo: ShipmentRepository) {
+  constructor(readonly shipmentRepo: ShipmentRepository) {
     super(shipmentRepo);
   }
 
@@ -127,6 +127,72 @@ export class ShipmentService extends GenericService<Shipment> {
       "Livraison confirmée",
       `Votre marchandise (${shipment.marchandise}) a bien été livrée à ${shipment.villeArrivee}.`,
     );
+    return shipment;
+  }
+
+  async expressInterest(
+    id: string,
+    data: { transporterId: string; transporterTenantId?: string }
+  ): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.addInterest(id, { ...data, createdAt: new Date() });
+    if (!shipment) {
+      throw Object.assign(new Error("Expédition introuvable, déjà pourvue, ou intérêt déjà manifesté"), { statusCode: 409 });
+    }
+    // Notifier l'admin par email
+    const adminEmail = process.env["ADMIN_EMAIL"] ?? FALLBACK_EMAIL;
+    void sendEmail(
+      "admin",
+      adminEmail,
+      "Nouveau transporteur intéressé",
+      `Un transporteur a manifesté son intérêt pour l'expédition ${id} (${shipment.marchandise} — ${shipment.villeDepart} → ${shipment.villeArrivee}).`,
+    );
+    return shipment;
+  }
+
+  async proposeToTransporter(
+    id: string,
+    data: { transporterId: string; transporterTenantId?: string }
+  ): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.proposeToTransporter(id, data);
+    if (!shipment) {
+      throw new Error("Expédition introuvable ou déjà pourvue");
+    }
+    // Notifier le transporteur
+    const transporterEmail = await resolveEmail(data.transporterTenantId, "transporter");
+    void sendEmail(
+      data.transporterId,
+      transporterEmail,
+      "Une mission vous a été proposée",
+      `Elimmekatruck vous propose une mission : ${shipment.marchandise} (${shipment.poids} T) — ${shipment.villeDepart} → ${shipment.villeArrivee}. Connectez-vous pour accepter ou refuser.`,
+    );
+    return shipment;
+  }
+
+  async acceptProposal(
+    id: string,
+    transporterTenantId: string,
+    transporterId: string,
+    data: { truckId: string; driverId: string }
+  ): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.acceptProposal(id, transporterTenantId, transporterId, data);
+    if (!shipment) {
+      throw new Error("Proposition introuvable ou déjà traitée");
+    }
+    const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
+    void sendEmail(
+      shipment.companyId,
+      companyEmail,
+      "Votre annonce a été acceptée",
+      `Un transporteur a accepté votre annonce pour ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
+    );
+    return shipment;
+  }
+
+  async refuseProposal(id: string, transporterTenantId: string): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.refuseProposal(id, transporterTenantId);
+    if (!shipment) {
+      throw new Error("Proposition introuvable ou déjà traitée");
+    }
     return shipment;
   }
 

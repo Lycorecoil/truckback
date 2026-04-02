@@ -17,9 +17,10 @@
       <ul class="sidebar-nav">
         <li class="sidebar-header">Portail Transporteur</li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
-        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-danger ms-1 d-none" id="sidebar-badge-proposed"></span></span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="expeditions-disponibles.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Expéditions dispo.</span></a></li>
       </ul>
     </div>
   </nav>
@@ -47,17 +48,20 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h1 class="h3 mb-1"><strong>Missions</strong></h1>
-            <p class="text-muted mb-0">Consultez les missions disponibles et suivez vos missions en cours</p>
+            <p class="text-muted mb-0">Missions recommandées et suivi de vos missions en cours</p>
           </div>
+          <a href="expeditions-disponibles.html" class="btn btn-danger btn-lg px-4 fw-semibold" style="font-size:1.05rem">
+            <i class="align-middle me-2" data-feather="package" style="width:20px;height:20px"></i> Voir les missions disponibles
+          </a>
         </div>
         <div id="alert-container"></div>
 
         <!-- Tabs -->
         <ul class="nav nav-tabs mb-3" id="missionTabs">
           <li class="nav-item">
-            <button type="button" class="nav-link active" data-tab="pending">
-              <i class="align-middle me-1" data-feather="inbox" style="width:14px"></i>
-              Disponibles <span class="badge bg-warning text-dark ms-1" id="tab-badge-pending">0</span>
+            <button type="button" class="nav-link active" data-tab="proposed">
+              <i class="align-middle me-1" data-feather="star" style="width:14px"></i>
+              Recommandées <span class="badge bg-danger ms-1" id="tab-badge-proposed">0</span>
             </button>
           </li>
           <li class="nav-item">
@@ -68,21 +72,22 @@
           </li>
         </ul>
 
-        <!-- Tab: Disponibles (PENDING) -->
-        <div id="tab-pending">
+        <!-- Tab: Recommandées (PROPOSED) -->
+        <div id="tab-proposed">
           <div class="card">
-            <div class="card-header">
-              <h5 class="card-title mb-0">Missions à accepter</h5>
+            <div class="card-header d-flex align-items-center gap-2">
+              <h5 class="card-title mb-0">Missions recommandées par Elimmekatruck</h5>
+              <span class="badge bg-secondary">Ces missions vous ont été sélectionnées — acceptez ou refusez</span>
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
                     <th>Réf.</th><th>Trajet</th><th>Marchandise</th>
-                    <th class="d-none d-md-table-cell">Date</th><th>Prix</th><th class="text-end">Action</th>
+                    <th class="d-none d-md-table-cell">Date</th><th>Prix</th><th class="text-end">Actions</th>
                   </tr>
                 </thead>
-                <tbody id="tbody-pending">
+                <tbody id="tbody-proposed">
                   <tr><td colspan="6" class="text-center py-4 text-muted">
                     <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
                   </td></tr>
@@ -94,6 +99,44 @@
 
         <!-- Tab: Mes missions -->
         <div id="tab-mine" class="d-none">
+
+          <!-- Filtres Mes missions -->
+          <div class="card mb-3">
+            <div class="card-body py-2">
+              <div class="row g-2 align-items-end">
+                <div class="col-sm-3">
+                  <label class="form-label mb-1 small text-muted">Statut</label>
+                  <select id="mine-f-statut" class="form-select form-select-sm" onchange="filterMine()">
+                    <option value="">Tous</option>
+                    <option value="ACCEPTED">En attente de démarrage</option>
+                    <option value="IN_PROGRESS">En cours</option>
+                    <option value="DELIVERED">Livrée</option>
+                    <option value="CANCELLED">Annulée</option>
+                  </select>
+                </div>
+                <div class="col-sm-3">
+                  <label class="form-label mb-1 small text-muted">Marchandise</label>
+                  <input id="mine-f-marchandise" class="form-control form-control-sm" placeholder="Rechercher..." oninput="filterMine()" />
+                </div>
+                <div class="col-sm-3">
+                  <label class="form-label mb-1 small text-muted">Pays d'arrivée</label>
+                  <select id="mine-f-pays-arrivee" class="form-select form-select-sm country-select" onchange="filterMine()"></select>
+                </div>
+                <div class="col-sm-3 d-flex gap-2">
+                  <div class="flex-grow-1">
+                    <label class="form-label mb-1 small text-muted">Date min</label>
+                    <input id="mine-f-date-from" type="date" class="form-control form-control-sm" onchange="filterMine()" />
+                  </div>
+                  <div class="align-self-end">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetMineFilters()" title="Réinitialiser">
+                      <i data-feather="x" style="width:13px;height:13px"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-header">
               <h5 class="card-title mb-0">Mes missions actives &amp; historique</h5>
@@ -233,7 +276,7 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let trucks = [], drivers = [], allShipments = [], selectedMissionId = null;
+let trucks = [], drivers = [], allShipments = [], selectedMissionId = null, acceptMode = 'accept'; // 'accept' | 'accept-proposal'
 
 function closeResourceAlert() {
   const el = document.getElementById('resource-alert-overlay');
@@ -244,16 +287,19 @@ function closeResourceAlert() {
 // Fermer sur Échap
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeResourceAlert(); });
 
-function renderPending(list) {
-  const tbody = document.getElementById('tbody-pending');
-  const pending = list.filter(s => s.statut === 'PENDING');
-  const badgeEl = document.getElementById('tab-badge-pending');
-  if (badgeEl) badgeEl.textContent = pending.length;
-  if (pending.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">📋</div><div>Aucune mission disponible pour le moment.</div></td></tr>';
+function renderProposed(list) {
+  const tbody = document.getElementById('tbody-proposed');
+  const proposed = list.filter(s => s.statut === 'PROPOSED');
+  const badgeEl = document.getElementById('tab-badge-proposed');
+  if (badgeEl) {
+    badgeEl.textContent = proposed.length;
+    badgeEl.className = proposed.length > 0 ? 'badge bg-danger ms-1' : 'badge bg-secondary ms-1';
+  }
+  if (proposed.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">⭐</div><div>Aucune mission recommandée pour le moment.</div></td></tr>';
     return;
   }
-  tbody.innerHTML = pending.map(s => `
+  tbody.innerHTML = proposed.map(s => `
     <tr>
       <td><strong>#${s.id.slice(0,8)}</strong></td>
       <td>
@@ -263,21 +309,55 @@ function renderPending(list) {
       <td class="text-muted small">${s.marchandise ?? '—'} — ${s.poids ?? '?'}T</td>
       <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
       <td><strong>${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</strong></td>
-      <td class="text-end"><button class="btn btn-sm btn-success" onclick="openAcceptModal('${s.id}')">
-        <i class="align-middle me-1" data-feather="check-circle" style="width:13px"></i>Accepter
-      </button></td>
+      <td class="text-end d-flex gap-2 justify-content-end">
+        <button class="btn btn-sm btn-outline-danger" onclick="refuseProposal('${s.id}', this)">
+          <i class="align-middle" data-feather="x-circle" style="width:13px"></i> Refuser
+        </button>
+        <button class="btn btn-sm btn-success" onclick="openAcceptModal('${s.id}', 'accept-proposal')">
+          <i class="align-middle me-1" data-feather="check-circle" style="width:13px"></i>Accepter
+        </button>
+      </td>
     </tr>
   `).join('');
   if (typeof feather !== 'undefined') feather.replace();
 }
 
+let allMine = [];
+
+function filterMine() {
+  const statut  = document.getElementById('mine-f-statut').value;
+  const marc    = document.getElementById('mine-f-marchandise').value.trim().toLowerCase();
+  const pays    = document.getElementById('mine-f-pays-arrivee').value;
+  const dateMin = document.getElementById('mine-f-date-from').value;
+  const filtered = allMine.filter(s => {
+    if (statut  && s.statut !== statut) return false;
+    if (marc    && !s.marchandise?.toLowerCase().includes(marc)) return false;
+    if (pays    && s.paysArrivee !== pays) return false;
+    if (dateMin && s.dateAnnonce < dateMin) return false;
+    return true;
+  });
+  renderMineRows(filtered);
+}
+
+function resetMineFilters() {
+  document.getElementById('mine-f-statut').value = '';
+  document.getElementById('mine-f-marchandise').value = '';
+  document.getElementById('mine-f-pays-arrivee').value = '';
+  document.getElementById('mine-f-date-from').value = '';
+  renderMineRows(allMine);
+}
+
 function renderMine(list) {
-  const tbody = document.getElementById('tbody-mine');
-  const mine = list.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'].includes(s.statut));
+  allMine = list.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'].includes(s.statut));
   const badgeEl = document.getElementById('tab-badge-mine');
-  if (badgeEl) badgeEl.textContent = mine.length;
+  if (badgeEl) badgeEl.textContent = allMine.length;
+  renderMineRows(allMine);
+}
+
+function renderMineRows(mine) {
+  const tbody = document.getElementById('tbody-mine');
   if (mine.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune mission.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune mission correspondante.</td></tr>';
     return;
   }
   tbody.innerHTML = mine.map(s => `
@@ -299,8 +379,42 @@ function renderMine(list) {
 
 let selectedTruckId = null, selectedDriverId = null;
 
-function openAcceptModal(id) {
+async function expressInterest(id, btn) {
+  UI.loading(btn, true);
+  try {
+    await api.post(`/shipments/${id}/interest`, {});
+    UI.toast('Intérêt enregistré ! L\'équipe Elimmekatruck va examiner votre candidature.', 'success');
+    btn.disabled = true;
+    btn.innerHTML = '<i data-feather="check" style="width:13px"></i> Intérêt envoyé';
+    if (typeof feather !== 'undefined') feather.replace();
+  } catch (err) {
+    const msg = err.error ?? err.message ?? 'Erreur';
+    if (msg.includes('déjà')) {
+      UI.toast('Vous avez déjà manifesté votre intérêt pour cette expédition.', 'warning');
+    } else {
+      UI.toast(msg, 'danger');
+    }
+    UI.loading(btn, false);
+  }
+}
+
+async function refuseProposal(id, btn) {
+  UI.loading(btn, true);
+  try {
+    await api.post(`/shipments/${id}/refuse`, {});
+    UI.toast('Mission refusée.', 'info');
+    const res = await api.get('/shipments');
+    allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+    renderProposed(allShipments); renderMine(allShipments);
+  } catch (err) {
+    UI.toast(err.error ?? 'Erreur', 'danger');
+    UI.loading(btn, false);
+  }
+}
+
+function openAcceptModal(id, mode = 'accept') {
   selectedMissionId = id;
+  acceptMode        = mode;
   selectedTruckId   = null;
   selectedDriverId  = null;
 
@@ -456,7 +570,7 @@ async function startMission(id) {
     UI.toast('Mission démarrée !', 'success');
     const res = await api.get('/shipments');
     allShipments = Array.isArray(res) ? res : (res?.data ?? []);
-    renderPending(allShipments); renderMine(allShipments);
+    renderMine(allShipments);
   } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
 }
 
@@ -466,21 +580,21 @@ async function deliverMission(id) {
     UI.toast('Mission livrée !', 'success');
     const res = await api.get('/shipments');
     allShipments = Array.isArray(res) ? res : (res?.data ?? []);
-    renderPending(allShipments); renderMine(allShipments);
+    renderMine(allShipments);
   } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects(true);
 
   // Tabs
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('tab-pending').classList.add('d-none');
-      document.getElementById('tab-mine').classList.add('d-none');
+      ['proposed', 'mine'].forEach(t => document.getElementById('tab-' + t).classList.add('d-none'));
       document.getElementById('tab-' + btn.dataset.tab).classList.remove('d-none');
     });
   });
@@ -496,8 +610,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   drivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
   allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
 
-  renderPending(allShipments);
+  renderProposed(allShipments);
   renderMine(allShipments);
+
+  // Badge sidebar
+  const proposed = allShipments.filter(s => s.statut === 'PROPOSED');
+  const sidebarBadge = document.getElementById('sidebar-badge-proposed');
+  if (sidebarBadge && proposed.length > 0) {
+    sidebarBadge.textContent = proposed.length;
+    sidebarBadge.classList.remove('d-none');
+  }
 
   // Confirm accept
   document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
@@ -508,12 +630,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btn = document.getElementById('btn-confirm-accept');
     UI.loading(btn, true);
     try {
-      await api.post(`/shipments/${selectedMissionId}/accept`, { truckId: selectedTruckId, driverId: selectedDriverId });
+      const endpoint = acceptMode === 'accept-proposal'
+        ? `/shipments/${selectedMissionId}/accept-proposal`
+        : `/shipments/${selectedMissionId}/accept`;
+      await api.post(endpoint, { truckId: selectedTruckId, driverId: selectedDriverId });
       bootstrap.Modal.getInstance(document.getElementById('modalAccept')).hide();
       UI.toast('Mission acceptée !', 'success');
       const res = await api.get('/shipments');
       allShipments = Array.isArray(res) ? res : (res?.data ?? []);
-      renderPending(allShipments); renderMine(allShipments);
+      renderProposed(allShipments); renderMine(allShipments);
     } catch (err) {
       document.getElementById('modal-alert').innerHTML = `<div class="alert alert-danger py-2">${err.error ?? 'Erreur'}</div>`;
     } finally { UI.loading(btn, false); }

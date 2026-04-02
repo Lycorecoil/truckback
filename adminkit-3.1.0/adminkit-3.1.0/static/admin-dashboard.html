@@ -354,64 +354,50 @@ function buildAlerts(shipments) {
 }
 
 function buildTopTables(shipments, expediteurs, transporteurs) {
-  // Top expéditeurs (par companyId ou expediteurId sur les shipments)
-  // On groupe par expediteurId si disponible, sinon par villeDepart comme fallback
+  const orgName = (list, tenantId) => {
+    const o = list.find(x => x.tenantId === tenantId);
+    return o?.raisonSociale ?? o?.companyName ?? tenantId?.slice(0, 8) + '…';
+  };
+
+  // Top expéditeurs — groupés par companyTenantId
   const expFreq = {};
   shipments.forEach(s => {
-    const key = s.expediteurId ?? s.companyId ?? null;
+    const key = s.companyTenantId ?? null;
     if (!key) return;
     if (!expFreq[key]) expFreq[key] = { count: 0, value: 0 };
     expFreq[key].count++;
     expFreq[key].value += s.prixTransport ?? 0;
   });
 
-  const topExp = Object.entries(expFreq)
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 5);
-
   const tbodyExp = document.getElementById('tbody-top-expediteurs');
-  if (topExp.length === 0) {
-    tbodyExp.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>';
-  } else {
-    tbodyExp.innerHTML = topExp.map(([id, stats]) => {
-      const org = expediteurs.find(e => e.id === id);
-      const name = org?.companyName ?? org?.name ?? id.slice(0, 8) + '…';
-      return `<tr>
-        <td><strong>${name}</strong></td>
+  const topExp = Object.entries(expFreq).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+  tbodyExp.innerHTML = topExp.length === 0
+    ? '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>'
+    : topExp.map(([tid, stats]) => `<tr>
+        <td><strong>${orgName(expediteurs, tid)}</strong></td>
         <td>${stats.count}</td>
         <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
-      </tr>`;
-    }).join('');
-  }
+      </tr>`).join('');
 
-  // Top transporteurs (par transporteurId)
+  // Top transporteurs — groupés par transporterTenantId (toutes missions acceptées)
   const transFreq = {};
-  shipments.filter(s => s.statut === 'DELIVERED').forEach(s => {
-    const key = s.transporteurId ?? null;
+  shipments.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut)).forEach(s => {
+    const key = s.transporterTenantId ?? null;
     if (!key) return;
     if (!transFreq[key]) transFreq[key] = { count: 0, value: 0 };
     transFreq[key].count++;
     transFreq[key].value += s.prixTransport ?? 0;
   });
 
-  const topTrans = Object.entries(transFreq)
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 5);
-
   const tbodyTrans = document.getElementById('tbody-top-transporteurs');
-  if (topTrans.length === 0) {
-    tbodyTrans.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>';
-  } else {
-    tbodyTrans.innerHTML = topTrans.map(([id, stats]) => {
-      const org = transporteurs.find(t => t.id === id);
-      const name = org?.companyName ?? org?.name ?? id.slice(0, 8) + '…';
-      return `<tr>
-        <td><strong>${name}</strong></td>
+  const topTrans = Object.entries(transFreq).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+  tbodyTrans.innerHTML = topTrans.length === 0
+    ? '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>'
+    : topTrans.map(([tid, stats]) => `<tr>
+        <td><strong>${orgName(transporteurs, tid)}</strong></td>
         <td>${stats.count}</td>
         <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
-      </tr>`;
-    }).join('');
-  }
+      </tr>`).join('');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -426,11 +412,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     api.get('/company/transporter?page=1&limit=200'),
   ]);
 
-  const shipments    = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
-  const trucks       = trucksRes?.data ?? [];
-  const drivers      = driversRes?.data ?? [];
-  const expediteurs  = expedRes?.data ?? expedRes ?? [];
-  const transporteurs = transRes?.data ?? transRes ?? [];
+  function unpack(res) {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+  const shipments     = unpack(shipmentsRes);
+  const trucks        = unpack(trucksRes);
+  const drivers       = unpack(driversRes);
+  const expediteurs   = unpack(expedRes);
+  const transporteurs = unpack(transRes);
 
   document.getElementById('kpi-shipments').textContent = shipments.length;
   document.getElementById('kpi-active').textContent    = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut)).length;

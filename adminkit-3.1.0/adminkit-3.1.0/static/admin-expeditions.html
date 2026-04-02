@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Toutes les Expéditions | Admin | Elimmekatruck</title>
+  <title>Expéditions | Admin | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
       <ul class="sidebar-nav">
         <li class="sidebar-header">Administration</li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
-        <li class="sidebar-item active"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Expéditions</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
       </ul>
     </div>
@@ -30,7 +30,8 @@
         <ul class="navbar-nav navbar-align">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
             </a>
             <div class="dropdown-menu dropdown-menu-end">
               <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
@@ -43,31 +44,52 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <h1 class="h3 mb-3"><strong>Toutes les Expéditions</strong></h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h1 class="h3 mb-0"><strong>Gestion des Expéditions</strong></h1>
+          <span class="badge bg-danger rounded-pill fs-6" id="badge-interests" style="display:none"></span>
+        </div>
+
+        <div id="alert-container"></div>
 
         <!-- Filtres -->
         <div class="card mb-3">
           <div class="card-body py-2">
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
               <button class="btn btn-sm btn-primary filter-btn active" data-statut="">Toutes</button>
               <button class="btn btn-sm btn-outline-warning filter-btn" data-statut="PENDING">En attente</button>
+              <button class="btn btn-sm btn-outline-secondary filter-btn" data-statut="PROPOSED">Proposées</button>
               <button class="btn btn-sm btn-outline-info filter-btn" data-statut="ACCEPTED">Acceptées</button>
               <button class="btn btn-sm btn-outline-primary filter-btn" data-statut="IN_PROGRESS">En cours</button>
               <button class="btn btn-sm btn-outline-success filter-btn" data-statut="DELIVERED">Livrées</button>
               <button class="btn btn-sm btn-outline-danger filter-btn" data-statut="CANCELLED">Annulées</button>
+              <div class="ms-auto">
+                <input id="search-input" type="text" class="form-control form-control-sm" placeholder="Rechercher…" style="width:200px">
+              </div>
             </div>
           </div>
         </div>
 
+        <!-- Table -->
         <div class="card">
-          <table class="table table-hover my-0">
-            <thead>
-              <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Date</th><th class="d-none d-md-table-cell">Prix</th><th>Statut</th></tr>
-            </thead>
-            <tbody id="tbody-all">
-              <tr><td colspan="6" class="text-center py-4 text-muted">Chargement...</td></tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Réf.</th>
+                  <th>Trajet</th>
+                  <th>Marchandise</th>
+                  <th class="d-none d-md-table-cell">Date</th>
+                  <th class="d-none d-md-table-cell">Prix</th>
+                  <th>Statut</th>
+                  <th>Intérêts</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-all">
+                <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -79,46 +101,275 @@
   </div>
 </div>
 
+<!-- ── OVERLAY : Gérer les intérêts d'une expédition ─────────────────── -->
+<div id="interest-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:9999;overflow-y:auto;padding:32px 16px">
+  <div style="max-width:700px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+      <div>
+        <h5 class="mb-0">Transporteurs intéressés</h5>
+        <div class="text-muted small mt-1" id="interest-mission-info"></div>
+      </div>
+      <button class="btn btn-sm btn-light" onclick="closeInterestOverlay()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4">
+      <div id="interest-list"></div>
+    </div>
+    <div class="p-4 border-top bg-light">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="text-muted small">Ou proposer directement à un transporteur sans intérêt :</span>
+        <button class="btn btn-outline-primary btn-sm" onclick="openDirectPropose()">
+          <i data-feather="send" style="width:13px"></i> Proposition directe
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Proposition directe ─────────────────────────────────── -->
+<div id="propose-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:480px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Proposer la mission</h5>
+      <button class="btn btn-sm btn-light" onclick="closeProposeOverlay()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <p class="text-muted small mb-3" id="propose-mission-info"></p>
+    <label class="form-label fw-semibold">Sélectionner un transporteur</label>
+    <select id="propose-select" class="form-select mb-4">
+      <option value="">— Choisir un transporteur —</option>
+    </select>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary" onclick="closeProposeOverlay()">Annuler</button>
+      <button class="btn btn-primary" id="btn-confirm-propose">
+        <i data-feather="send" style="width:13px"></i> Envoyer la proposition
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.interest-card { border:1px solid #e9ecef; border-radius:8px; padding:14px 16px; margin-bottom:10px; }
+.interest-card:hover { background:#f8f9fa; }
+</style>
+
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let allShipments = [];
+let allShipments = [], allTransporters = [];
+let currentShipmentId = null;
 
+// ── Badge intérêts ────────────────────────────────────────────────────────
+function updateInterestBadge(list) {
+  const withInterests = list.filter(s => s.statut === 'PENDING' && s.interests?.length > 0);
+  const badge = document.getElementById('badge-interests');
+  if (withInterests.length > 0) {
+    badge.textContent = `${withInterests.length} expédition(s) avec des intérêts en attente`;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Render table ──────────────────────────────────────────────────────────
 function renderTable(list) {
   const tbody = document.getElementById('tbody-all');
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
     return;
   }
-  tbody.innerHTML = list.map(s => `
+  tbody.innerHTML = list.map(s => {
+    const nbInterests = s.interests?.length ?? 0;
+    const canPropose  = s.statut === 'PENDING';
+    return `
     <tr>
       <td><strong>#${s.id.slice(0,8)}</strong></td>
-      <td>${s.villeDepart} → ${s.villeArrivee}</td>
-      <td>${s.marchandise} — ${s.poids}T</td>
-      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
-      <td class="d-none d-md-table-cell">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+      <td>
+        <div class="fw-semibold">${s.villeDepart} → ${s.villeArrivee}</div>
+        <div class="text-muted small">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
+      </td>
+      <td class="text-muted small">${s.marchandise} — ${s.poids}T</td>
+      <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(s.dateAnnonce)}</td>
+      <td class="d-none d-md-table-cell fw-semibold">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
       <td>${UI.shipmentBadge(s.statut)}</td>
-    </tr>
-  `).join('');
+      <td>
+        ${nbInterests > 0
+          ? `<button class="btn btn-sm btn-warning" onclick="openInterestOverlay('${s.id}')">
+               <i data-feather="eye" style="width:13px"></i> ${nbInterests} intérêt(s)
+             </button>`
+          : `<span class="text-muted small">—</span>`
+        }
+      </td>
+      <td class="text-end">
+        ${canPropose
+          ? `<button class="btn btn-sm btn-primary" onclick="openProposeOverlay('${s.id}')">
+               <i data-feather="send" style="width:13px"></i> Proposer
+             </button>`
+          : `<span class="text-muted small">—</span>`
+        }
+      </td>
+    </tr>`;
+  }).join('');
+  if (typeof feather !== 'undefined') feather.replace();
 }
+
+// ── Overlay intérêts ──────────────────────────────────────────────────────
+function openInterestOverlay(id) {
+  currentShipmentId = id;
+  const s = allShipments.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById('interest-mission-info').textContent =
+    `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
+
+  const interests = s.interests ?? [];
+  const list = document.getElementById('interest-list');
+
+  if (interests.length === 0) {
+    list.innerHTML = '<p class="text-muted text-center py-3">Aucun transporteur intéressé.</p>';
+  } else {
+    list.innerHTML = interests.map(i => {
+      const transporter = allTransporters.find(t => t.tenantId === i.transporterTenantId);
+      const name = transporter ? (transporter.raisonSociale ?? transporter.nom ?? i.transporterTenantId?.slice(0,8)) : (i.transporterTenantId?.slice(0,8) ?? '—');
+      const date = new Date(i.createdAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      return `
+        <div class="interest-card d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">${name}</div>
+            <div class="text-muted small">Intérêt le ${date}</div>
+          </div>
+          <button class="btn btn-sm btn-success" onclick="proposeFromInterest('${id}', '${i.transporterId}', '${i.transporterTenantId ?? ''}')">
+            <i data-feather="check-circle" style="width:13px"></i> Proposer cette mission
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  document.getElementById('interest-overlay').style.display = 'block';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeInterestOverlay() {
+  document.getElementById('interest-overlay').style.display = 'none';
+}
+
+async function proposeFromInterest(shipmentId, transporterId, transporterTenantId) {
+  try {
+    await api.post(`/shipments/${shipmentId}/propose`, { transporterId, transporterTenantId: transporterTenantId || undefined });
+    UI.toast('Mission proposée au transporteur — il recevra une notification.', 'success');
+    closeInterestOverlay();
+    await reload();
+  } catch (err) {
+    UI.toast(err.error ?? 'Erreur', 'danger');
+  }
+}
+
+// ── Overlay proposition directe ───────────────────────────────────────────
+function openProposeOverlay(id) {
+  currentShipmentId = id;
+  const s = allShipments.find(x => x.id === id);
+  if (s) {
+    document.getElementById('propose-mission-info').textContent =
+      `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
+  }
+
+  const select = document.getElementById('propose-select');
+  select.innerHTML = '<option value="">— Choisir un transporteur —</option>' +
+    allTransporters.map(t => `<option value="${t.tenantId}" data-tenant="${t.tenantId ?? ''}">${t.raisonSociale ?? t.nom ?? t.tenantId}</option>`).join('');
+
+  document.getElementById('propose-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+
+  // Pré-sélectionner si les intéressés existent
+  const s2 = allShipments.find(x => x.id === id);
+  if (s2?.interests?.length > 0) {
+    select.value = s2.interests[0].transporterTenantId;
+  }
+}
+
+function closeProposeOverlay() {
+  document.getElementById('propose-overlay').style.display = 'none';
+}
+
+function openDirectPropose() {
+  closeInterestOverlay();
+  openProposeOverlay(currentShipmentId);
+}
+
+// ── Confirm propose ───────────────────────────────────────────────────────
+async function confirmPropose() {
+  const select = document.getElementById('propose-select');
+  const transporterId = select.value;
+  if (!transporterId) { UI.toast('Sélectionnez un transporteur.', 'warning'); return; }
+  const option = select.options[select.selectedIndex];
+  const transporterTenantId = option.dataset.tenant || undefined;
+
+  const btn = document.getElementById('btn-confirm-propose');
+  UI.loading(btn, true);
+  try {
+    await api.post(`/shipments/${currentShipmentId}/propose`, { transporterId, transporterTenantId });
+    UI.toast('Mission proposée ! Le transporteur recevra une notification.', 'success');
+    closeProposeOverlay();
+    await reload();
+  } catch (err) {
+    UI.toast(err.error ?? 'Erreur', 'danger');
+  } finally { UI.loading(btn, false); }
+}
+
+// ── Reload data ───────────────────────────────────────────────────────────
+async function reload() {
+  const res = await api.get('/shipments');
+  allShipments = Array.isArray(res) ? res : (res?.data?.data ?? res?.data ?? []);
+  updateInterestBadge(allShipments);
+  const activeFilter = document.querySelector('.filter-btn.active')?.dataset?.statut ?? '';
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  let filtered = activeFilter ? allShipments.filter(s => s.statut === activeFilter) : allShipments;
+  if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
+  renderTable(filtered);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInterestOverlay(); closeProposeOverlay(); } });
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
 
-  const res = await api.get('/shipments');
-  allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+  // Charger expéditions + transporteurs en parallèle
+  const [shipmentsRes, transportersRes] = await Promise.all([
+    api.get('/shipments'),
+    api.get('/company/transporter').catch(() => []),
+  ]);
+  allShipments   = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data?.data ?? shipmentsRes?.data ?? []);
+  allTransporters = Array.isArray(transportersRes?.data) ? transportersRes.data : (transportersRes?.data?.data ?? []);
+
+  updateInterestBadge(allShipments);
   renderTable(allShipments);
 
+  // Filtres
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => { b.className = 'btn btn-sm btn-outline-secondary filter-btn'; });
-      btn.classList.add('btn-primary');
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.className = 'btn btn-sm btn-outline-secondary filter-btn';
+      });
       btn.classList.remove('btn-outline-secondary');
+      btn.classList.add('btn-primary', 'active');
       const f = btn.dataset.statut;
-      renderTable(f ? allShipments.filter(s => s.statut === f) : allShipments);
+      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      let filtered = f ? allShipments.filter(s => s.statut === f) : allShipments;
+      if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
+      renderTable(filtered);
     });
   });
+
+  // Recherche
+  document.getElementById('search-input').addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    const f = document.querySelector('.filter-btn.active')?.dataset?.statut ?? '';
+    let filtered = f ? allShipments.filter(s => s.statut === f) : allShipments;
+    if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
+    renderTable(filtered);
+  });
+
+  // Bouton confirmer proposition
+  document.getElementById('btn-confirm-propose').addEventListener('click', confirmPropose);
 });
 </script>
 </body>

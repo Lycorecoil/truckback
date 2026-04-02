@@ -49,15 +49,21 @@
         <form id="form-expedition">
           <div class="row">
 
-            <!-- Colonne gauche -->
+            <!-- Colonne gauche : Marchandise -->
             <div class="col-md-6">
               <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">📦 Marchandise</h5></div>
                 <div class="card-body">
 
                   <div class="mb-3">
-                    <label class="form-label" for="marchandise">Type de marchandise *</label>
-                    <select id="marchandise" class="form-select" required>
+                    <label class="form-label" for="designation">Désignation *</label>
+                    <input id="designation" class="form-control" placeholder="ex: haricot, blé, pneu, ciment, huile..." required />
+                    <div class="form-text text-muted">Nom précis de la marchandise transportée</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label" for="categorie">Catégorie</label>
+                    <select id="categorie" class="form-select">
                       <option value="">-- Choisir --</option>
                       <option>Agricole</option><option>BTP</option><option>Biens de consommation</option>
                       <option>Carburant</option><option>Réfrigéré</option><option>Textile</option><option>Autre</option>
@@ -66,7 +72,7 @@
 
                   <div class="mb-3">
                     <label class="form-label" for="emballage">Emballage</label>
-                    <select id="emballage" class="form-select">
+                    <select id="emballage" class="form-select" onchange="handleEmballageChange(this.value)">
                       <option value="">-- Choisir --</option>
                       <option>Vrac</option><option>Palettes</option><option>Sacs</option>
                       <option>Caisses</option><option>Fûts</option><option>Conteneur</option>
@@ -76,6 +82,9 @@
                   <div class="mb-3">
                     <label class="form-label" for="quantite">Quantité *</label>
                     <input id="quantite" type="number" class="form-control" placeholder="ex: 50" min="1" required />
+                    <div id="quantite-hint" class="form-text text-muted d-none">
+                      <i data-feather="info" style="width:12px;height:12px"></i> En vrac : quantité fixée à 1
+                    </div>
                   </div>
 
                   <div class="mb-3">
@@ -100,34 +109,30 @@
               </div>
             </div>
 
-            <!-- Colonne droite -->
+            <!-- Colonne droite : Trajet -->
             <div class="col-md-6">
               <div class="card">
                 <div class="card-header"><h5 class="card-title mb-0">📍 Trajet</h5></div>
                 <div class="card-body">
 
                   <div class="mb-3">
+                    <label class="form-label" for="paysDepart">Pays de départ *</label>
+                    <select id="paysDepart" class="form-select country-select" required></select>
+                  </div>
+                  <div class="mb-3">
                     <label class="form-label" for="villeDepart">Ville de départ *</label>
                     <input id="villeDepart" class="form-control" placeholder="Ouagadougou" required />
                   </div>
+
                   <div class="mb-3">
-                    <label class="form-label" for="paysDepart">Pays de départ *</label>
-                    <select id="paysDepart" class="form-select" required>
-                      <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
-                      <option>Niger</option><option>Ghana</option><option>Togo</option><option>Bénin</option><option>Sénégal</option>
-                    </select>
+                    <label class="form-label" for="paysArrivee">Pays d'arrivée *</label>
+                    <select id="paysArrivee" class="form-select country-select" required></select>
                   </div>
                   <div class="mb-3">
                     <label class="form-label" for="villeArrivee">Ville d'arrivée *</label>
                     <input id="villeArrivee" class="form-control" placeholder="Abidjan" required />
                   </div>
-                  <div class="mb-3">
-                    <label class="form-label" for="paysArrivee">Pays d'arrivée *</label>
-                    <select id="paysArrivee" class="form-select" required>
-                      <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
-                      <option>Niger</option><option>Ghana</option><option>Togo</option><option>Bénin</option><option>Sénégal</option>
-                    </select>
-                  </div>
+
                   <div class="mb-3">
                     <label class="form-label" for="commentaireGeneral">Commentaire</label>
                     <textarea id="commentaireGeneral" class="form-control" rows="3" placeholder="Instructions particulières, accès, contraintes..."></textarea>
@@ -157,9 +162,25 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
+function handleEmballageChange(val) {
+  const quantiteInput = document.getElementById('quantite');
+  const hint = document.getElementById('quantite-hint');
+  if (val === 'Vrac') {
+    quantiteInput.value = 1;
+    quantiteInput.disabled = true;
+    hint.classList.remove('d-none');
+  } else {
+    quantiteInput.disabled = false;
+    quantiteInput.value = quantiteInput.value === '1' ? '' : quantiteInput.value;
+    hint.classList.add('d-none');
+  }
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects();
 
   document.getElementById('form-expedition').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -169,26 +190,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     const poidsValeur = Number(document.getElementById('poidsValeur').value);
     const poidsUnite  = document.getElementById('poidsUnite').value;
-    // Normalise en tonnes pour le champ poids du backend
     const poidsEnTonnes = poidsUnite === 'kg' ? poidsValeur / 1000 : poidsValeur;
 
+    const designation = document.getElementById('designation').value.trim();
+    const categorie   = document.getElementById('categorie').value;
+    const marchandise = categorie ? `${designation} (${categorie})` : designation;
+
     const payload = {
-      marchandise: document.getElementById('marchandise').value,
-      emballage: document.getElementById('emballage').value || undefined,
-      quantite: Number(document.getElementById('quantite').value),
-      poids: poidsEnTonnes,
-      uniteQuantite: poidsUnite,
+      marchandise,
+      emballage:   document.getElementById('emballage').value || undefined,
+      quantite:    Number(document.getElementById('quantite').value),
+      poids:       poidsEnTonnes,
+      paysDepart:  document.getElementById('paysDepart').value,
       villeDepart: document.getElementById('villeDepart').value.trim(),
-      paysDepart: document.getElementById('paysDepart').value,
-      villeArrivee: document.getElementById('villeArrivee').value.trim(),
       paysArrivee: document.getElementById('paysArrivee').value,
+      villeArrivee: document.getElementById('villeArrivee').value.trim(),
       dateAnnonce:  now.toISOString().split('T')[0],
       heureAnnonce: now.toTimeString().slice(0, 5),
       prixTransport: document.getElementById('prixTransport').value ? Number(document.getElementById('prixTransport').value) : undefined,
       commentaireGeneral: document.getElementById('commentaireGeneral').value || undefined,
     };
 
-    console.log('payload envoyé:', JSON.stringify(payload, null, 2));
     try {
       await api.post('/shipments', payload);
       UI.toast('Expédition créée avec succès !', 'success');

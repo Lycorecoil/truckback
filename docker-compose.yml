@@ -225,6 +225,7 @@ services:
     volumes:
       - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./adminkit-3.1.0/adminkit-3.1.0/static:/var/www/app:ro
     depends_on:
       api-gateway-1:
         condition: service_healthy

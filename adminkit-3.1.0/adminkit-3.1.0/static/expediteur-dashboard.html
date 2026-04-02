@@ -44,61 +44,113 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <h1 class="h3 mb-3"><strong>Tableau de bord</strong> Expéditeur</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Tableau de bord</strong> Expéditeur</h1>
+          <div class="d-flex gap-2">
+            <a href="expeditions-disponibles.html" class="btn btn-danger btn-lg px-4 fw-semibold" style="font-size:1.05rem">
+              <i class="align-middle me-2" data-feather="package" style="width:20px;height:20px"></i> Voir les expéditions disponibles
+            </a>
+            <a href="expediteur-nouvelle-expedition.html" class="btn btn-primary btn-lg px-4 fw-semibold" style="font-size:1.05rem">
+              <i class="align-middle me-2" data-feather="plus" style="width:20px;height:20px"></i> Nouvelle expédition
+            </a>
+          </div>
+        </div>
 
-        <!-- Alerte PENDING > 48h -->
         <div id="alert-old-pending"></div>
 
-        <!-- KPI CARDS -->
-        <div class="row">
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">Total expéditions</h5></div>
-                  <div class="col-auto"><div class="stat text-primary"><i class="align-middle" data-feather="package"></i></div></div>
+        <!-- KPIs -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">Total</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#eef3fb">
+                    <i data-feather="package" style="width:16px;height:16px;color:#3b7ddd"></i>
+                  </div>
                 </div>
-                <h1 class="mt-1 mb-3" id="kpi-total">—</h1>
-                <div class="mb-0 text-muted">Toutes périodes</div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-total">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">Toutes périodes</div>
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">En attente</h5></div>
-                  <div class="col-auto"><div class="stat text-warning"><i class="align-middle" data-feather="clock"></i></div></div>
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">En attente</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#fff8e6">
+                    <i data-feather="clock" style="width:16px;height:16px;color:#f0ad4e"></i>
+                  </div>
                 </div>
-                <h1 class="mt-1 mb-3" id="kpi-pending">—</h1>
-                <div class="mb-0 text-muted">Sans transporteur</div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-pending">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">Sans transporteur</div>
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">En cours</h5></div>
-                  <div class="col-auto"><div class="stat text-info"><i class="align-middle" data-feather="truck"></i></div></div>
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm" style="border-top:3px solid #fd7e14 !important">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">Validation</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#fff3e6">
+                    <i data-feather="loader" style="width:16px;height:16px;color:#fd7e14"></i>
+                  </div>
                 </div>
-                <h1 class="mt-1 mb-3" id="kpi-inprogress">—</h1>
-                <div class="mb-0 text-muted">En transit</div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-validation">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">Avant démarrage</div>
               </div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col mt-0"><h5 class="card-title">Livrées</h5></div>
-                  <div class="col-auto"><div class="stat text-success"><i class="align-middle" data-feather="check-circle"></i></div></div>
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm" style="border-top:3px solid #17a2b8 !important">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">En cours</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#e6f7fb">
+                    <i data-feather="truck" style="width:16px;height:16px;color:#17a2b8"></i>
+                  </div>
                 </div>
-                <h1 class="mt-1 mb-3" id="kpi-delivered">—</h1>
-                <div class="mb-0 text-muted">Livraisons complètes</div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-execution">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">En transit</div>
               </div>
             </div>
           </div>
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm" style="border-top:3px solid #28a745 !important">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">Livrées</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#e8f8ec">
+                    <i data-feather="check-circle" style="width:16px;height:16px;color:#28a745"></i>
+                  </div>
+                </div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-delivered">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">Livraisons complètes</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="card h-100 border-0 shadow-sm" style="border-top:3px solid #dc3545 !important">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em;font-size:.68rem">Annulées</span>
+                  <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:34px;height:34px;background:#fdecea">
+                    <i data-feather="x-circle" style="width:16px;height:16px;color:#dc3545"></i>
+                  </div>
+                </div>
+                <div class="h2 fw-bold mb-0 lh-1" id="kpi-cancelled">—</div>
+                <div class="text-muted mt-1" style="font-size:.75rem">Expéditions annulées</div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- GRAPHIQUES -->
@@ -159,11 +211,27 @@
           </div>
         </div>
 
-        <!-- EXPÉDITIONS RÉCENTES -->
+        <!-- EXPÉDITIONS RÉCENTES avec filtres -->
         <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="card-title mb-0">Expéditions récentes</h5>
-            <a href="expediteur-expeditions.html" class="btn btn-sm btn-primary">Voir tout</a>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <select id="f-statut" class="form-select form-select-sm" style="width:160px" onchange="filterRecent()">
+                <option value="">Tous statuts</option>
+                <option value="PENDING">En attente</option>
+                <option value="PROPOSED">Proposée</option>
+                <option value="ACCEPTED">En attente validation</option>
+                <option value="IN_PROGRESS">En cours</option>
+                <option value="DELIVERED">Livrée</option>
+                <option value="CANCELLED">Annulée</option>
+              </select>
+              <select id="f-pays-arrivee" class="form-select form-select-sm country-select" style="width:160px" onchange="filterRecent()"></select>
+              <input id="f-marchandise" class="form-control form-control-sm" style="width:150px" placeholder="Marchandise..." oninput="filterRecent()" />
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetRecentFilters()">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+              <a href="expediteur-expeditions.html" class="btn btn-sm btn-primary">Voir tout</a>
+            </div>
           </div>
           <table class="table table-hover my-0">
             <thead>
@@ -173,6 +241,7 @@
               <tr><td colspan="5" class="text-center text-muted py-4">Chargement...</td></tr>
             </tbody>
           </table>
+          <div class="card-footer text-muted small" id="recent-count"></div>
         </div>
 
       </div>
@@ -187,6 +256,8 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
+let allShipments = [];
+
 function getLast6Months() {
   const months = [];
   const d = new Date();
@@ -196,7 +267,6 @@ function getLast6Months() {
   }
   return months;
 }
-
 function monthLabel(ym) {
   const [y, mo] = ym.split('-');
   return new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
@@ -209,28 +279,17 @@ function buildMonthlyChart(list) {
     type: 'line',
     data: {
       labels: months.map(monthLabel),
-      datasets: [{
-        label: 'Expéditions',
-        data: counts,
-        borderColor: '#3b7ddd',
-        backgroundColor: 'rgba(59,125,221,0.12)',
-        tension: 0.3,
-        fill: true,
-        pointRadius: 4,
-      }]
+      datasets: [{ label: 'Expéditions', data: counts, borderColor: '#3b7ddd', backgroundColor: 'rgba(59,125,221,0.12)', tension: 0.3, fill: true, pointRadius: 4 }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-    }
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
   });
 }
 
 function buildDonut(list) {
-  const statuts  = ['PENDING','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
-  const labels   = ['En attente','Acceptée','En cours','Livrée','Annulée'];
-  const colors   = ['#f0ad4e','#5bc0de','#3b7ddd','#28a745','#dc3545'];
-  const data     = statuts.map(s => list.filter(x => x.statut === s).length);
+  const statuts = ['PENDING','PROPOSED','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
+  const labels  = ['En attente','Proposée','En att. validation','En cours','Livrée','Annulée'];
+  const colors  = ['#f0ad4e','#6f42c1','#fd7e14','#3b7ddd','#28a745','#dc3545'];
+  const data    = statuts.map(s => list.filter(x => x.statut === s).length);
   if (data.every(v => v === 0)) return;
   new Chart(document.getElementById('chart-donut'), {
     type: 'doughnut',
@@ -240,33 +299,17 @@ function buildDonut(list) {
 }
 
 function buildStats(list) {
-  const total = list.length;
-
-  // Taux de livraison
   const delivered = list.filter(s => s.statut === 'DELIVERED');
-  const rate = total > 0 ? Math.round((delivered.length / total) * 100) : 0;
-  document.getElementById('stat-rate').textContent = rate + ' %';
-
-  // Coût total 30 derniers jours
+  const total = list.length;
+  document.getElementById('stat-rate').textContent = total > 0 ? Math.round((delivered.length / total) * 100) + ' %' : '—';
   const since30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
-  const cost30 = list
-    .filter(s => s.prixTransport && new Date(s.dateAnnonce) >= since30)
-    .reduce((sum, s) => sum + s.prixTransport, 0);
-  document.getElementById('stat-cost').textContent =
-    cost30 > 0 ? cost30.toLocaleString('fr-FR') + ' FCFA' : '0 FCFA';
-
-  // Délai moyen (créé → livré) en jours
+  const cost30 = list.filter(s => s.prixTransport && new Date(s.dateAnnonce) >= since30).reduce((s, x) => s + x.prixTransport, 0);
+  document.getElementById('stat-cost').textContent = cost30.toLocaleString('fr-FR') + ' FCFA';
   const withDelay = delivered.filter(s => s.dateAnnonce && s.updatedAt);
   if (withDelay.length > 0) {
-    const avgMs = withDelay.reduce((sum, s) =>
-      sum + (new Date(s.updatedAt) - new Date(s.dateAnnonce)), 0) / withDelay.length;
-    const days = Math.round(avgMs / (1000 * 3600 * 24));
-    document.getElementById('stat-delay').textContent = days + ' j';
-  } else {
-    document.getElementById('stat-delay').textContent = '— j';
-  }
-
-  // Top destination
+    const avgMs = withDelay.reduce((s, x) => s + (new Date(x.updatedAt) - new Date(x.dateAnnonce)), 0) / withDelay.length;
+    document.getElementById('stat-delay').textContent = Math.round(avgMs / (1000*3600*24)) + ' j';
+  } else { document.getElementById('stat-delay').textContent = '— j'; }
   const freq = {};
   list.forEach(s => { if (s.villeArrivee) freq[s.villeArrivee] = (freq[s.villeArrivee] ?? 0) + 1; });
   const top = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
@@ -278,44 +321,71 @@ function checkOldPending(list) {
   const old = list.filter(s => s.statut === 'PENDING' && new Date(s.dateAnnonce) < cutoff);
   if (old.length === 0) return;
   document.getElementById('alert-old-pending').innerHTML = `
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-      <strong>${old.length} expédition${old.length > 1 ? 's' : ''}</strong> en attente depuis plus de 48h sans transporteur.
-      <a href="expediteur-expeditions.html" class="alert-link ms-1">Voir →</a>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`;
+    <div class="alert alert-warning alert-dismissible fade show"><strong>${old.length} expédition${old.length > 1 ? 's' : ''}</strong> en attente depuis plus de 48h. <a href="expediteur-expeditions.html" class="alert-link ms-1">Voir →</a><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+  const alertEl = document.querySelector('#alert-old-pending .alert');
+  if (alertEl) setTimeout(() => { alertEl.classList.remove('show'); setTimeout(() => alertEl.remove(), 300); }, 5000);
+}
+
+// ─── Filtres expéditions récentes ─────────────────────────────────────────────
+function filterRecent() {
+  const statut = document.getElementById('f-statut').value;
+  const pays   = document.getElementById('f-pays-arrivee').value;
+  const marc   = document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const filtered = allShipments.filter(s => {
+    if (statut && s.statut !== statut) return false;
+    if (pays   && s.paysArrivee !== pays) return false;
+    if (marc   && !s.marchandise.toLowerCase().includes(marc)) return false;
+    return true;
+  });
+  renderRecent(filtered);
+}
+
+function resetRecentFilters() {
+  document.getElementById('f-statut').value = '';
+  document.getElementById('f-pays-arrivee').value = '';
+  document.getElementById('f-marchandise').value = '';
+  renderRecent(allShipments);
+}
+
+function renderRecent(list) {
+  const tbody = document.getElementById('tbody-recent');
+  document.getElementById('recent-count').textContent =
+    `${list.length} expédition${list.length !== 1 ? 's' : ''} affichée${list.length !== 1 ? 's' : ''} sur ${allShipments.length}`;
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Aucune expédition correspondante.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.slice(0, 10).map(s => `
+    <tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${s.paysDepart ? s.paysDepart+' / ' : ''}${s.villeDepart} → ${s.paysArrivee ? s.paysArrivee+' / ' : ''}${s.villeArrivee}</td>
+      <td>${s.marchandise} — ${s.poids}T</td>
+      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+      <td>${UI.shipmentBadge(s.statut)}</td>
+    </tr>
+  `).join('');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects(true);
 
   const res = await api.get('/shipments');
-  const list = Array.isArray(res) ? res : (res?.data ?? []);
+  allShipments = Array.isArray(res) ? res : (res?.data ?? []);
 
-  document.getElementById('kpi-total').textContent      = list.length;
-  document.getElementById('kpi-pending').textContent    = list.filter(s => s.statut === 'PENDING').length;
-  document.getElementById('kpi-inprogress').textContent = list.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut)).length;
-  document.getElementById('kpi-delivered').textContent  = list.filter(s => s.statut === 'DELIVERED').length;
+  document.getElementById('kpi-total').textContent      = allShipments.length;
+  document.getElementById('kpi-pending').textContent    = allShipments.filter(s => s.statut === 'PENDING').length;
+  document.getElementById('kpi-validation').textContent = allShipments.filter(s => ['ACCEPTED','PROPOSED'].includes(s.statut)).length;
+  document.getElementById('kpi-execution').textContent  = allShipments.filter(s => s.statut === 'IN_PROGRESS').length;
+  document.getElementById('kpi-delivered').textContent  = allShipments.filter(s => s.statut === 'DELIVERED').length;
+  document.getElementById('kpi-cancelled').textContent  = allShipments.filter(s => s.statut === 'CANCELLED').length;
 
-  buildMonthlyChart(list);
-  buildDonut(list);
-  buildStats(list);
-  checkOldPending(list);
-
-  const tbody = document.getElementById('tbody-recent');
-  if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Aucune expédition pour le moment.</td></tr>';
-  } else {
-    tbody.innerHTML = list.slice(0, 8).map(s => `
-      <tr>
-        <td><strong>#${s.id.slice(0,8)}</strong></td>
-        <td>${s.villeDepart} → ${s.villeArrivee}</td>
-        <td>${s.marchandise} — ${s.poids}T</td>
-        <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
-        <td>${UI.shipmentBadge(s.statut)}</td>
-      </tr>
-    `).join('');
-  }
+  buildMonthlyChart(allShipments);
+  buildDonut(allShipments);
+  buildStats(allShipments);
+  checkOldPending(allShipments);
+  renderRecent(allShipments);
 });
 </script>
 </body>

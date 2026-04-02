@@ -33,6 +33,81 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
+  // POST /shipments/:id/interest — transporteur manifeste son intérêt
+  router.post("/:id/interest", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "TRANSPORTER") {
+        res.status(403).json({ error: "Seul un transporteur peut manifester son intérêt" });
+        return;
+      }
+      const transporterId       = getHeader(req, "x-user-id");
+      const transporterTenantId = getHeader(req, "x-tenant-id");
+      const shipment = await service.expressInterest(req.params["id"] as string, { transporterId, transporterTenantId });
+      res.json(shipment);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /shipments/:id/propose — ADMIN propose la mission à un transporteur
+  router.post("/:id/propose", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "ADMIN") {
+        res.status(403).json({ error: "Seul l'admin peut proposer une mission" });
+        return;
+      }
+      const { transporterId, transporterTenantId } = req.body as { transporterId?: string; transporterTenantId?: string };
+      if (!transporterId) {
+        res.status(400).json({ error: "transporterId est requis" });
+        return;
+      }
+      const shipment = await service.proposeToTransporter(req.params["id"] as string, { transporterId, transporterTenantId });
+      res.json(shipment);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /shipments/:id/accept-proposal — transporteur accepte la proposition
+  router.post("/:id/accept-proposal", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "TRANSPORTER") {
+        res.status(403).json({ error: "Seul un transporteur peut accepter une proposition" });
+        return;
+      }
+      const transporterId   = getHeader(req, "x-user-id");
+      const transporterTenantId = getHeader(req, "x-tenant-id");
+      const { truckId, driverId } = req.body as { truckId?: string; driverId?: string };
+      if (!truckId || !driverId) {
+        res.status(400).json({ error: "truckId et driverId sont requis" });
+        return;
+      }
+      const shipment = await service.acceptProposal(req.params["id"] as string, transporterTenantId, transporterId, { truckId, driverId });
+      res.json(shipment);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // POST /shipments/:id/refuse — transporteur refuse la proposition
+  router.post("/:id/refuse", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "TRANSPORTER") {
+        res.status(403).json({ error: "Seul un transporteur peut refuser une proposition" });
+        return;
+      }
+      const transporterTenantId = getHeader(req, "x-tenant-id");
+      const shipment = await service.refuseProposal(req.params["id"] as string, transporterTenantId);
+      res.json(shipment);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // POST /shipments/:id/accept — uniquement TRANSPORTER (ou ADMIN)
   router.post("/:id/accept", async (req, res, next) => {
     try {
@@ -126,13 +201,16 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "TRANSPORTER") {
-        // Expéditions déjà acceptées par ce transporteur + expéditions PENDING disponibles
-        const [mine, pending] = await Promise.all([
+        const tenantId = getHeader(req, "x-tenant-id");
+        const [mine, pending, proposed] = await Promise.all([
           service.findByTransporterId(userId),
           service.findByStatut("PENDING"),
+          service.shipmentRepo.findProposedForTransporter(tenantId),
         ]);
-        const ids = new Set((mine as Array<{ id: string }>).map((s) => s.id));
-        const all = [...mine, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
+        const mineFiltered = (mine as Array<{ id: string; statut: string }>).filter((s) => s.statut !== "PROPOSED");
+        const ids = new Set(mineFiltered.map((s) => s.id));
+        proposed.forEach((s) => ids.add(s.id));
+        const all = [...mineFiltered, ...proposed, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
         res.json(all);
         return;
       }

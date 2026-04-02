@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import mongoose from 'mongoose';
 import { notificationRouter } from './router';
+import { whatsappQrRouter } from './whatsappQrRouter';
 import { errorMiddleware } from './middleware/errorMiddleware';
 import { metricsMiddleware, metricsHandler } from '../../utils/metrics.middleware';
 
@@ -19,6 +20,9 @@ export function createApp(): Application {
   });
 
   app.get('/metrics', metricsHandler);
+
+  // Page QR WhatsApp — sans auth, avant le router protégé
+  app.use('/', whatsappQrRouter);
 
   app.use('/', notificationRouter);
 

@@ -1,6 +1,12 @@
 import type { BaseEntity } from "@jb226/generic-service";
 
-export type ShipmentStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "DELIVERED" | "CANCELLED";
+export type ShipmentStatus = "PENDING" | "PROPOSED" | "ACCEPTED" | "IN_PROGRESS" | "DELIVERED" | "CANCELLED";
+
+export interface ShipmentInterest {
+  transporterId: string;
+  transporterTenantId?: string;
+  createdAt: Date;
+}
 
 export interface GeoPoint {
   latitude: number;
@@ -8,7 +14,8 @@ export interface GeoPoint {
 }
 
 export interface Shipment extends BaseEntity {
-  companyId: string;             // userId de l'expéditeur (x-user-id)
+  companyId: string;
+  interests?: ShipmentInterest[];    // transporteurs ayant manifesté leur intérêt             // userId de l'expéditeur (x-user-id)
   companyTenantId?: string;      // tenantId de l'expéditeur → lookup email company-service
   transporterId?: string;        // userId du transporteur (rempli à ACCEPTED)
   transporterTenantId?: string;  // tenantId du transporteur → lookup email company-service

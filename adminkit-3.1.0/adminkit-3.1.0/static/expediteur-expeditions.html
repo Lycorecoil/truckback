@@ -52,15 +52,74 @@
 
         <div id="alert-container"></div>
 
-        <!-- Filtres -->
+        <!-- Filtres avancés -->
         <div class="card mb-3">
-          <div class="card-body py-2">
-            <div class="d-flex gap-2 flex-wrap">
-              <button class="btn btn-sm btn-primary filter-btn active" data-statut="">Toutes</button>
-              <button class="btn btn-sm btn-outline-warning filter-btn" data-statut="PENDING">En attente</button>
-              <button class="btn btn-sm btn-outline-info filter-btn" data-statut="ACCEPTED">Acceptées</button>
-              <button class="btn btn-sm btn-outline-primary filter-btn" data-statut="IN_PROGRESS">En cours</button>
-              <button class="btn btn-sm btn-outline-success filter-btn" data-statut="DELIVERED">Livrées</button>
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body">
+            <div class="row g-2">
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="PENDING">En attente</option>
+                  <option value="PROPOSED">Proposée</option>
+                  <option value="ACCEPTED">Acceptée</option>
+                  <option value="IN_PROGRESS">En cours</option>
+                  <option value="DELIVERED">Livrée</option>
+                  <option value="CANCELLED">Annulée</option>
+                </select>
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Pays de départ</label>
+                <select id="f-pays-depart" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Pays d'arrivée</label>
+                <select id="f-pays-arrivee" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Marchandise</label>
+                <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Du</label>
+                <input id="f-date-debut" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Au</label>
+                <input id="f-date-fin" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix min (FCFA)</label>
+                <input id="f-prix-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix max (FCFA)</label>
+                <input id="f-prix-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" oninput="applyFilters()" />
+              </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
             </div>
           </div>
         </div>
@@ -122,7 +181,7 @@
 
     <div class="d-flex gap-2 justify-content-end">
       <button class="btn btn-light btn-sm" onclick="closeCancelOverlay()">Retour</button>
-      <button id="btn-confirm-cancel" class="btn btn-danger btn-sm px-4" onclick="cancelShipment()">
+      <button id="btn-confirm-cancel" class="btn btn-danger btn-sm px-4" onclick="confirmCancel()">
         <i class="align-middle me-1" data-feather="x-circle" style="width:13px"></i> Confirmer l'annulation
       </button>
     </div>
@@ -134,7 +193,7 @@
 <script src="js/app-elimmeka.js"></script>
 <script>
 let allShipments = [];
-let currentFilter = '';
+let filterPanelOpen = true;
 
 function renderTable(list) {
   const tbody = document.getElementById('tbody-expeditions');
@@ -145,7 +204,7 @@ function renderTable(list) {
   tbody.innerHTML = list.map(s => `
     <tr>
       <td><strong>#${s.id.slice(0,8)}</strong></td>
-      <td>${s.villeDepart} → ${s.villeArrivee}</td>
+      <td>${s.paysDepart ? s.paysDepart + ' / ' : ''}${s.villeDepart} → ${s.paysArrivee ? s.paysArrivee + ' / ' : ''}${s.villeArrivee}</td>
       <td>${s.marchandise} — ${s.poids}T</td>
       <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
       <td class="d-none d-md-table-cell">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
@@ -156,8 +215,62 @@ function renderTable(list) {
       </td>
     </tr>
   `).join('');
+  if (typeof feather !== 'undefined') feather.replace();
 }
 
+function applyFilters() {
+  const statut     = document.getElementById('f-statut').value;
+  const paysDepart = document.getElementById('f-pays-depart').value;
+  const paysArrivee= document.getElementById('f-pays-arrivee').value;
+  const marchandise= document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const dateDebut  = document.getElementById('f-date-debut').value;
+  const dateFin    = document.getElementById('f-date-fin').value;
+  const prixMin    = document.getElementById('f-prix-min').value ? Number(document.getElementById('f-prix-min').value) : null;
+  const prixMax    = document.getElementById('f-prix-max').value ? Number(document.getElementById('f-prix-max').value) : null;
+
+  let filtered = allShipments.filter(s => {
+    if (statut      && s.statut !== statut) return false;
+    if (paysDepart  && s.paysDepart !== paysDepart) return false;
+    if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
+    if (marchandise && !s.marchandise.toLowerCase().includes(marchandise)) return false;
+    if (dateDebut   && s.dateAnnonce < dateDebut) return false;
+    if (dateFin     && s.dateAnnonce > dateFin) return false;
+    if (prixMin !== null && (s.prixTransport ?? 0) < prixMin) return false;
+    if (prixMax !== null && (s.prixTransport ?? 0) > prixMax) return false;
+    return true;
+  });
+
+  renderTable(filtered);
+
+  // Badge count
+  const activeCount = [statut, paysDepart, paysArrivee, marchandise, dateDebut, dateFin,
+    prixMin !== null ? '1' : '', prixMax !== null ? '1' : ''].filter(Boolean).length;
+  const badge = document.getElementById('filter-badge');
+  if (activeCount > 0) {
+    badge.textContent = activeCount;
+    badge.classList.remove('d-none');
+  } else {
+    badge.classList.add('d-none');
+  }
+  document.getElementById('filter-result-count').textContent =
+    `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allShipments.length}`;
+}
+
+function resetFilters() {
+  ['f-statut','f-pays-depart','f-pays-arrivee'].forEach(id => document.getElementById(id).value = '');
+  ['f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
+
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  const panel = document.getElementById('filter-panel');
+  const chevron = document.getElementById('filter-chevron');
+  panel.style.display = filterPanelOpen ? '' : 'none';
+  chevron.style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+}
+
+// ─── Annulation ────────────────────────────────────────────────────────────────
 let cancelTargetId = null;
 
 function openCancelModal(id) {
@@ -179,7 +292,7 @@ function closeCancelOverlay() {
   setTimeout(() => { el.style.display = 'none'; }, 200);
 }
 
-async function cancelShipment() {
+async function confirmCancel() {
   const raison = document.getElementById('cancel-raison').value.trim();
   if (!raison) {
     document.getElementById('cancel-alert').innerHTML =
@@ -193,7 +306,7 @@ async function cancelShipment() {
     closeCancelOverlay();
     UI.toast('Expédition annulée.', 'success');
     allShipments = allShipments.filter(s => s.id !== cancelTargetId);
-    renderTable(currentFilter ? allShipments.filter(s => s.statut === currentFilter) : allShipments);
+    applyFilters();
   } catch (err) {
     document.getElementById('cancel-alert').innerHTML =
       `<div class="alert alert-danger py-2 small mb-2">${err.error ?? 'Erreur lors de l\'annulation.'}</div>`;
@@ -207,21 +320,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCancelO
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects(true);
 
   const res = await api.get('/shipments');
   const raw = Array.isArray(res) ? res : (res?.data ?? []);
-  allShipments = raw.filter(s => s.statut !== 'CANCELLED');
-  renderTable(allShipments);
-
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'btn-primary', 'btn-warning', 'btn-info', 'btn-success', 'btn-danger'));
-      btn.classList.add('active', 'btn-primary');
-      currentFilter = btn.dataset.statut;
-      const filtered = currentFilter ? allShipments.filter(s => s.statut === currentFilter) : allShipments;
-      renderTable(filtered);
-    });
-  });
+  allShipments = raw;
+  applyFilters();
 });
 </script>
 </body>

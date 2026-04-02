@@ -9,11 +9,13 @@ import { blacklistAccessToken, type JwtPayload } from '../middleware/authMiddlew
 export function createProxyRouter(services: ServiceUrls, redisClient?: RedisClientType): Router {
   const router = Router();
 
-  const proxy = (target: string, pathPrefix: string) =>
+  // Express strip le préfixe matchant avant de passer au proxy (ex: /v1/shipments → /).
+  // servicePrefix permet de remettre le préfixe attendu par le service cible (ex: /shipments).
+  const proxy = (target: string, servicePrefix = '') =>
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      pathRewrite: { [`^${pathPrefix}`]: '' },
+      ...(servicePrefix ? { pathRewrite: (path: string) => servicePrefix + path } : {}),
       on: {
         error: (err, _req, res) => {
           const httpRes = res as import('http').ServerResponse;
@@ -43,22 +45,22 @@ export function createProxyRouter(services: ServiceUrls, redisClient?: RedisClie
   });
 
   // Auth — public pour signup/login, restreint pour le reste
-  router.use('/v1/auth', proxy(services.auth, '/v1/auth'));
+  router.use('/v1/auth', proxy(services.auth));
 
   // Company — tous les rôles authentifiés
-  router.use('/v1/company', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.company, '/v1/company'));
+  router.use('/v1/company', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.company));
 
   // Fleet — TRANSPORTER gère sa flotte, EXPEDITEUR et DRIVER peuvent consulter
-  router.use('/v1/fleet', requireRoles('ADMIN', 'TRANSPORTER', 'EXPEDITEUR', 'DRIVER'), proxy(services.fleet, '/v1/fleet'));
+  router.use('/v1/fleet', requireRoles('ADMIN', 'TRANSPORTER', 'EXPEDITEUR', 'DRIVER'), proxy(services.fleet));
 
   // Shipment — EXPEDITEUR crée/annule, TRANSPORTER accepte, DRIVER démarre/livre
-  router.use('/v1/shipments', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.shipment, '/v1/shipments'));
+  router.use('/v1/shipments', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.shipment, '/shipments'));
 
   // Notification — tous les rôles authentifiés
-  router.use('/v1/notification', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.notification, '/v1/notification'));
+  router.use('/v1/notification', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.notification));
 
   // Tracking — DRIVER envoie, EXPEDITEUR/TRANSPORTER/ADMIN consulte
-  router.use('/v1/tracking', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.tracking, '/v1/tracking'));
+  router.use('/v1/tracking', requireRoles('ADMIN', 'EXPEDITEUR', 'TRANSPORTER', 'DRIVER'), proxy(services.tracking, '/tracking'));
 
   return router;
 }

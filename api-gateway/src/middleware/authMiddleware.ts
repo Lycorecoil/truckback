@@ -85,7 +85,7 @@ export function createAuthMiddleware(redisClient?: RedisClientType) {
 
     req.headers['x-user-id']   = payload.sub;
     req.headers['x-user-role'] = payload.role;
-    req.headers['x-tenant-id'] = payload.tenantId;
+    if (payload.tenantId) req.headers['x-tenant-id'] = payload.tenantId;
     next();
   };
 }
