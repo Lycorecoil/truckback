@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Accepter une mission | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .truck-card {
+      background: #fff;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+      position: relative;
+      user-select: none;
+    }
+    .truck-card:hover:not(.truck-disabled) {
+      border-color: var(--cu-orange, #F97316);
+      box-shadow: 0 4px 16px rgba(249,115,22,.12);
+    }
+    .truck-card.selected {
+      border-color: var(--cu-orange, #F97316);
+      background: #FFF7ED;
+      box-shadow: 0 4px 16px rgba(249,115,22,.18);
+    }
+    .truck-card.truck-disabled {
+      background: #F9FAFB;
+      border-color: #E5E7EB;
+      cursor: not-allowed;
+      opacity: .7;
+    }
+    .truck-check {
+      display: none;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--cu-orange, #F97316);
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .truck-card.selected .truck-check { display: flex; }
+    .truck-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #FFF7ED;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .truck-avatar.disabled-av { background: #F3F4F6; }
+    .driver-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .68rem;
+      font-weight: 700;
+      color: #3B82F6;
+      flex-shrink: 0;
+    }
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1.5px solid #E5E7EB;
+      background: #fff;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s;
+      color: #374151;
+      white-space: nowrap;
+    }
+    .filter-chip:hover { border-color: #F97316; color: #F97316; }
+    .filter-chip.active { border-color: #F97316; background: #FFF7ED; color: #F97316; }
+    .mission-summary {
+      background: linear-gradient(135deg, #1A4B6E 0%, #0F2840 100%);
+      border-radius: 14px;
+      padding: 24px 28px;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .mission-route-line {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255,255,255,.3), rgba(255,255,255,.7), rgba(255,255,255,.3));
+      margin: 0 12px;
+      position: relative;
+    }
+    .mission-route-line::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-left-color: rgba(255,255,255,.7);
+      border-right: none;
+    }
+    .cu-confirm-btn {
+      background: var(--cu-orange, #F97316);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cu-confirm-btn:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .cu-confirm-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="expeditions-disponibles.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Expéditions dispo.</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <a href="expeditions-disponibles.html" class="btn btn-light">
+            <i class="align-middle" data-feather="arrow-left" style="width:16px"></i>
+          </a>
+          <div>
+            <h1 class="h3 mb-0 fw-bold">Manifester mon intérêt</h1>
+            <p class="text-muted mb-0 small">Sélectionnez le camion que vous souhaitez affecter à cette mission</p>
+          </div>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Résumé mission -->
+        <div id="mission-summary" class="mission-summary d-none">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:4px">Mission</div>
+              <div class="fw-bold" style="font-size:1.1rem" id="ms-ref">—</div>
+            </div>
+            <div id="ms-badge-urgent" class="d-none" style="background:rgba(239,68,68,.9);color:#fff;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:999px">⚡ URGENT</div>
+          </div>
+
+          <div class="d-flex align-items-center mb-3" style="gap:0">
+            <div>
+              <div style="font-size:.68rem;opacity:.55;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Départ</div>
+              <div class="fw-bold" style="font-size:1rem" id="ms-depart">—</div>
+              <div style="font-size:.78rem;opacity:.65" id="ms-pays-depart">—</div>
+            </div>
+            <div class="mission-route-line mx-3"></div>
+            <div class="text-end">
+              <div style="font-size:.68rem;opacity:.55;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Arrivée</div>
+              <div class="fw-bold" style="font-size:1rem" id="ms-arrivee">—</div>
+              <div style="font-size:.78rem;opacity:.65" id="ms-pays-arrivee">—</div>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3" style="font-size:.82rem">
+            <div><span style="opacity:.6">Marchandise :</span> <strong id="ms-marchandise">—</strong></div>
+            <div><span style="opacity:.6">Poids :</span> <strong id="ms-poids">—</strong></div>
+            <div><span style="opacity:.6">Prix :</span> <strong id="ms-prix" style="color:#F97316">—</strong></div>
+            <div><span style="opacity:.6">Date :</span> <strong id="ms-date">—</strong></div>
+          </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+          <span class="text-muted small fw-semibold me-1">Filtrer :</span>
+          <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">Tous</button>
+          <button class="filter-chip" data-filter="Semi-remorque" onclick="setFilter(this,'Semi-remorque')">Semi-remorque</button>
+          <button class="filter-chip" data-filter="Camion benne" onclick="setFilter(this,'Camion benne')">Benne</button>
+          <button class="filter-chip" data-filter="Camion frigorifique" onclick="setFilter(this,'Camion frigorifique')">Frigo</button>
+          <button class="filter-chip" data-filter="Camion plateau" onclick="setFilter(this,'Camion plateau')">Plateau</button>
+          <button class="filter-chip" data-filter="Citerne" onclick="setFilter(this,'Citerne')">Citerne</button>
+          <button class="filter-chip" data-filter="Fourgon" onclick="setFilter(this,'Fourgon')">Fourgon</button>
+          <span class="ms-2 text-muted small" id="filter-count"></span>
+        </div>
+
+        <!-- Grille camions -->
+        <div id="trucks-grid" class="row g-3 mb-4">
+          <div class="col-12 text-center py-5 text-muted">
+            <div class="spinner-border me-2"></div> Chargement de vos véhicules…
+          </div>
+        </div>
+
+        <!-- Légende -->
+        <div class="d-flex gap-4 mb-4" style="font-size:.8rem;color:#6B7280">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:12px;height:12px;border-radius:3px;background:#F97316"></div>
+            Camion sélectionné
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:12px;height:12px;border-radius:3px;background:#E5E7EB"></div>
+            Sans chauffeur (non disponible)
+          </div>
+        </div>
+
+        <!-- Pied de page action -->
+        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:20px 24px" class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div id="selection-info" style="color:#6B7280;font-size:.88rem">
+            Aucun camion sélectionné
+          </div>
+          <div class="d-flex gap-3">
+            <a href="expeditions-disponibles.html" class="btn btn-light px-4">Annuler</a>
+            <button class="cu-confirm-btn" id="btn-confirm" disabled onclick="confirmInterest()">
+              <i data-feather="check-circle" style="width:18px;height:18px"></i>
+              Confirmer mon intérêt
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allTrucks = [], allDrivers = [], selectedTruckId = null, currentFilter = 'all', shipmentId = null;
+
+// ─── Filtre ────────────────────────────────────────────────────────────────────
+function setFilter(btn, type) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = type;
+  renderTrucks();
+}
+
+// ─── Rendu camions ─────────────────────────────────────────────────────────────
+function renderTrucks() {
+  const filtered = currentFilter === 'all'
+    ? allTrucks
+    : allTrucks.filter(t => t.typeVehicule === currentFilter);
+
+  document.getElementById('filter-count').textContent =
+    `${filtered.length} camion${filtered.length !== 1 ? 's' : ''}`;
+
+  const grid = document.getElementById('trucks-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="col-12 text-center py-5">
+      <div style="font-size:2.5rem;margin-bottom:12px">🚚</div>
+      <h6 class="text-muted">Aucun véhicule de ce type</h6>
+      <p class="text-muted small">Essayez un autre filtre ou ajoutez des véhicules dans Ma Flotte.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => {
+    const driver = allDrivers.find(d => d.id === t.driverId);
+    const hasDriver = !!driver;
+    const isSelected = selectedTruckId === t.id;
+    const initials = driver ? `${driver.prenom?.[0] ?? ''}${driver.nom?.[0] ?? ''}`.toUpperCase() : '';
+
+    return `
+    <div class="col-md-6 col-xl-4">
+      <div class="truck-card ${isSelected ? 'selected' : ''} ${hasDriver ? '' : 'truck-disabled'}"
+           ${hasDriver ? `onclick="selectTruck('${t.id}')"` : ''}>
+
+        <div class="truck-check">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="truck-avatar ${hasDriver ? '' : 'disabled-av'}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="${hasDriver ? '#F97316' : '#9CA3AF'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13" rx="2"/>
+              <path d="M16 8h4l3 5v3h-7V8z"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-bold" style="font-size:.95rem">${t.immatriculation ?? '—'}</div>
+            <div class="text-muted small">${t.marque ?? ''} ${t.modele ?? ''}</div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span style="font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:999px;background:${hasDriver ? '#FFF7ED' : '#F3F4F6'};color:${hasDriver ? '#F97316' : '#9CA3AF'};border:1px solid ${hasDriver ? '#FED7AA' : '#E5E7EB'}">
+            ${t.typeVehicule ?? 'Non défini'}
+          </span>
+          <span style="font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:999px;background:#F0FDF4;color:#10B981;border:1px solid #BBF7D0">
+            ${t.capaciteMax ?? '?'} T
+          </span>
+          <span style="font-size:.72rem;padding:3px 10px;border-radius:999px;background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB">
+            ${t.villeBase ?? '—'}, ${t.paysBase ?? ''}
+          </span>
+        </div>
+
+        ${hasDriver
+          ? `<div class="d-flex align-items-center gap-2" style="padding:10px 12px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0">
+              <div class="driver-avatar">${initials}</div>
+              <div>
+                <div class="fw-semibold" style="font-size:.82rem;color:#065F46">${driver.prenom} ${driver.nom}</div>
+                <div style="font-size:.7rem;color:#6B7280">${driver.telephone ?? ''}</div>
+              </div>
+              <div class="ms-auto" style="font-size:.68rem;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:.05em">Disponible</div>
+            </div>`
+          : `<div class="d-flex align-items-center gap-2" style="padding:10px 12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+              <span style="font-size:.78rem;color:#9CA3AF">Aucun chauffeur assigné — <a href="transporteur-chauffeurs.html" style="color:#F97316;text-decoration:none">Assigner →</a></span>
+            </div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+// ─── Sélection ─────────────────────────────────────────────────────────────────
+function selectTruck(id) {
+  selectedTruckId = selectedTruckId === id ? null : id;
+  const truck = allTrucks.find(t => t.id === selectedTruckId);
+  const driver = truck ? allDrivers.find(d => d.id === truck.driverId) : null;
+  const btn = document.getElementById('btn-confirm');
+  const info = document.getElementById('selection-info');
+  if (selectedTruckId && truck) {
+    btn.disabled = false;
+    info.innerHTML = `<strong style="color:#111">${truck.immatriculation}</strong> — ${truck.marque ?? ''} ${truck.modele ?? ''}
+      ${driver ? `<span class="ms-2 text-muted">• Chauffeur : ${driver.prenom} ${driver.nom}</span>` : ''}`;
+  } else {
+    btn.disabled = true;
+    info.textContent = 'Aucun camion sélectionné';
+  }
+  renderTrucks();
+}
+
+// ─── Confirmation ──────────────────────────────────────────────────────────────
+async function confirmInterest() {
+  if (!selectedTruckId || !shipmentId) return;
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Envoi en cours…`;
+  try {
+    await api.post(`/shipments/${shipmentId}/interest`, { truckId: selectedTruckId });
+    UI.toast('Intérêt enregistré ! L\'équipe Elimmekatruck va examiner votre candidature.', 'success');
+    setTimeout(() => { window.location.href = 'transporteur-missions.html'; }, 1200);
+  } catch (err) {
+    const msg = err.error ?? err.message ?? 'Erreur';
+    if (msg.includes('déjà')) {
+      UI.toast('Vous avez déjà manifesté votre intérêt pour cette expédition.', 'warning');
+      setTimeout(() => { window.location.href = 'expeditions-disponibles.html'; }, 1500);
+    } else {
+      document.getElementById('alert-container').innerHTML =
+        `<div class="alert alert-danger alert-dismissible fade show mb-3">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+      btn.disabled = false;
+      btn.innerHTML = `<i data-feather="check-circle" style="width:18px;height:18px"></i> Confirmer mon intérêt`;
+      if (typeof feather !== 'undefined') feather.replace();
+    }
+  }
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const params = new URLSearchParams(window.location.search);
+  shipmentId = params.get('id');
+  if (!shipmentId) {
+    window.location.href = 'expeditions-disponibles.html';
+    return;
+  }
+
+  try {
+    const [shipRes, trucksRes, driversRes] = await Promise.all([
+      api.get(`/shipments/${shipmentId}`),
+      api.get('/fleet/trucks'),
+      api.get('/fleet/drivers'),
+    ]);
+
+    // Mission summary
+    const s = shipRes?.data ?? shipRes ?? {};
+    if (s && s.id) {
+      document.getElementById('ms-ref').textContent = `#${s.id.slice(0, 8).toUpperCase()}`;
+      document.getElementById('ms-depart').textContent = s.villeDepart ?? '—';
+      document.getElementById('ms-arrivee').textContent = s.villeArrivee ?? '—';
+      document.getElementById('ms-pays-depart').textContent = s.paysDepart ?? '';
+      document.getElementById('ms-pays-arrivee').textContent = s.paysArrivee ?? '';
+      document.getElementById('ms-marchandise').textContent = s.marchandise ?? '—';
+      document.getElementById('ms-poids').textContent = s.poids ? `${s.poids} T` : '—';
+      document.getElementById('ms-prix').textContent = s.prixTransport ? `${s.prixTransport.toLocaleString('fr-FR')} FCFA` : '—';
+      document.getElementById('ms-date').textContent = UI.formatDate(s.dateAnnonce);
+      if (s.commentaireGeneral?.toLowerCase().includes('urgent')) {
+        document.getElementById('ms-badge-urgent').classList.remove('d-none');
+      }
+      document.getElementById('mission-summary').classList.remove('d-none');
+    }
+
+    // Trucks & drivers
+    const rawT = trucksRes?.data ?? trucksRes ?? [];
+    const rawD = driversRes?.data ?? driversRes ?? [];
+    allTrucks  = Array.isArray(rawT) ? rawT : (rawT.items ?? []);
+    allDrivers = Array.isArray(rawD) ? rawD : (rawD.items ?? []);
+
+    // Sort: trucks with driver first
+    allTrucks.sort((a, b) => (b.driverId ? 1 : 0) - (a.driverId ? 1 : 0));
+
+    renderTrucks();
+  } catch (err) {
+    document.getElementById('trucks-grid').innerHTML =
+      `<div class="col-12"><div class="alert alert-danger">Erreur de chargement : ${err.error ?? err.message ?? 'Erreur inconnue'}</div></div>`;
+  }
+});
+</script>
+</body>
+</html>

@@ -307,9 +307,9 @@ function renderCards(list) {
           <div class="d-flex gap-2">
             ${role === 'TRANSPORTER' ? `
               <button class="btn btn-sm btn-outline-secondary" onclick="openDetail('${s.id}')">Détails</button>
-              <button class="btn btn-sm btn-primary" id="btn-interest-${s.id}" onclick="expressInterest('${s.id}', this)">
+              <a class="btn btn-sm btn-primary" href="transporteur-accepter-mission.html?id=${s.id}">
                 Je suis intéressé
-              </button>
+              </a>
             ` : `
               <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">Gérer</a>
             `}
@@ -365,9 +365,7 @@ function openDetail(id) {
     </table>
   `;
   document.getElementById('btn-interested').onclick = () => {
-    closeDetail();
-    const btn = document.getElementById(`btn-interest-${id}`);
-    if (btn) expressInterest(id, btn);
+    window.location.href = `transporteur-accepter-mission.html?id=${id}`;
   };
   document.getElementById('detail-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
