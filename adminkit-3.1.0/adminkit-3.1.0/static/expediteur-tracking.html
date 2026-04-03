@@ -6,21 +6,189 @@
   <title>Tracking | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-  <!-- Leaflet.js -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    #map { height: 520px; width: 100%; border-radius: 6px; z-index: 0; }
-    .tracking-info { font-size: 0.85rem; }
-    .pulse {
-      display: inline-block; width: 12px; height: 12px; border-radius: 50%;
-      background: #3b7ddd; animation: pulse 1.5s infinite;
+    /* ── Layout split ── */
+    .tracking-wrap {
+      display: flex;
+      gap: 0;
+      height: calc(100vh - 120px);
+      min-height: 500px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,.10);
     }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(59,125,221,0.6); }
-      70%  { box-shadow: 0 0 0 10px rgba(59,125,221,0); }
-      100% { box-shadow: 0 0 0 0 rgba(59,125,221,0); }
+    .tracking-panel {
+      width: 340px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #E5E7EB;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .tracking-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .tracking-map {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* ── Panel header ── */
+    .tp-header {
+      background: linear-gradient(135deg, #1A4B6E 0%, #0F2840 100%);
+      padding: 20px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .tp-ref {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .55;
+      margin-bottom: 4px;
+    }
+    .tp-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    /* ── Route steps ── */
+    .route-steps { display: flex; flex-direction: column; gap: 0; }
+    .route-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .route-step-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: .65rem;
+      font-weight: 700;
+    }
+    .route-step-icon.start { background: #10B981; color: #fff; }
+    .route-step-icon.end   { background: #F97316; color: #fff; }
+    .route-step-line {
+      width: 2px;
+      height: 24px;
+      background: linear-gradient(180deg, #10B981, #F97316);
+      margin: 4px 13px;
+      flex-shrink: 0;
+    }
+    .route-step-text { padding-top: 4px; }
+    .route-step-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .55; }
+    .route-step-city  { font-size: .9rem; font-weight: 700; }
+    .route-step-sub   { font-size: .72rem; opacity: .6; }
+
+    /* ── GPS card ── */
+    .gps-card {
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .gps-label {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+    }
+    .gps-value {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .gps-sub { font-size: .75rem; color: #6B7280; margin-top: 2px; }
+
+    /* ── Pulse live ── */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      animation: cu-pulse 1.6s infinite;
+      margin-right: 6px;
+    }
+    @keyframes cu-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.6); }
+      70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+      100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+    }
+
+    /* ── Countdown bar ── */
+    .countdown-bar {
+      height: 3px;
+      background: #E5E7EB;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .countdown-fill {
+      height: 100%;
+      background: #F97316;
+      border-radius: 999px;
+      transition: width 1s linear;
+    }
+
+    /* ── Map overlay ── */
+    .map-overlay-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 400;
+      background: rgba(255,255,255,.95);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.12);
+      font-size: .78rem;
+      min-width: 160px;
+    }
+
+    /* ── Stat chips ── */
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      font-size: .82rem;
+    }
+    .stat-chip-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .tracking-wrap { flex-direction: column; height: auto; }
+      .tracking-panel { width: 100%; border-right: none; border-bottom: 1px solid #E5E7EB; }
+      .tracking-map { height: 350px; }
     }
   </style>
 </head>
@@ -50,6 +218,8 @@
               <span id="navbar-user-name" class="text-dark">—</span>
             </a>
             <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
             </div>
           </li>
@@ -60,51 +230,141 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1 class="h3 mb-0"><strong>Tracking</strong> <span id="title-ref" class="text-muted fw-normal"></span></h1>
-          <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-secondary">
-            <i class="align-middle me-1" data-feather="arrow-left"></i> Retour
+        <!-- Breadcrumb + retour -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <a href="expediteur-expeditions.html" class="btn btn-light btn-sm">
+            <i class="align-middle me-1" data-feather="arrow-left" style="width:14px"></i> Retour
           </a>
-        </div>
-
-        <!-- Infos expédition -->
-        <div class="row mb-3">
-          <div class="col-md-8">
-            <div class="card h-100">
-              <div class="card-body py-3 tracking-info">
-                <div class="row">
-                  <div class="col-sm-4"><span class="text-muted">Trajet</span><br><strong id="info-trajet">—</strong></div>
-                  <div class="col-sm-4"><span class="text-muted">Marchandise</span><br><strong id="info-marchandise">—</strong></div>
-                  <div class="col-sm-4"><span class="text-muted">Statut</span><br><span id="info-statut">—</span></div>
-                </div>
-              </div>
-            </div>
+          <div>
+            <h1 class="h4 mb-0 fw-bold">Suivi en temps réel
+              <span id="title-ref" class="text-muted fw-normal" style="font-size:.85rem"></span>
+            </h1>
           </div>
-          <div class="col-md-4">
-            <div class="card h-100">
-              <div class="card-body py-3 tracking-info">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                  <span class="pulse"></span>
-                  <strong>Dernière position</strong>
-                </div>
-                <div id="info-position" class="text-muted">En attente de données GPS...</div>
-                <div id="info-vitesse" class="text-muted"></div>
-                <div id="info-lastupdate" class="text-muted" style="font-size:0.75rem;"></div>
-              </div>
-            </div>
+          <div class="ms-auto d-flex align-items-center gap-2" style="font-size:.78rem;color:#6B7280">
+            <span class="live-dot"></span>
+            <span id="next-refresh">Actualisation dans 30s</span>
           </div>
         </div>
 
-        <!-- Carte -->
-        <div class="card">
-          <div class="card-body p-2">
+        <!-- Layout split -->
+        <div class="tracking-wrap">
+
+          <!-- Panneau gauche -->
+          <div class="tracking-panel">
+
+            <!-- Header mission -->
+            <div class="tp-header">
+              <div class="tp-ref" id="panel-ref">Référence mission</div>
+              <div class="tp-title" id="panel-marchandise">Chargement…</div>
+
+              <!-- Route -->
+              <div class="route-steps">
+                <div class="route-step">
+                  <div class="route-step-icon start">A</div>
+                  <div class="route-step-text">
+                    <div class="route-step-label">Départ</div>
+                    <div class="route-step-city" id="panel-depart">—</div>
+                    <div class="route-step-sub" id="panel-pays-depart">—</div>
+                  </div>
+                </div>
+                <div class="route-step-line ms-3"></div>
+                <div class="route-step">
+                  <div class="route-step-icon end">B</div>
+                  <div class="route-step-text">
+                    <div class="route-step-label">Arrivée</div>
+                    <div class="route-step-city" id="panel-arrivee">—</div>
+                    <div class="route-step-sub" id="panel-pays-arrivee">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Corps panneau -->
+            <div class="tracking-panel-body">
+
+              <!-- Statut -->
+              <div class="mb-3">
+                <div class="gps-label">Statut expédition</div>
+                <div id="panel-statut">—</div>
+              </div>
+
+              <!-- Position GPS -->
+              <div class="gps-card" id="gps-card">
+                <div class="gps-label">
+                  <span class="live-dot"></span>Dernière position GPS
+                </div>
+                <div class="gps-value" id="gps-coords">En attente de données…</div>
+                <div class="gps-sub" id="gps-update"></div>
+              </div>
+
+              <!-- Stats chips -->
+              <div class="d-flex flex-column gap-2 mb-3">
+                <div class="stat-chip">
+                  <div class="stat-chip-icon" style="background:#FFF7ED">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  </div>
+                  <div>
+                    <div class="gps-label mb-0">Vitesse actuelle</div>
+                    <div class="fw-bold" id="stat-vitesse" style="font-size:.88rem">—</div>
+                  </div>
+                </div>
+                <div class="stat-chip">
+                  <div class="stat-chip-icon" style="background:#F0FDF4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div>
+                    <div class="gps-label mb-0">Mise à jour</div>
+                    <div class="fw-bold" id="stat-update" style="font-size:.88rem">—</div>
+                  </div>
+                </div>
+                <div class="stat-chip">
+                  <div class="stat-chip-icon" style="background:#EFF6FF">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </div>
+                  <div>
+                    <div class="gps-label mb-0">Points GPS reçus</div>
+                    <div class="fw-bold" id="stat-points" style="font-size:.88rem">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Countdown -->
+              <div style="font-size:.72rem;color:#9CA3AF" class="mb-1">Prochaine actualisation</div>
+              <div class="countdown-bar">
+                <div class="countdown-fill" id="countdown-fill" style="width:100%"></div>
+              </div>
+              <div style="font-size:.72rem;color:#6B7280;text-align:right;margin-top:4px" id="countdown-label">30s</div>
+
+              <!-- Aucune donnée GPS -->
+              <div id="no-gps" class="text-center py-4 d-none">
+                <div style="font-size:2.5rem;margin-bottom:10px">📡</div>
+                <h6 class="text-muted">Aucune position GPS</h6>
+                <p class="text-muted small">Le camion n'a pas encore transmis de coordonnées.</p>
+              </div>
+
+            </div>
+
+            <!-- Pied panneau -->
+            <div style="padding:16px 20px;border-top:1px solid #E5E7EB;background:#FAFAFA">
+              <a href="expediteur-expeditions.html" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="align-middle me-1" data-feather="list" style="width:13px"></i> Toutes mes expéditions
+              </a>
+            </div>
+          </div>
+
+          <!-- Carte -->
+          <div class="tracking-map">
             <div id="map"></div>
-          </div>
-        </div>
 
-        <div class="text-muted text-end mt-2" style="font-size:0.75rem;">
-          Actualisation automatique toutes les 30s — <span id="next-refresh"></span>
-        </div>
+            <!-- Badge overlay -->
+            <div class="map-overlay-badge" id="map-badge" style="display:none">
+              <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9CA3AF;margin-bottom:4px">Position actuelle</div>
+              <div class="fw-bold" style="font-size:.82rem" id="badge-coords">—</div>
+              <div style="font-size:.72rem;color:#6B7280" id="badge-speed"></div>
+            </div>
+          </div>
+
+        </div><!-- /tracking-wrap -->
 
       </div>
     </main>
@@ -119,76 +379,124 @@
 <script src="js/app-elimmeka.js"></script>
 <script>
 const shipmentId = new URLSearchParams(window.location.search).get('id');
-let map, routeLine, truckMarker, refreshTimer, countdownTimer, countdown = 30;
+let map, routeLine, truckMarker, startMarker, refreshTimer, countdownTimer;
+let countdown = 30, totalCountdown = 30;
 
-// Icône camion personnalisée
+// ── Icône camion ───────────────────────────────────────────────────────────────
 const truckIcon = L.divIcon({
-  html: `<div style="background:#3b7ddd;color:#fff;border-radius:50%;width:36px;height:36px;
-    display:flex;align-items:center;justify-content:center;font-size:18px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.3)">🚛</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-  className: '',
+  html: `<div style="
+    background: linear-gradient(135deg,#F97316,#EA580C);
+    color:#fff;border-radius:50%;width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 3px 12px rgba(249,115,22,.5);
+    border:3px solid #fff;">🚛</div>`,
+  iconSize:   [42, 42],
+  iconAnchor: [21, 21],
+  className:  '',
 });
 
+const startIcon = L.divIcon({
+  html: `<div style="
+    background:#10B981;color:#fff;border-radius:50%;width:16px;height:16px;
+    border:3px solid #fff;box-shadow:0 2px 6px rgba(16,185,129,.5)"></div>`,
+  iconSize:   [16, 16],
+  iconAnchor: [8, 8],
+  className:  '',
+});
+
+// ── Init carte ────────────────────────────────────────────────────────────────
 function initMap() {
-  // Centré sur Afrique de l'Ouest par défaut
-  map = L.map('map').setView([12.3714, -1.5197], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 18,
+  map = L.map('map', { zoomControl: false }).setView([12.3714, -1.5197], 5);
+
+  // Tuiles style propre (CartoDB Positron)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CartoDB',
+    maxZoom: 19,
   }).addTo(map);
+
+  // Contrôle zoom en haut à droite
+  L.control.zoom({ position: 'topright' }).addTo(map);
 }
 
+// ── Chargement tracking ───────────────────────────────────────────────────────
 async function loadTracking() {
   if (!shipmentId) return;
 
-  const points = await api.get(`/tracking/shipment/${shipmentId}`);
-  if (!points || points.length === 0) {
-    document.getElementById('info-position').textContent = 'Aucune position GPS reçue pour le moment.';
-    return;
+  try {
+    const points = await api.get(`/tracking/shipment/${shipmentId}`);
+
+    if (!points || points.length === 0) {
+      document.getElementById('gps-coords').textContent = 'Aucune position reçue.';
+      document.getElementById('stat-points').textContent = '0 point';
+      document.getElementById('no-gps').classList.remove('d-none');
+      document.getElementById('gps-card').style.opacity = '.5';
+      return;
+    }
+
+    document.getElementById('no-gps').classList.add('d-none');
+    document.getElementById('gps-card').style.opacity = '1';
+    document.getElementById('map-badge').style.display = 'block';
+
+    // Route
+    const coords = points.map(p => [p.latitude, p.longitude]);
+    if (routeLine) map.removeLayer(routeLine);
+    routeLine = L.polyline(coords, {
+      color: '#F97316', weight: 4, opacity: .85,
+      dashArray: null,
+    }).addTo(map);
+
+    // Marqueur départ
+    if (startMarker) map.removeLayer(startMarker);
+    startMarker = L.marker(coords[0], { icon: startIcon })
+      .addTo(map)
+      .bindPopup('<strong>Point de départ</strong>');
+
+    // Marqueur camion (dernier point)
+    const last = points[points.length - 1];
+    if (truckMarker) map.removeLayer(truckMarker);
+    truckMarker = L.marker([last.latitude, last.longitude], { icon: truckIcon })
+      .addTo(map)
+      .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:.82rem;min-width:160px">
+        <div style="font-weight:700;margin-bottom:6px">🚛 Position actuelle</div>
+        <div>Lat : <strong>${last.latitude.toFixed(5)}</strong></div>
+        <div>Lng : <strong>${last.longitude.toFixed(5)}</strong></div>
+        ${last.vitesse != null ? `<div>Vitesse : <strong>${last.vitesse} km/h</strong></div>` : ''}
+        <div style="color:#9CA3AF;font-size:.72rem;margin-top:6px">${new Date(last.timestamp).toLocaleString('fr-FR')}</div>
+      </div>`)
+      .openPopup();
+
+    // Centrer
+    map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+
+    // Mise à jour panneaux
+    const coordsText = `${last.latitude.toFixed(5)}, ${last.longitude.toFixed(5)}`;
+    const timeText   = new Date(last.timestamp).toLocaleString('fr-FR');
+
+    document.getElementById('gps-coords').textContent    = coordsText;
+    document.getElementById('gps-update').textContent    = `Mis à jour : ${timeText}`;
+    document.getElementById('stat-vitesse').textContent  = last.vitesse != null ? `${last.vitesse} km/h` : 'Non disponible';
+    document.getElementById('stat-update').textContent   = timeText;
+    document.getElementById('stat-points').textContent   = `${points.length} point${points.length > 1 ? 's' : ''}`;
+    document.getElementById('badge-coords').textContent  = coordsText;
+    document.getElementById('badge-speed').textContent   = last.vitesse != null ? `${last.vitesse} km/h` : '';
+
+  } catch (err) {
+    document.getElementById('gps-coords').textContent = 'Erreur de connexion au service de tracking.';
   }
-
-  // Tracer la route
-  const coords = points.map(p => [p.latitude, p.longitude]);
-  if (routeLine) map.removeLayer(routeLine);
-  routeLine = L.polyline(coords, { color: '#3b7ddd', weight: 4, opacity: 0.8 }).addTo(map);
-
-  // Marqueur départ
-  L.circleMarker(coords[0], { radius: 8, color: '#28a745', fillColor: '#28a745', fillOpacity: 1 })
-    .addTo(map).bindPopup('Départ');
-
-  // Marqueur position actuelle (dernier point)
-  const last = points[points.length - 1];
-  if (truckMarker) map.removeLayer(truckMarker);
-  truckMarker = L.marker([last.latitude, last.longitude], { icon: truckIcon })
-    .addTo(map)
-    .bindPopup(`<strong>Position actuelle</strong><br>
-      Lat: ${last.latitude.toFixed(5)}<br>
-      Lng: ${last.longitude.toFixed(5)}<br>
-      ${last.vitesse != null ? `Vitesse: ${last.vitesse} km/h<br>` : ''}
-      ${new Date(last.timestamp).toLocaleString('fr-FR')}`)
-    .openPopup();
-
-  // Centrer la carte sur la position actuelle
-  map.setView([last.latitude, last.longitude], Math.max(map.getZoom(), 8));
-
-  // Infos panneau
-  document.getElementById('info-position').innerHTML =
-    `Lat: <strong>${last.latitude.toFixed(5)}</strong> — Lng: <strong>${last.longitude.toFixed(5)}</strong>`;
-  document.getElementById('info-vitesse').textContent =
-    last.vitesse != null ? `Vitesse : ${last.vitesse} km/h` : '';
-  document.getElementById('info-lastupdate').textContent =
-    `Mis à jour : ${new Date(last.timestamp).toLocaleString('fr-FR')}`;
 }
 
+// ── Countdown ─────────────────────────────────────────────────────────────────
 function startCountdown() {
-  countdown = 30;
+  countdown = totalCountdown;
   clearInterval(countdownTimer);
   countdownTimer = setInterval(() => {
     countdown--;
-    const el = document.getElementById('next-refresh');
-    if (el) el.textContent = `prochain dans ${countdown}s`;
+    const fill  = document.getElementById('countdown-fill');
+    const label = document.getElementById('countdown-label');
+    const next  = document.getElementById('next-refresh');
+    if (fill)  fill.style.width  = `${(countdown / totalCountdown) * 100}%`;
+    if (label) label.textContent = `${countdown}s`;
+    if (next)  next.textContent  = `Actualisation dans ${countdown}s`;
     if (countdown <= 0) clearInterval(countdownTimer);
   }, 1000);
 }
@@ -199,34 +507,45 @@ function scheduleRefresh() {
   refreshTimer = setTimeout(async () => {
     await loadTracking();
     scheduleRefresh();
-  }, 30000);
+  }, totalCountdown * 1000);
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
 
   if (!shipmentId) {
-    document.getElementById('info-trajet').textContent = 'ID manquant dans l\'URL';
+    window.location.href = 'expediteur-expeditions.html';
     return;
   }
 
-  document.getElementById('title-ref').textContent = `#${shipmentId.slice(0, 8)}`;
-
-  // Charger les infos de l'expédition
-  const shipments = await api.get('/shipments');
-  const list = Array.isArray(shipments) ? shipments : (shipments?.data ?? []);
-  const s = list.find(x => x.id === shipmentId);
-  if (s) {
-    document.getElementById('title-ref').textContent   = `#${s.id.slice(0, 8)}`;
-    document.getElementById('info-trajet').textContent = `${s.villeDepart} → ${s.villeArrivee}`;
-    document.getElementById('info-marchandise').textContent = `${s.marchandise} — ${s.poids}T`;
-    document.getElementById('info-statut').innerHTML   = UI.shipmentBadge(s.statut);
+  // Infos mission
+  try {
+    const res = await api.get(`/shipments/${shipmentId}`);
+    const s   = res?.data ?? res ?? {};
+    if (s && s.id) {
+      document.getElementById('title-ref').textContent       = ` — #${s.id.slice(0, 8).toUpperCase()}`;
+      document.getElementById('panel-ref').textContent       = `Réf. #${s.id.slice(0, 8).toUpperCase()}`;
+      document.getElementById('panel-marchandise').textContent = `${s.marchandise ?? '—'} · ${s.poids ?? '?'} T`;
+      document.getElementById('panel-depart').textContent    = s.villeDepart   ?? '—';
+      document.getElementById('panel-arrivee').textContent   = s.villeArrivee  ?? '—';
+      document.getElementById('panel-pays-depart').textContent  = s.paysDepart  ?? '';
+      document.getElementById('panel-pays-arrivee').textContent = s.paysArrivee ?? '';
+      document.getElementById('panel-statut').innerHTML      = UI.shipmentBadge(s.statut);
+    }
+  } catch (_) {
+    // Fallback silencieux si l'API shipment échoue (on affiche quand même la carte)
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('title-ref').textContent = ` — #${shipmentId.slice(0, 8).toUpperCase()}`;
+    document.getElementById('panel-ref').textContent = `Réf. #${shipmentId.slice(0, 8).toUpperCase()}`;
   }
 
   initMap();
   await loadTracking();
   scheduleRefresh();
+
+  if (typeof feather !== 'undefined') feather.replace();
 });
 </script>
 </body>
