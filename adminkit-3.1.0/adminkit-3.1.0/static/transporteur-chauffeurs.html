@@ -6,6 +6,7 @@
   <title>Mes Chauffeurs | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -104,6 +105,45 @@
   </div>
 </div>
 
+<!-- Overlay : Modifier un chauffeur -->
+<div id="edit-driver-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,38,64,.6);backdrop-filter:blur(3px);z-index:1060;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s" onclick="if(event.target===this)closeEditDriver()">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:480px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">Modifier le chauffeur</h5>
+      <button onclick="closeEditDriver()" style="background:none;border:none;font-size:1.3rem;color:#adb5bd;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div id="edit-driver-alert"></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Prénom</label>
+        <input id="ed-prenom" class="form-control" placeholder="Jean" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Nom</label>
+        <input id="ed-nom" class="form-control" placeholder="Dupont" />
+      </div>
+      <div class="col-12">
+        <label class="form-label small fw-semibold">Email</label>
+        <input id="ed-email" type="email" class="form-control" />
+      </div>
+      <div class="col-12">
+        <label class="form-label small fw-semibold">Téléphone</label>
+        <input id="ed-tel" class="form-control" placeholder="+226 70 00 00 00" />
+      </div>
+      <div class="col-12">
+        <label class="form-label small fw-semibold">N° Permis</label>
+        <input id="ed-permis" class="form-control" placeholder="BF-123456" />
+      </div>
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-4 pt-3" style="border-top:1px solid #e9ecef">
+      <button class="btn btn-light" onclick="closeEditDriver()">Annuler</button>
+      <button id="btn-save-edit-driver" class="btn btn-primary px-4" onclick="saveEditDriver()">
+        <i class="align-middle me-1" data-feather="save" style="width:14px"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Overlay confirmation -->
 <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:9999;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
@@ -118,7 +158,52 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let drivers = [];
+let drivers = [], editDriverId = null;
+
+function openEditDriver(id) {
+  const d = drivers.find(d => d.id === id);
+  if (!d) return;
+  editDriverId = id;
+  document.getElementById('ed-prenom').value = d.prenom ?? '';
+  document.getElementById('ed-nom').value    = d.nom ?? '';
+  document.getElementById('ed-email').value  = d.email ?? '';
+  document.getElementById('ed-tel').value    = d.telephone ?? '';
+  document.getElementById('ed-permis').value = d.numeroPermis ?? '';
+  document.getElementById('edit-driver-alert').innerHTML = '';
+  const el = document.getElementById('edit-driver-overlay');
+  el.style.opacity = '0'; el.style.display = 'flex';
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeEditDriver() {
+  const el = document.getElementById('edit-driver-overlay');
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 200);
+}
+
+async function saveEditDriver() {
+  if (!editDriverId) return;
+  const payload = {
+    prenom:       document.getElementById('ed-prenom').value.trim(),
+    nom:          document.getElementById('ed-nom').value.trim(),
+    email:        document.getElementById('ed-email').value.trim(),
+    telephone:    document.getElementById('ed-tel').value.trim(),
+    numeroPermis: document.getElementById('ed-permis').value.trim(),
+  };
+  const btn = document.getElementById('btn-save-edit-driver');
+  UI.loading(btn, true);
+  try {
+    const updated = await api.put(`/fleet/drivers/${editDriverId}`, payload);
+    const idx = drivers.findIndex(d => d.id === editDriverId);
+    if (idx !== -1) drivers[idx] = { ...drivers[idx], ...payload, ...(updated ?? {}) };
+    renderDrivers();
+    closeEditDriver();
+    UI.toast('Chauffeur mis à jour avec succès.', 'success');
+  } catch (err) {
+    document.getElementById('edit-driver-alert').innerHTML = `<div class="alert alert-danger py-2 small mb-3">${err.error ?? 'Erreur lors de la mise à jour'}</div>`;
+  } finally { UI.loading(btn, false); }
+}
 
 function askConfirm(msg, okLabel, okClass) {
   return new Promise(resolve => {
@@ -183,6 +268,9 @@ function renderDrivers() {
                 <i class="align-middle" data-feather="pause-circle" style="width:14px"></i>
               </button>`
           }
+          <button class="btn btn-sm btn-outline-secondary" onclick="openEditDriver('${d.id}')" title="Modifier">
+            <i class="align-middle" data-feather="edit-2" style="width:14px"></i>
+          </button>
           <button class="btn btn-sm btn-outline-danger" onclick="deleteDriver('${d.id}')" title="Supprimer">
             <i class="align-middle" data-feather="trash-2" style="width:14px"></i>
           </button>
@@ -225,6 +313,8 @@ async function suspendDriver(id) {
     UI.toast('Chauffeur suspendu.', 'success');
   } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
 }
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeEditDriver(); } });
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;

@@ -6,6 +6,7 @@
   <title>Expéditions disponibles | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -265,49 +266,58 @@ function renderCards(list) {
     container.innerHTML = `<div class="col-12 text-center py-5"><div style="font-size:3rem;margin-bottom:12px">📦</div><h5 class="text-muted">Aucune expédition trouvée</h5><p class="text-muted small">Essayez de modifier vos filtres.</p></div>`;
     return;
   }
-  container.innerHTML = list.map(s => `
-    <div class="col-md-6 col-xl-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <span class="text-muted small fw-semibold">#${s.id.slice(0,8).toUpperCase()}</span>
-            ${role === 'TRANSPORTER' ? '<span class="badge bg-warning text-dark">Disponible</span>' : UI.shipmentBadge(s.statut)}
-          </div>
-          <h5 class="mb-1">
-            <i class="align-middle me-1" data-feather="map-pin" style="width:15px;color:#3b7ddd"></i>
-            ${s.villeDepart} → ${s.villeArrivee}
-          </h5>
-          <div class="text-muted small mb-3">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
-          <div class="row g-2 mb-2">
-            <div class="col-6"><div class="text-muted small">Marchandise</div><div class="fw-semibold">${s.marchandise}</div></div>
-            <div class="col-6"><div class="text-muted small">Poids</div><div class="fw-semibold">${s.poids} T</div></div>
-            <div class="col-6"><div class="text-muted small">Date</div><div class="fw-semibold">${UI.formatDate(s.dateAnnonce)}</div></div>
-            <div class="col-6">
-              <div class="text-muted small">Prix proposé</div>
-              <div class="fw-semibold ${s.prixTransport ? 'text-success' : 'text-muted'}">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : 'Non défini'}</div>
-            </div>
-            ${s.emballage ? `<div class="col-6"><div class="text-muted small">Emballage</div><div class="fw-semibold">${s.emballage}</div></div>` : ''}
-            ${s.quantite  ? `<div class="col-6"><div class="text-muted small">Quantité</div><div class="fw-semibold">${s.quantite}</div></div>` : ''}
-          </div>
-          ${s.commentaireGeneral ? `<p class="text-muted small mb-0 fst-italic border-top pt-2 mt-2">"${s.commentaireGeneral}"</p>` : ''}
+  container.innerHTML = list.map((s, i) => {
+    const isUrgent = s.commentaireGeneral?.toLowerCase().includes('urgent') || false;
+    const isNew = i < 2; // first 2 are "new" visually — approximation
+    const age = (() => {
+      if (!s.dateAnnonce) return '';
+      const diff = Date.now() - new Date(s.dateAnnonce).getTime();
+      const h = Math.floor(diff / 3600000);
+      if (h < 1) return 'Il y a quelques min';
+      if (h < 24) return `Il y a ${h}h`;
+      return `Il y a ${Math.floor(h/24)}j`;
+    })();
+    return `
+    <div class="col-md-6">
+      <div class="cu-mission-card h-100 ${isUrgent ? 'urgent' : ''}">
+        ${isUrgent ? '<span class="cu-mission-badge urgent">⚡ Urgent</span>' : (isNew ? '<span class="cu-mission-badge new">Nouveau</span>' : '')}
+        <div class="fw-bold" style="font-size:.8rem;color:#6B7280;margin-bottom:2px">${s.marchandise?.split(' ')[0]?.toUpperCase() ?? 'EXPÉDITION'}</div>
+        <div class="text-muted" style="font-size:.72rem;margin-bottom:10px">${age}</div>
+
+        <div class="cu-route">
+          <div class="cu-route-dot"></div>
+          <div class="cu-route-city">${s.villeDepart ?? '—'}</div>
+          <div class="cu-route-line"></div>
+          <div class="cu-route-city">${s.villeArrivee ?? '—'}</div>
+          <div class="cu-route-dot dest"></div>
         </div>
-        <div class="card-footer d-flex gap-2 justify-content-end">
-          ${role === 'TRANSPORTER' ? `
-            <button class="btn btn-sm btn-outline-primary" onclick="openDetail('${s.id}')">
-              <i data-feather="eye" style="width:13px"></i> Détail
-            </button>
-            <button class="btn btn-sm btn-success" id="btn-interest-${s.id}" onclick="expressInterest('${s.id}', this)">
-              <i data-feather="thumbs-up" style="width:13px"></i> Je suis intéressé
-            </button>
-          ` : `
-            <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">
-              <i data-feather="external-link" style="width:13px"></i> Gérer
-            </a>
-          `}
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="cu-chip">${s.marchandise ?? '—'} ${s.poids ?? ''}T</span>
+          ${s.emballage ? `<span class="cu-chip">${s.emballage}</span>` : ''}
+          ${s.paysDepart && s.paysDepart !== s.paysArrivee ? `<span class="cu-chip">🌍 ${s.paysDepart} → ${s.paysArrivee}</span>` : ''}
+          <span class="cu-chip">📅 ${UI.formatDate(s.dateAnnonce)}</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-end">
+          <div>
+            <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9CA3AF;margin-bottom:2px">Rémunération</div>
+            <div class="cu-price">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</div>
+          </div>
+          <div class="d-flex gap-2">
+            ${role === 'TRANSPORTER' ? `
+              <button class="btn btn-sm btn-outline-secondary" onclick="openDetail('${s.id}')">Détails</button>
+              <button class="btn btn-sm btn-primary" id="btn-interest-${s.id}" onclick="expressInterest('${s.id}', this)">
+                Je suis intéressé
+              </button>
+            ` : `
+              <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">Gérer</a>
+            `}
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   if (typeof feather !== 'undefined') feather.replace();
 }
 

@@ -6,6 +6,7 @@
   <title>Ma Flotte | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -108,6 +109,76 @@
   </div>
 </div>
 
+<!-- Overlay : Modifier un camion -->
+<div id="edit-truck-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,38,64,.6);backdrop-filter:blur(3px);z-index:1060;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s" onclick="if(event.target===this)closeEditTruck()">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:560px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">Modifier le camion</h5>
+      <button onclick="closeEditTruck()" style="background:none;border:none;font-size:1.3rem;color:#adb5bd;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div id="edit-truck-alert"></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Immatriculation</label>
+        <input id="et-immat" class="form-control" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">N° Châssis (VIN)</label>
+        <input id="et-chassis" class="form-control" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Marque</label>
+        <input id="et-marque" class="form-control" placeholder="Mercedes, MAN, Volvo…" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Modèle</label>
+        <input id="et-modele" class="form-control" placeholder="Actros, TGX…" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Type de véhicule</label>
+        <select id="et-type" class="form-select">
+          <option value="">-- Sélectionner --</option>
+          <option>Camion benne</option>
+          <option>Camion frigorifique</option>
+          <option>Camion plateau</option>
+          <option>Semi-remorque</option>
+          <option>Tracteur routier</option>
+          <option>Fourgon</option>
+          <option>Citerne</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Capacité max (T)</label>
+        <input id="et-capacite" type="number" class="form-control" min="1" max="100" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Ville de base</label>
+        <input id="et-ville" class="form-control" placeholder="Ouagadougou" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small fw-semibold">Pays de base</label>
+        <select id="et-pays" class="form-select">
+          <option>Burkina Faso</option>
+          <option>Côte d'Ivoire</option>
+          <option>Mali</option>
+          <option>Niger</option>
+          <option>Ghana</option>
+          <option>Togo</option>
+          <option>Bénin</option>
+          <option>Sénégal</option>
+        </select>
+      </div>
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-4 pt-3" style="border-top:1px solid #e9ecef">
+      <button class="btn btn-light" onclick="closeEditTruck()">Annuler</button>
+      <button id="btn-save-edit-truck" class="btn btn-primary px-4" onclick="saveEditTruck()">
+        <i class="align-middle me-1" data-feather="save" style="width:14px"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Overlay : Assigner un chauffeur -->
 <div id="assign-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,38,64,.6);backdrop-filter:blur(3px);z-index:1055;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s" onclick="if(event.target===this)closeAssignOverlay()">
   <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:460px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
@@ -146,7 +217,58 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let trucks = [], drivers = [], assignTruckId = null, assignDriverId = null;
+let trucks = [], drivers = [], assignTruckId = null, assignDriverId = null, editTruckId = null;
+
+function openEditTruck(id) {
+  const t = trucks.find(t => t.id === id);
+  if (!t) return;
+  editTruckId = id;
+  document.getElementById('et-immat').value   = t.immatriculation ?? '';
+  document.getElementById('et-chassis').value = t.chassis ?? '';
+  document.getElementById('et-marque').value  = t.marque ?? '';
+  document.getElementById('et-modele').value  = t.modele ?? '';
+  document.getElementById('et-type').value    = t.typeVehicule ?? '';
+  document.getElementById('et-capacite').value= t.capaciteMax ?? '';
+  document.getElementById('et-ville').value   = t.villeBase ?? '';
+  document.getElementById('et-pays').value    = t.paysBase ?? 'Burkina Faso';
+  document.getElementById('edit-truck-alert').innerHTML = '';
+  const el = document.getElementById('edit-truck-overlay');
+  el.style.opacity = '0'; el.style.display = 'flex';
+  requestAnimationFrame(() => { el.style.opacity = '1'; });
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeEditTruck() {
+  const el = document.getElementById('edit-truck-overlay');
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 200);
+}
+
+async function saveEditTruck() {
+  if (!editTruckId) return;
+  const payload = {
+    immatriculation: document.getElementById('et-immat').value.trim(),
+    chassis:         document.getElementById('et-chassis').value.trim(),
+    marque:          document.getElementById('et-marque').value.trim(),
+    modele:          document.getElementById('et-modele').value.trim(),
+    typeVehicule:    document.getElementById('et-type').value,
+    capaciteMax:     Number(document.getElementById('et-capacite').value),
+    villeBase:       document.getElementById('et-ville').value.trim(),
+    paysBase:        document.getElementById('et-pays').value,
+  };
+  const btn = document.getElementById('btn-save-edit-truck');
+  UI.loading(btn, true);
+  try {
+    const updated = await api.put(`/fleet/trucks/${editTruckId}`, payload);
+    const idx = trucks.findIndex(t => t.id === editTruckId);
+    if (idx !== -1) trucks[idx] = { ...trucks[idx], ...payload, ...(updated ?? {}) };
+    renderTrucks();
+    closeEditTruck();
+    UI.toast('Camion mis à jour avec succès.', 'success');
+  } catch (err) {
+    document.getElementById('edit-truck-alert').innerHTML = `<div class="alert alert-danger py-2 small mb-3">${err.error ?? 'Erreur lors de la mise à jour'}</div>`;
+  } finally { UI.loading(btn, false); }
+}
 
 function driverName(id) {
   if (!id) return null;
@@ -209,6 +331,9 @@ function renderTrucks() {
                 <i class="align-middle" data-feather="user-check" style="width:14px"></i>
                </button>`
           }
+          <button class="btn btn-sm btn-outline-secondary" onclick="openEditTruck('${t.id}')" title="Modifier">
+            <i class="align-middle" data-feather="edit-2" style="width:14px"></i>
+          </button>
           <button class="btn btn-sm btn-outline-danger" onclick="deleteTruck('${t.id}')" title="Supprimer">
             <i class="align-middle" data-feather="trash-2" style="width:14px"></i>
           </button>
