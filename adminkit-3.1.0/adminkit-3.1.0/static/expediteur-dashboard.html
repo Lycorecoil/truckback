@@ -164,8 +164,10 @@
           <div class="col-lg-4">
             <div class="card">
               <div class="card-header"><h5 class="card-title mb-0">Répartition par statut</h5></div>
-              <div class="card-body d-flex align-items-center justify-content-center">
-                <canvas id="chart-donut" height="220"></canvas>
+              <div class="card-body">
+                <div style="position:relative;height:220px">
+                  <canvas id="chart-donut"></canvas>
+                </div>
               </div>
             </div>
           </div>
@@ -287,14 +289,20 @@ function buildMonthlyChart(list) {
 
 function buildDonut(list) {
   const statuts = ['PENDING','PROPOSED','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
-  const labels  = ['En attente','Proposée','En att. validation','En cours','Livrée','Annulée'];
+  const labels  = ['En attente','Recommandée','En att. validation','En cours','Livrée','Annulée'];
   const colors  = ['#f0ad4e','#6f42c1','#fd7e14','#3b7ddd','#28a745','#dc3545'];
   const data    = statuts.map(s => list.filter(x => x.statut === s).length);
-  if (data.every(v => v === 0)) return;
-  new Chart(document.getElementById('chart-donut'), {
+  const canvas  = document.getElementById('chart-donut');
+  if (data.every(v => v === 0)) {
+    canvas.closest('.card-body').innerHTML = '<p class="text-muted text-center mb-0">Aucune expédition pour le moment.</p>';
+    return;
+  }
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  new Chart(canvas, {
     type: 'doughnut',
     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
-    options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
   });
 }
 
