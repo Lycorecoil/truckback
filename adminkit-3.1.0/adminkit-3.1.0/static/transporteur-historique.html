@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Historique | Transporteur | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="mb-4">
+          <h1 class="h3 mb-1 fw-bold">Historique des missions</h1>
+          <p class="text-muted mb-0">Toutes vos missions avec filtres complets</p>
+        </div>
+
+        <!-- KPIs résumé (mis à jour selon filtres) -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#EFF6FF">
+                <i data-feather="list" style="width:22px;height:22px;color:#3B82F6"></i>
+              </div>
+              <div class="cu-kpi-value" id="h-total">—</div>
+              <div class="cu-kpi-label">Total missions</div>
+              <div class="cu-kpi-sub">Sur la sélection</div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#F0FDF4">
+                <i data-feather="check-circle" style="width:22px;height:22px;color:#28A745"></i>
+              </div>
+              <div class="cu-kpi-value" id="h-delivered">—</div>
+              <div class="cu-kpi-label">Livrées</div>
+              <div class="cu-kpi-sub">Taux : <span id="h-rate">—</span></div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#FFF0F0">
+                <i data-feather="x-circle" style="width:22px;height:22px;color:#DC3545"></i>
+              </div>
+              <div class="cu-kpi-value" id="h-cancelled">—</div>
+              <div class="cu-kpi-label">Annulées</div>
+              <div class="cu-kpi-sub">Sur la sélection</div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#FFFBEB">
+                <i data-feather="trending-up" style="width:22px;height:22px;color:#F59E0B"></i>
+              </div>
+              <div class="cu-kpi-value" id="h-revenue">—</div>
+              <div class="cu-kpi-label">Revenus (FCFA)</div>
+              <div class="cu-kpi-sub">Missions livrées</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtres complets -->
+        <div class="card mb-3">
+          <div class="card-body py-3">
+            <div class="row g-3 align-items-end">
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted fw-semibold">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="DELIVERED">Livrée</option>
+                  <option value="CANCELLED">Annulée</option>
+                  <option value="IN_PROGRESS">En cours</option>
+                  <option value="ACCEPTED">En attente</option>
+                </select>
+              </div>
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted fw-semibold">Camion</label>
+                <select id="f-camion" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                </select>
+              </div>
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted fw-semibold">Chauffeur</label>
+                <select id="f-chauffeur" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                </select>
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted fw-semibold">Pays de départ</label>
+                <select id="f-pays-depart" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted fw-semibold">Pays d'arrivée</label>
+                <select id="f-pays-arrivee" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted fw-semibold">Marchandise</label>
+                <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="applyFilters()" />
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label mb-1 small text-muted fw-semibold">Période</label>
+                <div class="d-flex gap-2 align-items-center">
+                  <input id="f-date-from" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+                  <span class="text-muted small">—</span>
+                  <input id="f-date-to" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+                </div>
+              </div>
+              <div class="col-sm-5">
+                <label class="form-label mb-1 small text-muted fw-semibold">Prix (FCFA)</label>
+                <div class="d-flex gap-2 align-items-center">
+                  <input id="f-prix-min" type="number" min="0" class="form-control form-control-sm" placeholder="Min" oninput="applyFilters()" />
+                  <span class="text-muted small">—</span>
+                  <input id="f-prix-max" type="number" min="0" class="form-control form-control-sm" placeholder="Max" oninput="applyFilters()" />
+                </div>
+              </div>
+              <div class="col-sm-8 d-flex align-items-end">
+                <span class="text-muted small" id="f-results"></span>
+              </div>
+              <div class="col-sm-4 d-flex align-items-end justify-content-end">
+                <button class="btn btn-sm btn-outline-secondary px-3" onclick="resetFilters()">
+                  <i data-feather="x" style="width:13px;height:13px"></i> Réinitialiser
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Missions</h5>
+            <span class="badge bg-primary rounded-pill" id="table-count">0</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Réf.</th>
+                  <th>Trajet</th>
+                  <th>Marchandise</th>
+                  <th>Camion</th>
+                  <th>Chauffeur</th>
+                  <th>Date</th>
+                  <th>Prix</th>
+                  <th class="text-center">Statut</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-hist">
+                <tr><td colspan="8" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allShipments = [], trucks = [], drivers = [];
+
+function fmt(n) { return Number(n).toLocaleString('fr-FR'); }
+
+function applyFilters() {
+  const statut    = document.getElementById('f-statut').value;
+  const camionId  = document.getElementById('f-camion').value;
+  const chauffId  = document.getElementById('f-chauffeur').value;
+  const paysD     = document.getElementById('f-pays-depart').value;
+  const paysA     = document.getElementById('f-pays-arrivee').value;
+  const marc      = document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const dateFrom  = document.getElementById('f-date-from').value;
+  const dateTo    = document.getElementById('f-date-to').value;
+  const prixMin   = Number(document.getElementById('f-prix-min').value) || 0;
+  const prixMax   = Number(document.getElementById('f-prix-max').value) || Infinity;
+
+  const filtered = allShipments.filter(s => {
+    if (statut   && s.statut !== statut) return false;
+    if (camionId && s.truckId !== camionId) return false;
+    if (chauffId && s.driverId !== chauffId) return false;
+    if (paysD    && s.paysDepart !== paysD) return false;
+    if (paysA    && s.paysArrivee !== paysA) return false;
+    if (marc     && !s.marchandise?.toLowerCase().includes(marc)) return false;
+    if (dateFrom && s.dateAnnonce < dateFrom) return false;
+    if (dateTo   && s.dateAnnonce > dateTo) return false;
+    const prix = s.prixTransport ?? 0;
+    if (prix < prixMin || prix > prixMax) return false;
+    return true;
+  });
+
+  document.getElementById('f-results').textContent =
+    `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allShipments.length}`;
+  document.getElementById('table-count').textContent = filtered.length;
+
+  // KPIs
+  const delivered = filtered.filter(s => s.statut === 'DELIVERED');
+  const cancelled = filtered.filter(s => s.statut === 'CANCELLED');
+  const revenue   = delivered.reduce((sum, s) => sum + (s.prixTransport ?? 0), 0);
+  const denom     = delivered.length + cancelled.length;
+  document.getElementById('h-total').textContent     = filtered.length;
+  document.getElementById('h-delivered').textContent = delivered.length;
+  document.getElementById('h-cancelled').textContent = cancelled.length;
+  document.getElementById('h-rate').textContent      = denom > 0 ? Math.round(delivered.length / denom * 100) + ' %' : '—';
+  document.getElementById('h-revenue').textContent   = revenue > 0 ? fmt(revenue) : '—';
+
+  renderTable(filtered);
+}
+
+function resetFilters() {
+  ['f-statut','f-camion','f-chauffeur','f-pays-depart','f-pays-arrivee','f-marchandise','f-date-from','f-date-to','f-prix-min','f-prix-max']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-results').textContent = '';
+  applyFilters();
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('tbody-hist');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">Aucune mission correspondante.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(s => {
+    const truck  = trucks.find(t => t.id === s.truckId);
+    const driver = drivers.find(d => d.id === s.driverId);
+    const truckLabel  = truck  ? `<div class="fw-semibold">${truck.immatriculation ?? '—'}</div><div class="text-muted small">${truck.marque ?? ''} ${truck.modele ?? ''}</div>` : '<span class="text-muted small">—</span>';
+    const driverLabel = driver ? `${driver.prenom ?? ''} ${driver.nom ?? ''}` : '<span class="text-muted small">—</span>';
+    return `<tr>
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>
+        <div class="fw-semibold">${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</div>
+        <div class="text-muted small">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
+      </td>
+      <td class="text-muted small">${s.marchandise ?? '—'}<br>${s.poids ?? '?'} T</td>
+      <td>${truckLabel}</td>
+      <td class="align-middle small">${driverLabel}</td>
+      <td class="align-middle small">${UI.formatDate(s.dateAnnonce)}</td>
+      <td class="align-middle fw-semibold">${s.prixTransport ? fmt(s.prixTransport) + ' FCFA' : '—'}</td>
+      <td class="text-center align-middle">${UI.shipmentBadge(s.statut)}</td>
+    </tr>`;
+  }).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function populateSelects() {
+  const camionSel = document.getElementById('f-camion');
+  trucks.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = `${t.immatriculation ?? '—'} — ${t.marque ?? ''} ${t.modele ?? ''}`.trim();
+    camionSel.appendChild(opt);
+  });
+  const chauffSel = document.getElementById('f-chauffeur');
+  drivers.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = `${d.prenom ?? ''} ${d.nom ?? ''}`.trim();
+    chauffSel.appendChild(opt);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+  fillCountrySelects(true);
+
+  try {
+    const [shipmentsRes, trucksRes, driversRes] = await Promise.all([
+      api.get('/shipments'),
+      api.get('/fleet/trucks'),
+      api.get('/fleet/drivers'),
+    ]);
+    allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+    trucks       = Array.isArray(trucksRes)    ? trucksRes    : (trucksRes?.data    ?? []);
+    drivers      = Array.isArray(driversRes)   ? driversRes   : (driversRes?.data   ?? []);
+  } catch(e) {
+    console.error('[historique]', e);
+  }
+
+  populateSelects();
+  applyFilters();
+  if (typeof feather !== 'undefined') feather.replace();
+});
+</script>
+</body>
+</html>

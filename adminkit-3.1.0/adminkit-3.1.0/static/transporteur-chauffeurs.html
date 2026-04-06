@@ -21,6 +21,7 @@
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
       </ul>
     </div>
   </nav>
@@ -59,6 +60,44 @@
         </div>
 
         <div id="alert-container"></div>
+
+        <!-- Filtres -->
+        <div class="card mb-3">
+          <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+              <div class="col-sm-4">
+                <label class="form-label mb-1 small text-muted">Recherche</label>
+                <input id="f-search" class="form-control form-control-sm" placeholder="Nom, prénom, email, téléphone..." oninput="filterDrivers()" />
+              </div>
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="filterDrivers()">
+                  <option value="">Tous</option>
+                  <option value="AVAILABLE">Disponible</option>
+                  <option value="BUSY">En mission</option>
+                </select>
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted">N° Permis</label>
+                <input id="f-permis" class="form-control form-control-sm" placeholder="Ex: BF-123456" oninput="filterDrivers()" />
+              </div>
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted">Véhicule assigné</label>
+                <select id="f-assigned" class="form-select form-select-sm" onchange="filterDrivers()">
+                  <option value="">Tous</option>
+                  <option value="yes">Assigné</option>
+                  <option value="no">Non assigné</option>
+                </select>
+              </div>
+              <div class="col-sm-1 d-flex align-items-end">
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetDriverFilters()" title="Réinitialiser">
+                  <i data-feather="x" style="width:13px;height:13px"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mt-2 text-muted small" id="f-results"></div>
+          </div>
+        </div>
 
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -158,7 +197,7 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let drivers = [], editDriverId = null;
+let drivers = [], trucks = [], editDriverId = null;
 
 function openEditDriver(id) {
   const d = drivers.find(d => d.id === id);
@@ -226,7 +265,32 @@ function askConfirm(msg, okLabel, okClass) {
   });
 }
 
-function renderDrivers() {
+function filterDrivers() {
+  const search   = document.getElementById('f-search').value.trim().toLowerCase();
+  const statut   = document.getElementById('f-statut').value;
+  const permis   = document.getElementById('f-permis').value.trim().toLowerCase();
+  const assigned = document.getElementById('f-assigned').value;
+  const assignedIds = new Set(trucks.filter(t => t.driverId).map(t => t.driverId));
+  const filtered = drivers.filter(d => {
+    if (search   && ![d.prenom, d.nom, d.email, d.telephone].some(v => v?.toLowerCase().includes(search))) return false;
+    if (statut   && d.statut !== statut) return false;
+    if (permis   && !d.numeroPermis?.toLowerCase().includes(permis)) return false;
+    if (assigned === 'yes' && !assignedIds.has(d.id)) return false;
+    if (assigned === 'no'  &&  assignedIds.has(d.id)) return false;
+    return true;
+  });
+  document.getElementById('f-results').textContent = `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${drivers.length}`;
+  renderDrivers(filtered);
+}
+
+function resetDriverFilters() {
+  ['f-search','f-statut','f-permis','f-assigned'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-results').textContent = '';
+  renderDrivers(drivers);
+}
+
+function renderDrivers(list) {
+  list = list ?? drivers;
   const tbody    = document.getElementById('tbody-drivers');
   const empty    = document.getElementById('empty-state');
   const tableWrap = document.getElementById('table-wrap');
@@ -242,7 +306,7 @@ function renderDrivers() {
   empty.classList.add('d-none');
   tableWrap.classList.remove('d-none');
 
-  tbody.innerHTML = drivers.map(d => `
+  tbody.innerHTML = list.map(d => `
     <tr>
       <td>
         <div class="d-flex align-items-center gap-2">
@@ -318,10 +382,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeEditD
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
 
-  const res = await api.get('/fleet/drivers');
-  const raw = res?.data ?? res ?? [];
-  drivers = Array.isArray(raw) ? raw : (raw.items ?? []);
+  const [driversRes, trucksRes] = await Promise.all([
+    api.get('/fleet/drivers'),
+    api.get('/fleet/trucks'),
+  ]);
+  const rawD = driversRes?.data ?? driversRes ?? [];
+  const rawT = trucksRes?.data ?? trucksRes ?? [];
+  drivers = Array.isArray(rawD) ? rawD : (rawD.items ?? []);
+  trucks  = Array.isArray(rawT) ? rawT : (rawT.items ?? []);
   renderDrivers();
 });
 </script>

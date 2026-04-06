@@ -21,6 +21,7 @@
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-danger ms-1 d-none" id="badge-pending"></span></span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
       </ul>
     </div>
   </nav>
@@ -57,45 +58,77 @@
 
         <!-- KPIs transporteur -->
         <div class="row g-3 mb-4">
-          <div class="col-6 col-xl-3">
-            <div class="cu-kpi-card">
-              <div class="cu-kpi-icon" style="background:#FFF7ED">
-                <i data-feather="truck" style="width:22px;height:22px;color:#F97316"></i>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-flotte.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(249,115,22,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#FFF7ED">
+                  <i data-feather="truck" style="width:22px;height:22px;color:#F97316"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-trucks">—</div>
+                <div class="cu-kpi-label">Véhicules</div>
+                <div class="cu-kpi-sub">Dans ma flotte</div>
               </div>
-              <div class="cu-kpi-value" id="kpi-trucks">—</div>
-              <div class="cu-kpi-label">Véhicules</div>
-              <div class="cu-kpi-sub">Dans ma flotte</div>
-            </div>
+            </a>
           </div>
-          <div class="col-6 col-xl-3">
-            <div class="cu-kpi-card">
-              <div class="cu-kpi-icon" style="background:#EFF6FF">
-                <i data-feather="users" style="width:22px;height:22px;color:#3B82F6"></i>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-chauffeurs.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(59,130,246,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#EFF6FF">
+                  <i data-feather="users" style="width:22px;height:22px;color:#3B82F6"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-drivers">—</div>
+                <div class="cu-kpi-label">Chauffeurs</div>
+                <div class="cu-kpi-sub">Enregistrés</div>
               </div>
-              <div class="cu-kpi-value" id="kpi-drivers">—</div>
-              <div class="cu-kpi-label">Chauffeurs</div>
-              <div class="cu-kpi-sub">Enregistrés</div>
-            </div>
+            </a>
           </div>
-          <div class="col-6 col-xl-3">
-            <div class="cu-kpi-card">
-              <div class="cu-kpi-icon" style="background:#F0FDF4">
-                <i data-feather="zap" style="width:22px;height:22px;color:#10B981"></i>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-missions.html?tab=mine&statut=IN_PROGRESS" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(16,185,129,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#F0FDF4">
+                  <i data-feather="zap" style="width:22px;height:22px;color:#10B981"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-execution">—</div>
+                <div class="cu-kpi-label">Missions en cours</div>
+                <div class="cu-kpi-sub">En cours d'exécution</div>
               </div>
-              <div class="cu-kpi-value" id="kpi-execution">—</div>
-              <div class="cu-kpi-label">Missions actives</div>
-              <div class="cu-kpi-sub">En cours d'exécution</div>
-            </div>
+            </a>
           </div>
-          <div class="col-6 col-xl-3">
-            <div class="cu-kpi-card">
-              <div class="cu-kpi-icon" style="background:#FFFBEB">
-                <i data-feather="clock" style="width:22px;height:22px;color:#F59E0B"></i>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-missions.html?tab=mine&statut=ACCEPTED" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(245,158,11,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#FFFBEB">
+                  <i data-feather="clock" style="width:22px;height:22px;color:#F59E0B"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-validation">—</div>
+                <div class="cu-kpi-label">En attente</div>
+                <div class="cu-kpi-sub">Activation chauffeur</div>
               </div>
-              <div class="cu-kpi-value" id="kpi-validation">—</div>
-              <div class="cu-kpi-label">En attente</div>
-              <div class="cu-kpi-sub">Validation chauffeur</div>
-            </div>
+            </a>
+          </div>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-missions.html?tab=mine&statut=DELIVERED" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(40,167,69,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#F0FDF4">
+                  <i data-feather="check-circle" style="width:22px;height:22px;color:#28A745"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-delivered">—</div>
+                <div class="cu-kpi-label">Missions bouclées</div>
+                <div class="cu-kpi-sub">Livrées avec succès</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-6 col-xl-2">
+            <a href="transporteur-missions.html?tab=mine&statut=CANCELLED" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(220,53,69,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#FFF0F0">
+                  <i data-feather="x-circle" style="width:22px;height:22px;color:#DC3545"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-cancelled">—</div>
+                <div class="cu-kpi-label">Missions avortées</div>
+                <div class="cu-kpi-sub">Annulées</div>
+              </div>
+            </a>
           </div>
         </div>
         <!-- kpi-pending hidden (still needed by JS) -->
@@ -113,9 +146,7 @@
             <div class="card">
               <div class="card-header"><h5 class="card-title mb-0">Répartition des missions</h5></div>
               <div class="card-body">
-                <div style="position:relative;height:220px">
-                  <canvas id="chart-donut"></canvas>
-                </div>
+                <canvas id="chart-donut" height="300"></canvas>
               </div>
             </div>
           </div>
@@ -205,24 +236,25 @@ function buildRevenueChart(shipments) {
   });
 }
 
+let _donutChart = null;
 function buildDonut(shipments) {
-  const statuts = ['PENDING','PROPOSED','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
-  const labels  = ['Disponible','Recommandée','En attente de validation','En cours d\'exécution','Livrée','Annulée'];
-  const colors  = ['#f0ad4e','#6f42c1','#fd7e14','#3b7ddd','#28a745','#dc3545'];
+  const statuts = ['ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
+  const labels  = ['En attente','En cours','Livrée','Annulée'];
+  const colors  = ['#fd7e14','#3b7ddd','#28a745','#dc3545'];
   const data    = statuts.map(s => shipments.filter(x => x.statut === s).length);
   const canvas  = document.getElementById('chart-donut');
-  if (data.every(v => v === 0)) {
-    canvas.closest('.card-body').innerHTML = '<p class="text-muted text-center mb-0">Aucune mission pour le moment.</p>';
-    return;
-  }
-  const existing = Chart.getChart(canvas);
-  if (existing) existing.destroy();
-  new Chart(canvas, {
+  if (_donutChart) { _donutChart.destroy(); _donutChart = null; }
+  const isEmpty = data.every(v => v === 0);
+  _donutChart = new Chart(canvas, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+    data: isEmpty
+      ? { labels: ['Aucune mission'], datasets: [{ data: [1], backgroundColor: ['#ffffff'], borderColor: ['#e0e0e0'], borderWidth: 2 }] }
+      : { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
+    options: { plugins: { legend: { position: 'bottom' }, tooltip: { enabled: !isEmpty } }, cutout: '65%' }
   });
 }
+
+function getPrice(s) { return s.prixTransport ?? s.prix ?? 0; }
 
 function buildStats(shipments, trucks) {
   const delivered = shipments.filter(s => s.statut === 'DELIVERED');
@@ -231,9 +263,9 @@ function buildStats(shipments, trucks) {
   const nbTrucks  = trucks.length;
   document.getElementById('stat-util').textContent =
     nbTrucks > 0 ? Math.min(Math.round((active.length / nbTrucks) * 100), 100) + ' %' : '—';
-  const withPrice = delivered.filter(s => s.prixTransport);
+  const withPrice = delivered.filter(s => getPrice(s) > 0);
   document.getElementById('stat-avg').textContent = withPrice.length > 0
-    ? Math.round(withPrice.reduce((s, x) => s + x.prixTransport, 0) / withPrice.length).toLocaleString('fr-FR') + ' FCFA' : '—';
+    ? Math.round(withPrice.reduce((sum, x) => sum + getPrice(x), 0) / withPrice.length).toLocaleString('fr-FR') + ' FCFA' : '—';
   const freq = {};
   shipments.forEach(s => { if (s.villeDepart && s.villeArrivee) { const k = `${s.villeDepart} → ${s.villeArrivee}`; freq[k] = (freq[k] ?? 0) + 1; } });
   const top = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
@@ -282,6 +314,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('kpi-pending').textContent    = allPending.length;
   document.getElementById('kpi-validation').textContent = validation.length;
   document.getElementById('kpi-execution').textContent  = execution.length;
+  document.getElementById('kpi-delivered').textContent  = shipments.filter(s => s.statut === 'DELIVERED').length;
+  document.getElementById('kpi-cancelled').textContent  = shipments.filter(s => s.statut === 'CANCELLED').length;
 
   const proposed = shipments.filter(s => s.statut === 'PROPOSED');
   const badgeEl = document.getElementById('badge-pending');

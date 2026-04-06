@@ -6,6 +6,7 @@
   <title>Missions | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -20,6 +21,7 @@
         <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-danger ms-1 d-none" id="sidebar-badge-proposed"></span></span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
 
       </ul>
     </div>
@@ -74,6 +76,48 @@
 
         <!-- Tab: Recommandées (PROPOSED) -->
         <div id="tab-proposed">
+          <div class="card mb-3">
+            <div class="card-body py-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-sm-3">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays de départ</label>
+                  <select id="prop-f-pays-depart" class="form-select form-select-sm country-select" onchange="filterProposed()"></select>
+                </div>
+                <div class="col-sm-3">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays d'arrivée</label>
+                  <select id="prop-f-pays-arrivee" class="form-select form-select-sm country-select" onchange="filterProposed()"></select>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Marchandise</label>
+                  <input id="prop-f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="filterProposed()" />
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Date</label>
+                  <div class="d-flex gap-2 align-items-center">
+                    <input id="prop-f-date-from" type="date" class="form-control form-control-sm" onchange="filterProposed()" />
+                    <span class="text-muted small">—</span>
+                    <input id="prop-f-date-to" type="date" class="form-control form-control-sm" onchange="filterProposed()" />
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Prix (FCFA)</label>
+                  <div class="d-flex gap-2 align-items-center">
+                    <input id="prop-f-prix-min" type="number" min="0" class="form-control form-control-sm" placeholder="Min" oninput="filterProposed()" />
+                    <span class="text-muted small">—</span>
+                    <input id="prop-f-prix-max" type="number" min="0" class="form-control form-control-sm" placeholder="Max" oninput="filterProposed()" />
+                  </div>
+                </div>
+                <div class="col-sm-10 d-flex align-items-end">
+                  <span class="text-muted small" id="prop-f-results"></span>
+                </div>
+                <div class="col-sm-2 d-flex align-items-end justify-content-end">
+                  <button class="btn btn-sm btn-outline-secondary px-3" onclick="resetProposedFilters()">
+                    <i data-feather="x" style="width:13px;height:13px"></i> Réinitialiser
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="card">
             <div class="card-header d-flex align-items-center gap-2">
               <h5 class="card-title mb-0">Missions recommandées par Elimmekatruck</h5>
@@ -102,36 +146,53 @@
 
           <!-- Filtres Mes missions -->
           <div class="card mb-3">
-            <div class="card-body py-2">
-              <div class="row g-2 align-items-end">
-                <div class="col-sm-3">
-                  <label class="form-label mb-1 small text-muted">Statut</label>
+            <div class="card-body py-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Statut</label>
                   <select id="mine-f-statut" class="form-select form-select-sm" onchange="filterMine()">
                     <option value="">Tous</option>
-                    <option value="ACCEPTED">En attente de démarrage</option>
+                    <option value="ACCEPTED">En attente</option>
                     <option value="IN_PROGRESS">En cours</option>
                     <option value="DELIVERED">Livrée</option>
                     <option value="CANCELLED">Annulée</option>
                   </select>
                 </div>
                 <div class="col-sm-3">
-                  <label class="form-label mb-1 small text-muted">Marchandise</label>
-                  <input id="mine-f-marchandise" class="form-control form-control-sm" placeholder="Rechercher..." oninput="filterMine()" />
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays de départ</label>
+                  <select id="mine-f-pays-depart" class="form-select form-select-sm country-select" onchange="filterMine()"></select>
                 </div>
                 <div class="col-sm-3">
-                  <label class="form-label mb-1 small text-muted">Pays d'arrivée</label>
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays d'arrivée</label>
                   <select id="mine-f-pays-arrivee" class="form-select form-select-sm country-select" onchange="filterMine()"></select>
                 </div>
-                <div class="col-sm-3 d-flex gap-2">
-                  <div class="flex-grow-1">
-                    <label class="form-label mb-1 small text-muted">Date min</label>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Marchandise</label>
+                  <input id="mine-f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="filterMine()" />
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Date</label>
+                  <div class="d-flex gap-2 align-items-center">
                     <input id="mine-f-date-from" type="date" class="form-control form-control-sm" onchange="filterMine()" />
+                    <span class="text-muted small">—</span>
+                    <input id="mine-f-date-to" type="date" class="form-control form-control-sm" onchange="filterMine()" />
                   </div>
-                  <div class="align-self-end">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="resetMineFilters()" title="Réinitialiser">
-                      <i data-feather="x" style="width:13px;height:13px"></i>
-                    </button>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Prix (FCFA)</label>
+                  <div class="d-flex gap-2 align-items-center">
+                    <input id="mine-f-prix-min" type="number" min="0" class="form-control form-control-sm" placeholder="Min" oninput="filterMine()" />
+                    <span class="text-muted small">—</span>
+                    <input id="mine-f-prix-max" type="number" min="0" class="form-control form-control-sm" placeholder="Max" oninput="filterMine()" />
                   </div>
+                </div>
+                <div class="col-sm-10 d-flex align-items-end">
+                  <span class="text-muted small" id="mine-f-results"></span>
+                </div>
+                <div class="col-sm-2 d-flex align-items-end justify-content-end">
+                  <button class="btn btn-sm btn-outline-secondary px-3" onclick="resetMineFilters()">
+                    <i data-feather="x" style="width:13px;height:13px"></i> Réinitialiser
+                  </button>
                 </div>
               </div>
             </div>
@@ -287,14 +348,39 @@ function closeResourceAlert() {
 // Fermer sur Échap
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeResourceAlert(); });
 
-function renderProposed(list) {
+let allProposed = [];
+
+function filterProposed() {
+  const paysDepart  = document.getElementById('prop-f-pays-depart').value;
+  const paysArrivee = document.getElementById('prop-f-pays-arrivee').value;
+  const marc        = document.getElementById('prop-f-marchandise').value.trim().toLowerCase();
+  const dateMin     = document.getElementById('prop-f-date-from').value;
+  const dateMax     = document.getElementById('prop-f-date-to').value;
+  const prixMin     = Number(document.getElementById('prop-f-prix-min').value) || 0;
+  const prixMax     = Number(document.getElementById('prop-f-prix-max').value) || Infinity;
+  const filtered = allProposed.filter(s => {
+    if (paysDepart  && s.paysDepart !== paysDepart) return false;
+    if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
+    if (marc        && !s.marchandise?.toLowerCase().includes(marc)) return false;
+    if (dateMin     && s.dateAnnonce < dateMin) return false;
+    if (dateMax     && s.dateAnnonce > dateMax) return false;
+    const prix = s.prixTransport ?? 0;
+    if (prix < prixMin || prix > prixMax) return false;
+    return true;
+  });
+  document.getElementById('prop-f-results').textContent = `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allProposed.length}`;
+  renderProposedRows(filtered);
+}
+
+function resetProposedFilters() {
+  ['prop-f-pays-depart','prop-f-pays-arrivee','prop-f-marchandise','prop-f-date-from','prop-f-date-to','prop-f-prix-min','prop-f-prix-max']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('prop-f-results').textContent = '';
+  renderProposedRows(allProposed);
+}
+
+function renderProposedRows(proposed) {
   const tbody = document.getElementById('tbody-proposed');
-  const proposed = list.filter(s => s.statut === 'PROPOSED');
-  const badgeEl = document.getElementById('tab-badge-proposed');
-  if (badgeEl) {
-    badgeEl.textContent = proposed.length;
-    badgeEl.className = proposed.length > 0 ? 'badge bg-danger ms-1' : 'badge bg-secondary ms-1';
-  }
   if (proposed.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">⭐</div><div>Aucune mission recommandée pour le moment.</div></td></tr>';
     return;
@@ -322,28 +408,47 @@ function renderProposed(list) {
   if (typeof feather !== 'undefined') feather.replace();
 }
 
+function renderProposed(list) {
+  const tbody = document.getElementById('tbody-proposed');
+  allProposed = list.filter(s => s.statut === 'PROPOSED');
+  const badgeEl = document.getElementById('tab-badge-proposed');
+  if (badgeEl) {
+    badgeEl.textContent = allProposed.length;
+    badgeEl.className = allProposed.length > 0 ? 'badge bg-danger ms-1' : 'badge bg-secondary ms-1';
+  }
+  renderProposedRows(allProposed);
+}
+
 let allMine = [];
 
 function filterMine() {
-  const statut  = document.getElementById('mine-f-statut').value;
-  const marc    = document.getElementById('mine-f-marchandise').value.trim().toLowerCase();
-  const pays    = document.getElementById('mine-f-pays-arrivee').value;
-  const dateMin = document.getElementById('mine-f-date-from').value;
+  const statut      = document.getElementById('mine-f-statut').value;
+  const paysDepart  = document.getElementById('mine-f-pays-depart').value;
+  const paysArrivee = document.getElementById('mine-f-pays-arrivee').value;
+  const marc        = document.getElementById('mine-f-marchandise').value.trim().toLowerCase();
+  const dateMin     = document.getElementById('mine-f-date-from').value;
+  const dateMax     = document.getElementById('mine-f-date-to').value;
+  const prixMin     = Number(document.getElementById('mine-f-prix-min').value) || 0;
+  const prixMax     = Number(document.getElementById('mine-f-prix-max').value) || Infinity;
   const filtered = allMine.filter(s => {
-    if (statut  && s.statut !== statut) return false;
-    if (marc    && !s.marchandise?.toLowerCase().includes(marc)) return false;
-    if (pays    && s.paysArrivee !== pays) return false;
-    if (dateMin && s.dateAnnonce < dateMin) return false;
+    if (statut      && s.statut !== statut) return false;
+    if (paysDepart  && s.paysDepart !== paysDepart) return false;
+    if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
+    if (marc        && !s.marchandise?.toLowerCase().includes(marc)) return false;
+    if (dateMin     && s.dateAnnonce < dateMin) return false;
+    if (dateMax     && s.dateAnnonce > dateMax) return false;
+    const prix = s.prixTransport ?? 0;
+    if (prix < prixMin || prix > prixMax) return false;
     return true;
   });
+  document.getElementById('mine-f-results').textContent = `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allMine.length}`;
   renderMineRows(filtered);
 }
 
 function resetMineFilters() {
-  document.getElementById('mine-f-statut').value = '';
-  document.getElementById('mine-f-marchandise').value = '';
-  document.getElementById('mine-f-pays-arrivee').value = '';
-  document.getElementById('mine-f-date-from').value = '';
+  ['mine-f-statut','mine-f-pays-depart','mine-f-pays-arrivee','mine-f-marchandise','mine-f-date-from','mine-f-date-to','mine-f-prix-min','mine-f-prix-max']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mine-f-results').textContent = '';
   renderMineRows(allMine);
 }
 
@@ -612,6 +717,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderProposed(allShipments);
   renderMine(allShipments);
+
+  // URL params (ex: depuis dashboard ?tab=mine&statut=IN_PROGRESS)
+  const params = new URLSearchParams(location.search);
+  if (params.get('tab') === 'mine') {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-tab="mine"]').classList.add('active');
+    document.getElementById('tab-proposed').classList.add('d-none');
+    document.getElementById('tab-mine').classList.remove('d-none');
+    if (params.get('statut')) {
+      document.getElementById('mine-f-statut').value = params.get('statut');
+      filterMine();
+    }
+  }
 
   // Badge sidebar
   const proposed = allShipments.filter(s => s.statut === 'PROPOSED');

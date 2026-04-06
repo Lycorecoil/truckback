@@ -21,6 +21,7 @@
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
         <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
       </ul>
     </div>
   </nav>
@@ -59,6 +60,59 @@
         </div>
 
         <div id="alert-container"></div>
+
+        <!-- Filtres -->
+        <div class="card mb-3">
+          <div class="card-body py-3">
+            <div class="row g-3 align-items-end">
+              <div class="col-sm-4">
+                <label class="form-label mb-1 small text-muted fw-semibold">Recherche</label>
+                <input id="f-search" class="form-control form-control-sm" placeholder="Immatriculation, marque, modèle..." oninput="filterTrucks()" />
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted fw-semibold">Type de véhicule</label>
+                <select id="f-type" class="form-select form-select-sm" onchange="filterTrucks()">
+                  <option value="">Tous</option>
+                  <option>Camion benne</option><option>Camion frigorifique</option><option>Camion plateau</option>
+                  <option>Semi-remorque</option><option>Tracteur routier</option><option>Fourgon</option>
+                  <option>Citerne</option><option>Autre</option>
+                </select>
+              </div>
+              <div class="col-sm-2">
+                <label class="form-label mb-1 small text-muted fw-semibold">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="filterTrucks()">
+                  <option value="">Tous</option>
+                  <option value="AVAILABLE">Disponible</option>
+                  <option value="BUSY">En mission</option>
+                </select>
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label mb-1 small text-muted fw-semibold">Pays de base</label>
+                <select id="f-pays" class="form-select form-select-sm" onchange="filterTrucks()">
+                  <option value="">Tous</option>
+                  <option>Burkina Faso</option><option>Côte d'Ivoire</option><option>Mali</option>
+                  <option>Niger</option><option>Ghana</option><option>Togo</option><option>Bénin</option><option>Sénégal</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label mb-1 small text-muted fw-semibold">Capacité (T)</label>
+                <div class="d-flex gap-2 align-items-center">
+                  <input id="f-cap-min" type="number" min="0" class="form-control form-control-sm" placeholder="Min" oninput="filterTrucks()" />
+                  <span class="text-muted small">—</span>
+                  <input id="f-cap-max" type="number" min="0" class="form-control form-control-sm" placeholder="Max" oninput="filterTrucks()" />
+                </div>
+              </div>
+              <div class="col-sm-6 d-flex align-items-end">
+                <span class="text-muted small" id="f-results"></span>
+              </div>
+              <div class="col-sm-2 d-flex align-items-end justify-content-end">
+                <button class="btn btn-sm btn-outline-secondary px-3" onclick="resetTruckFilters()">
+                  <i data-feather="x" style="width:13px;height:13px"></i> Réinitialiser
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -276,7 +330,34 @@ function driverName(id) {
   return d ? `${d.prenom} ${d.nom}` : null;
 }
 
-function renderTrucks() {
+function filterTrucks() {
+  const search  = document.getElementById('f-search').value.trim().toLowerCase();
+  const type    = document.getElementById('f-type').value;
+  const statut  = document.getElementById('f-statut').value;
+  const pays    = document.getElementById('f-pays').value;
+  const capMin  = Number(document.getElementById('f-cap-min').value) || 0;
+  const capMax  = Number(document.getElementById('f-cap-max').value) || Infinity;
+  const filtered = trucks.filter(t => {
+    if (search && ![t.immatriculation, t.marque, t.modele].some(v => v?.toLowerCase().includes(search))) return false;
+    if (type   && t.typeVehicule !== type) return false;
+    if (statut && t.statut !== statut) return false;
+    if (pays   && t.paysBase !== pays) return false;
+    const cap = t.capaciteMax ?? 0;
+    if (cap < capMin || cap > capMax) return false;
+    return true;
+  });
+  document.getElementById('f-results').textContent = `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${trucks.length}`;
+  renderTrucks(filtered);
+}
+
+function resetTruckFilters() {
+  ['f-search','f-type','f-statut','f-pays','f-cap-min','f-cap-max'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-results').textContent = '';
+  renderTrucks(trucks);
+}
+
+function renderTrucks(list) {
+  list = list ?? trucks;
   const tbody     = document.getElementById('tbody-trucks');
   const empty     = document.getElementById('empty-state');
   const tableWrap = document.getElementById('table-wrap');
@@ -292,7 +373,7 @@ function renderTrucks() {
   empty.classList.add('d-none');
   tableWrap.classList.remove('d-none');
 
-  tbody.innerHTML = trucks.map(t => {
+  tbody.innerHTML = list.map(t => {
     const name = driverName(t.driverId);
     const driverCell = name
       ? `<div class="d-flex align-items-center gap-1">
