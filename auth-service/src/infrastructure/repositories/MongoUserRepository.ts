@@ -45,6 +45,14 @@ export class MongoUserRepository implements IUserRepository {
     return this.toDomain(doc);
   }
 
+  async findAll(filters?: { tenantId?: string; role?: UserRole }): Promise<User[]> {
+    const query: Record<string, unknown> = {};
+    if (filters?.tenantId) query.tenantId = filters.tenantId;
+    if (filters?.role) query.role = filters.role;
+    const docs = await UserModel.find(query).sort({ createdAt: -1 });
+    return docs.map(d => this.toDomain(d));
+  }
+
   async delete(id: string): Promise<void> {
     await UserModel.deleteOne({ id });
   }

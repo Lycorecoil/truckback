@@ -308,15 +308,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   UI.fillNavbar();
   await loadGeo(); fillCountrySelects(true);
 
+  const currentUser = Auth.getUser();
+  const userId = currentUser?.sub ?? currentUser?.id ?? '';
+
   try {
     const [shipmentsRes, trucksRes, driversRes] = await Promise.all([
       api.get('/shipments'),
       api.get('/fleet/trucks'),
       api.get('/fleet/drivers'),
     ]);
-    allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
-    trucks       = Array.isArray(trucksRes)    ? trucksRes    : (trucksRes?.data    ?? []);
-    drivers      = Array.isArray(driversRes)   ? driversRes   : (driversRes?.data   ?? []);
+    function unpack(r) { if (Array.isArray(r)) return r; return r?.data?.data ?? r?.data ?? []; }
+    // Uniquement les missions que ce transporteur a acceptées (transporterId correspond à l'userId du transporteur)
+    allShipments = unpack(shipmentsRes).filter(s => s.transporterId === userId);
+    trucks       = unpack(trucksRes);
+    drivers      = unpack(driversRes);
   } catch(e) {
     console.error('[historique]', e);
   }

@@ -61,15 +61,15 @@
         <!-- Tabs -->
         <ul class="nav nav-tabs mb-3" id="missionTabs">
           <li class="nav-item">
-            <button type="button" class="nav-link active" data-tab="proposed">
-              <i class="align-middle me-1" data-feather="star" style="width:14px"></i>
-              Recommandées <span class="badge bg-danger ms-1" id="tab-badge-proposed">0</span>
+            <button type="button" class="nav-link active" data-tab="mine">
+              <i class="align-middle me-1" data-feather="list" style="width:14px"></i>
+              Mes missions <span class="badge bg-primary ms-1" id="tab-badge-mine">0</span>
             </button>
           </li>
           <li class="nav-item">
-            <button type="button" class="nav-link" data-tab="mine">
-              <i class="align-middle me-1" data-feather="list" style="width:14px"></i>
-              Mes missions <span class="badge bg-primary ms-1" id="tab-badge-mine">0</span>
+            <button type="button" class="nav-link" data-tab="proposed">
+              <i class="align-middle me-1" data-feather="star" style="width:14px"></i>
+              Recommandées <span class="badge bg-danger ms-1" id="tab-badge-proposed">0</span>
             </button>
           </li>
           <li class="nav-item">
@@ -81,7 +81,7 @@
         </ul>
 
         <!-- Tab: Recommandées (PROPOSED) -->
-        <div id="tab-proposed">
+        <div id="tab-proposed" class="d-none">
           <div class="card mb-3">
             <div class="card-body py-3">
               <div class="row g-3 align-items-end">
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Tab: Mes missions -->
-        <div id="tab-mine" class="d-none">
+        <div id="tab-mine">
 
           <!-- Filtres Mes missions -->
           <div class="card mb-3">
@@ -1014,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderTrucks();
 
-  if (activeTab === 'mine' || activeTab === 'trucks') {
+  if (activeTab === 'proposed' || activeTab === 'trucks') {
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
     document.querySelector(`[data-tab="${activeTab}"]`).classList.add('active');
     ['proposed', 'mine', 'trucks'].forEach(t => document.getElementById('tab-' + t).classList.add('d-none'));

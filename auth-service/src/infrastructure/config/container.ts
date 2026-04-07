@@ -10,6 +10,11 @@ import { LogoutUseCase } from '../../application/use-cases/LogoutUseCase';
 import { ResetPasswordUseCase } from '../../application/use-cases/ResetPasswordUseCase';
 import { RefreshTokenUseCase } from '../../application/use-cases/RefreshTokenUseCase';
 import { ConfirmResetPasswordUseCase } from '../../application/use-cases/ConfirmResetPasswordUseCase';
+import { ListUsersUseCase } from '../../application/use-cases/ListUsersUseCase';
+import { GetUserUseCase } from '../../application/use-cases/GetUserUseCase';
+import { UpdateUserUseCase } from '../../application/use-cases/UpdateUserUseCase';
+import { DeleteUserUseCase } from '../../application/use-cases/DeleteUserUseCase';
+import { ResetUserPasswordUseCase } from '../../application/use-cases/ResetUserPasswordUseCase';
 
 const userRepository         = new MongoUserRepository();
 const revokedTokenRepository = new MongoRevokedTokenRepository();
@@ -40,6 +45,11 @@ export const container = {
   resetPasswordUseCase: new ResetPasswordUseCase(userRepository, jwtService, notificationClient),
   confirmResetPasswordUseCase: new ConfirmResetPasswordUseCase(userRepository, jwtService, revokedTokenRepository),
   refreshTokenUseCase: new RefreshTokenUseCase(userRepository, jwtService, revokedTokenRepository),
+  listUsersUseCase:   new ListUsersUseCase(userRepository),
+  getUserUseCase:     new GetUserUseCase(userRepository),
+  updateUserUseCase:  new UpdateUserUseCase(userRepository),
+  deleteUserUseCase:  new DeleteUserUseCase(userRepository),
+  resetUserPasswordUseCase: new ResetUserPasswordUseCase(userRepository),
 };
 
 export type Container = typeof container;

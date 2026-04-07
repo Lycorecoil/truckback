@@ -132,4 +132,89 @@ export class AuthController {
       next(err);
     }
   }
+
+  // ── User Management (ADMIN only) ─────────────────────────────────────
+
+  async listUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+        return;
+      }
+      const query = req.query as Record<string, string | undefined>;
+      const result = await this.container.listUsersUseCase.execute({
+        role: query.role as any,
+        tenantId: query.tenantId,
+        search: query.search,
+      });
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+        return;
+      }
+      const userId = req.params['id'] as string;
+      const result = await this.container.getUserUseCase.execute(userId);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+        return;
+      }
+      const userId = req.params['id'] as string;
+      const body = req.body as { email?: string; role?: string };
+      const result = await this.container.updateUserUseCase.execute(userId, {
+        email: body.email,
+        role: body.role as any,
+      });
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+        return;
+      }
+      const userId = req.params['id'] as string;
+      await this.container.deleteUserUseCase.execute(userId);
+      res.status(200).json({ success: true, message: 'Utilisateur supprimé.' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resetUserPassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+        return;
+      }
+      const userId = req.params['id'] as string;
+      const body = req.body as { newPassword?: string };
+      if (!body.newPassword || body.newPassword.length < 8) {
+        res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caractères.' });
+        return;
+      }
+      await this.container.resetUserPasswordUseCase.execute(userId, body.newPassword);
+      res.status(200).json({ success: true, message: 'Mot de passe réinitialisé.' });
+    } catch (err) {
+      next(err);
+    }
+  }
 }

@@ -19,3 +19,10 @@ authRouter.post('/logout',               (req, res, next) => controller.logout(r
 authRouter.post('/confirm-reset-password', validateBody(ConfirmResetSchema), (req, res, next) => controller.confirmResetPassword(req, res, next));
 authRouter.post('/reset-password',(req, res, next) => controller.resetPassword(req, res, next));
 authRouter.post('/refresh',       (req, res, next) => controller.refresh(req, res, next));
+
+// ── User Management (ADMIN only) ─────────────────────────────────────
+authRouter.get('/users',          jwtMiddleware, (req, res, next) => controller.listUsers(req, res, next));
+authRouter.get('/users/:id',      jwtMiddleware, (req, res, next) => controller.getUser(req, res, next));
+authRouter.put('/users/:id',      jwtMiddleware, (req, res, next) => controller.updateUser(req, res, next));
+authRouter.put('/users/:id/password', jwtMiddleware, (req, res, next) => controller.resetUserPassword(req, res, next));
+authRouter.delete('/users/:id',   jwtMiddleware, (req, res, next) => controller.deleteUser(req, res, next));
