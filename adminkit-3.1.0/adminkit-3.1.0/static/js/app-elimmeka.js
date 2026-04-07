@@ -5,8 +5,9 @@
 
 const API = '/v1';
 
-// Version courante des CGU — incrémenter déclenche une re-acceptation pour tous les utilisateurs existants
-const CURRENT_TERMS_VERSION = '1.0';
+// Version courante des Conditions Générales d'Utilisation — chargée dynamiquement depuis le backend au login.
+// Fallback '1.0' utilisé uniquement si le backend est injoignable.
+let CURRENT_TERMS_VERSION = '1.0';
 
 // ─── Géographie (pays + villes) ───────────────────────────────────────────────
 
@@ -213,13 +214,13 @@ const Auth = {
     Auth.redirectByRole();
   },
 
-  /** Redirige vers login si pas connecté, ou vers CGU si pas encore acceptées */
+  /** Redirige vers login si pas connecté, ou vers les Conditions Générales d'Utilisation si pas encore acceptées */
   requireAuth() {
     if (!Auth.isLoggedIn()) {
       window.location.href = 'pages-sign-in.html';
       return false;
     }
-    // Profil existant mais CGU pas acceptées (ou version obsolète) → page de re-acceptation
+    // Profil existant mais Conditions Générales d'Utilisation non acceptées (ou version obsolète) → page de re-acceptation
     if (Auth.hasProfile() && !Auth.hasAcceptedTerms()) {
       window.location.href = 'cgu-update.html';
       return false;
@@ -233,10 +234,10 @@ const Auth = {
     return user?.role === 'ADMIN' || !!user?.orgId;
   },
 
-  /** Retourne true si la version des CGU en session correspond à la version courante */
+  /** Retourne true si la version des Conditions Générales d'Utilisation en session correspond à la version courante */
   hasAcceptedTerms() {
     const user = Auth.getUser();
-    // ADMIN n'a pas d'org → pas soumis aux CGU
+    // ADMIN n'a pas d'org → pas soumis aux Conditions Générales d'Utilisation
     if (user?.role === 'ADMIN') return true;
     return user?.termsAcceptedVersion === CURRENT_TERMS_VERSION;
   },
