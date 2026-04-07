@@ -165,6 +165,52 @@
       font-size: 0.8rem; font-weight: 600;
       margin-bottom: 20px;
     }
+
+    /* Gate CGU */
+    .cgu-gate {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+      padding: 36px 40px;
+      width: 100%; max-width: 620px;
+    }
+    .cgu-gate h4 { font-weight: 700; margin-bottom: 4px; }
+    .cgu-gate .desc { color: #6c757d; font-size: 0.875rem; margin-bottom: 20px; }
+    .cgu-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 18px 20px;
+      max-height: 280px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #495057;
+      margin-bottom: 20px;
+    }
+    .cgu-box h6 { font-weight: 700; font-size: 0.85rem; color: #1a1a2e; margin: 14px 0 4px; }
+    .cgu-box h6:first-child { margin-top: 0; }
+    .cgu-accept-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(59,125,221,0.06);
+      border: 1.5px solid rgba(59,125,221,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .cgu-accept-row input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+    .cgu-accept-row label { font-size: 0.875rem; font-weight: 500; color: #343a40; cursor: pointer; }
+    .btn-accept-cgu {
+      background: #3b7ddd; color: #fff;
+      border: none; border-radius: 10px;
+      padding: 12px 32px; font-weight: 600;
+      font-size: 0.95rem; width: 100%;
+      transition: background .2s;
+      opacity: .45; cursor: not-allowed;
+    }
+    .btn-accept-cgu.enabled { opacity: 1; cursor: pointer; }
+    .btn-accept-cgu.enabled:hover { background: #2f6abf; }
   </style>
 </head>
 <body>
@@ -177,8 +223,55 @@
     <div class="subtitle">Configurez votre espace en quelques minutes</div>
   </div>
 
-  <!-- Stepper -->
-  <div class="stepper" id="stepper">
+  <!-- ── Gate CGU (affiché avant le formulaire) ── -->
+  <div class="cgu-gate" id="cgu-gate">
+    <div class="step-card-icon blue" style="width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:16px;background:rgba(59,125,221,0.12)">📜</div>
+    <h4>Conditions Générales d'Utilisation</h4>
+    <p class="desc">Avant de configurer votre espace, veuillez lire et accepter nos CGU. Cette acceptation est obligatoire pour accéder à la plateforme.</p>
+
+    <div class="cgu-box">
+      <h6>1. Objet</h6>
+      <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de la plateforme Elimmekatruck, service de mise en relation entre expéditeurs et transporteurs pour le transport de marchandises en Afrique de l'Ouest.</p>
+
+      <h6>2. Acceptation</h6>
+      <p>En créant un compte et en utilisant la plateforme, l'organisation représentée par l'utilisateur accepte sans réserve les présentes CGU. L'acceptation est tracée avec la date et l'identité du représentant légal.</p>
+
+      <h6>3. Accès au service</h6>
+      <p>L'accès à la plateforme est réservé aux professionnels (personnes morales). Chaque organisation dispose d'un espace sécurisé accessible via des identifiants personnels. L'utilisateur s'engage à maintenir la confidentialité de ses accès.</p>
+
+      <h6>4. Obligations de l'utilisateur</h6>
+      <p>L'utilisateur s'engage à fournir des informations exactes lors de son inscription, à respecter les lois et réglementations applicables, à ne pas utiliser la plateforme à des fins illicites, et à informer Elimmekatruck de tout accès non autorisé à son compte.</p>
+
+      <h6>5. Responsabilités</h6>
+      <p>Elimmekatruck met en relation les parties mais n'est pas responsable des contrats conclus entre expéditeurs et transporteurs. Chaque partie reste responsable de ses obligations contractuelles et réglementaires.</p>
+
+      <h6>6. Données personnelles</h6>
+      <p>Les données collectées sont utilisées exclusivement pour le fonctionnement de la plateforme. Elles ne sont pas cédées à des tiers. L'utilisateur dispose d'un droit d'accès, de rectification et de suppression conformément aux législations applicables.</p>
+
+      <h6>7. Modification des CGU</h6>
+      <p>Elimmekatruck se réserve le droit de modifier les présentes CGU. Toute modification majeure sera notifiée aux utilisateurs. La poursuite de l'utilisation de la plateforme après notification vaut acceptation des nouvelles CGU.</p>
+
+      <h6>8. Résiliation</h6>
+      <p>Elimmekatruck peut suspendre ou résilier l'accès d'une organisation en cas de violation des présentes CGU, après mise en demeure restée sans effet.</p>
+
+      <h6>9. Droit applicable</h6>
+      <p>Les présentes CGU sont soumises au droit de la République du Bénin. Tout litige sera soumis à la juridiction compétente de Cotonou.</p>
+    </div>
+
+    <div class="cgu-accept-row" onclick="document.getElementById('cb-cgu').click()">
+      <input type="checkbox" id="cb-cgu" onclick="event.stopPropagation()" onchange="onCguCheck(this.checked)" />
+      <label for="cb-cgu">
+        J'ai lu et j'accepte les Conditions Générales d'Utilisation d'Elimmekatruck au nom de mon organisation. Je certifie être habilité(e) à engager juridiquement cette organisation.
+      </label>
+    </div>
+
+    <button class="btn-accept-cgu" id="btn-accept-cgu" disabled onclick="acceptCgu()">
+      Accepter et configurer mon profil <span style="margin-left:4px">→</span>
+    </button>
+  </div>
+
+  <!-- Stepper (masqué jusqu'à acceptation des CGU) -->
+  <div class="stepper d-none" id="stepper">
     <div class="step-item active" id="si-1">
       <div class="step-circle"><span class="step-num">1</span></div>
       <div class="step-label">Entreprise</div>
@@ -197,7 +290,7 @@
     <div id="alert-container" class="mb-3"></div>
   </div>
 
-  <form id="form-onboarding" style="width:100%;max-width:580px">
+  <form id="form-onboarding" class="d-none" style="width:100%;max-width:580px">
 
     <!-- ── ÉTAPE 1 ── -->
     <div class="step-card" id="step-1">
@@ -330,6 +423,18 @@
 <script>
 let currentStep = 1;
 
+function onCguCheck(checked) {
+  const btn = document.getElementById('btn-accept-cgu');
+  btn.disabled = !checked;
+  btn.classList.toggle('enabled', checked);
+}
+
+function acceptCgu() {
+  document.getElementById('cgu-gate').classList.add('d-none');
+  document.getElementById('stepper').classList.remove('d-none');
+  document.getElementById('form-onboarding').classList.remove('d-none');
+}
+
 
 function updateStepper(n) {
   for (let i = 1; i <= 3; i++) {
@@ -413,10 +518,16 @@ document.getElementById('form-onboarding').addEventListener('submit', async (e) 
         orgData = res?.data ?? res;
         if (!orgData) throw _;
       }
+      // Enregistrer l'acceptation des CGU sur l'organisation
+      try {
+        await api.post(`/company/${route}/${orgData.id}/accept-terms`, { version: CURRENT_TERMS_VERSION });
+      } catch (_) { /* non bloquant — on continue quand même */ }
+
       const session = Auth.getUser();
-      session.raisonSociale = orgData.raisonSociale;
-      session.logo          = orgData.logo ?? null;
-      session.orgId         = orgData.id;
+      session.raisonSociale          = orgData.raisonSociale;
+      session.logo                   = orgData.logo ?? null;
+      session.orgId                  = orgData.id;
+      session.termsAcceptedVersion   = CURRENT_TERMS_VERSION;
       localStorage.setItem('cu_user', JSON.stringify(session));
       Auth.redirectByRole();
     } catch (err) {

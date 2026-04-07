@@ -5,6 +5,9 @@
 
 const API = '/v1';
 
+// Version courante des CGU — incrémenter déclenche une re-acceptation pour tous les utilisateurs existants
+const CURRENT_TERMS_VERSION = '1.0';
+
 // ─── Géographie (pays + villes) ───────────────────────────────────────────────
 
 let geoData = null;
@@ -210,10 +213,15 @@ const Auth = {
     Auth.redirectByRole();
   },
 
-  /** Redirige vers login si pas connecté */
+  /** Redirige vers login si pas connecté, ou vers CGU si pas encore acceptées */
   requireAuth() {
     if (!Auth.isLoggedIn()) {
       window.location.href = 'pages-sign-in.html';
+      return false;
+    }
+    // Profil existant mais CGU pas acceptées (ou version obsolète) → page de re-acceptation
+    if (Auth.hasProfile() && !Auth.hasAcceptedTerms()) {
+      window.location.href = 'cgu-update.html';
       return false;
     }
     return true;
@@ -223,6 +231,14 @@ const Auth = {
   hasProfile() {
     const user = Auth.getUser();
     return user?.role === 'ADMIN' || !!user?.orgId;
+  },
+
+  /** Retourne true si la version des CGU en session correspond à la version courante */
+  hasAcceptedTerms() {
+    const user = Auth.getUser();
+    // ADMIN n'a pas d'org → pas soumis aux CGU
+    if (user?.role === 'ADMIN') return true;
+    return user?.termsAcceptedVersion === CURRENT_TERMS_VERSION;
   },
 
   redirectByRole() {

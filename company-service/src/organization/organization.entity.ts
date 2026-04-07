@@ -34,6 +34,11 @@ export interface Organization extends BaseEntity {
   // Optionnel
   logo?: string;
 
+  // CGU — traçabilité juridique de l'acceptation
+  termsAcceptedVersion?: string | null;
+  termsAcceptedAt?: Date | null;
+  termsAcceptedBy?: string | null; // userId du représentant qui a cliqué
+
   createdAt: Date;
   updatedAt: Date;
 }

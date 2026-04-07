@@ -45,6 +45,11 @@ const OrganizationSchema = new Schema<Organization>(
 
     // Optionnel
     logo: { type: String },
+
+    // CGU — traçabilité juridique de l'acceptation
+    termsAcceptedVersion: { type: String, default: null },
+    termsAcceptedAt: { type: Date, default: null },
+    termsAcceptedBy: { type: String, default: null },
   },
   {
     // Mongoose gère createdAt et updatedAt automatiquement
