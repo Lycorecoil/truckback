@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const token = data.token ?? data.accessToken;
 
       // Récupérer le profil organisation pour avoir raisonSociale + logo
-      let raisonSociale = null, logo = null, orgId = null;
+      let raisonSociale = null, logo = null, orgId = null, termsAcceptedVersion = null;
       if (u.role === 'EXPEDITEUR' || u.role === 'TRANSPORTER') {
         const route = u.role === 'EXPEDITEUR' ? 'company' : 'transporter';
         try {
@@ -97,9 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (orgRes.ok) {
             const body = await orgRes.json();
             const org  = body.data ?? body;
-            raisonSociale = org.raisonSociale ?? null;
-            logo          = org.logo ?? null;
-            orgId         = org.id ?? null;
+            raisonSociale        = org.raisonSociale ?? null;
+            logo                 = org.logo ?? null;
+            orgId                = org.id ?? null;
+            termsAcceptedVersion = org.termsAcceptedVersion ?? null;
           }
         } catch (_) {}
       }
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         raisonSociale,
         logo,
         orgId,
+        termsAcceptedVersion,
       });
 
       Auth.redirectByRole();
