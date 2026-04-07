@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Utilisateurs | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .page-size-select { width:auto; display:inline-block; }
+    .role-badge { font-size:.72rem; padding:3px 10px; border-radius:999px; font-weight:600; }
+    .role-ADMIN { background:#FEF3C7; color:#92400E; }
+    .role-EXPEDITEUR { background:#DBEAFE; color:#1E40AF; }
+    .role-TRANSPORTER { background:#D1FAE5; color:#065F46; }
+    .role-DRIVER { background:#EDE9FE; color:#5B21B6; }
+    .col-filter-wrap { position:relative; display:inline-block; }
+    .col-filter-btn { background:none; border:none; padding:2px 4px; cursor:pointer; color:#6c757d; font-size:.75rem; border-radius:3px; }
+    .col-filter-btn:hover { background:#e9ecef; color:#333; }
+    .col-filter-btn.active { color:var(--cu-orange,#F97316); background:rgba(249,115,22,.1); }
+    .col-filter-dropdown { position:absolute; top:100%; left:0; z-index:9999; background:#fff; border:1px solid #dee2e6; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.15); padding:10px; min-width:200px; display:none; }
+    .col-filter-dropdown.show { display:block; }
+    .col-filter-dropdown input, .col-filter-dropdown select { width:100%; margin-bottom:6px; }
+    .col-filter-dropdown .filter-actions { display:flex; gap:4px; justify-content:flex-end; }
+    .global-filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+    .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
+    .toggle-group .btn { border-radius:0; border:none; font-size:.78rem; padding:5px 14px; background:transparent; color:#6c757d; font-weight:500; transition: all .15s; position:relative; }
+    .toggle-group .btn:hover { background:#f8f9fa; color:#333; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+    .toggle-group .btn .check-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6c757d; margin-right:5px; vertical-align:middle; transition: background .15s; }
+    .toggle-group .btn.active .check-dot { background:#fff; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Utilisateurs</strong></h1>
+          <span class="badge bg-primary rounded-pill fs-6" id="badge-total" style="display:none"></span>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Filtres globaux -->
+        <div class="global-filter-bar">
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" data-quick="" onclick="setQuickFilter(this)"><span class="check-dot"></span>Tous</button>
+              <button class="btn" data-quick="ADMIN" onclick="setQuickFilter(this)"><span class="check-dot"></span>Admins</button>
+              <button class="btn" data-quick="EXPEDITEUR" onclick="setQuickFilter(this)"><span class="check-dot"></span>Expéditeurs</button>
+              <button class="btn" data-quick="TRANSPORTER" onclick="setQuickFilter(this)"><span class="check-dot"></span>Transporteurs</button>
+            </div>
+            <input id="search-global" type="text" class="form-control form-control-sm" placeholder="Rechercher par email…" style="width:260px" oninput="applyFilters()">
+            <div class="ms-auto d-flex gap-2 align-items-center">
+              <select id="f-sort" class="form-select form-select-sm" style="width:140px" onchange="applyFilters()">
+                <option value="newest">Plus récent</option>
+                <option value="oldest">Plus ancien</option>
+                <option value="email">Email A-Z</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" title="Réinitialiser">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>
+                    Email
+                    <div class="col-filter-wrap">
+                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
+                      <div class="col-filter-dropdown">
+                        <input type="text" class="form-control form-control-sm" id="cf-email" placeholder="Rechercher…" oninput="applyFilters()">
+                        <div class="filter-actions"><button class="btn btn-xs btn-outline-secondary" onclick="clearColFilter('cf-email')">Effacer</button></div>
+                      </div>
+                    </div>
+                  </th>
+                  <th>
+                    Rôle
+                    <div class="col-filter-wrap">
+                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
+                      <div class="col-filter-dropdown" style="min-width:160px">
+                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="ADMIN" id="cr-admin" onchange="applyFilters()"><label class="form-check-label small" for="cr-admin">Admin</label></div>
+                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="EXPEDITEUR" id="cr-exp" onchange="applyFilters()"><label class="form-check-label small" for="cr-exp">Expéditeur</label></div>
+                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="TRANSPORTER" id="cr-trans" onchange="applyFilters()"><label class="form-check-label small" for="cr-trans">Transporteur</label></div>
+                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="DRIVER" id="cr-driver" onchange="applyFilters()"><label class="form-check-label small" for="cr-driver">Chauffeur</label></div>
+                        <div class="filter-actions mt-1"><button class="btn btn-xs btn-outline-secondary" onclick="clearColStatut('.cf-role')">Tout décocher</button></div>
+                      </div>
+                    </div>
+                  </th>
+                  <th class="d-none d-md-table-cell">
+                    Organisation
+                    <div class="col-filter-wrap">
+                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
+                      <div class="col-filter-dropdown">
+                        <select class="form-select form-select-sm" id="cf-tenant" onchange="applyFilters()"><option value="">Toutes</option></select>
+                        <div class="filter-actions"><button class="btn btn-xs btn-outline-secondary" onclick="clearColFilter('cf-tenant')">Effacer</button></div>
+                      </div>
+                    </div>
+                  </th>
+                  <th class="d-none d-lg-table-cell">ID</th>
+                  <th class="d-none d-md-table-cell">Créé le</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-all">
+                <tr><td colspan="6" class="text-center py-4 text-muted">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="text-muted small" id="pagination-info">—</div>
+              <div class="d-flex align-items-center gap-1">
+                <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                <select id="page-size-select" class="form-select form-select-sm page-size-select" style="width:70px">
+                  <option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Tous</option>
+                </select>
+              </div>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Détail utilisateur ─────────────────────────────────── -->
+<div id="detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeDetail()">
+  <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
+    <div class="d-flex align-items-center gap-3 p-4 border-bottom">
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold">Détail utilisateur</h5>
+        <div class="text-muted small mt-1" id="detail-email">—</div>
+      </div>
+      <button class="btn btn-sm btn-light ms-2" onclick="closeDetail()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4">
+      <div class="row g-3">
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Rôle</div><div id="detail-role">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Organisation</div><div class="fw-semibold" id="detail-tenant">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">ID</div><div class="fw-semibold" style="font-size:.8rem" id="detail-id">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Créé le</div><div class="fw-semibold" id="detail-created">—</div></div>
+      </div>
+      <hr class="my-3">
+      <div class="mb-3"><label class="form-label fw-semibold small">Modifier le rôle</label>
+        <select id="detail-role-select" class="form-select form-select-sm">
+          <option value="ADMIN">Admin</option><option value="EXPEDITEUR">Expéditeur</option><option value="TRANSPORTER">Transporteur</option><option value="DRIVER">Chauffeur</option>
+        </select>
+      </div>
+      <div class="mb-3"><label class="form-label fw-semibold small">Réinitialiser le mot de passe</label>
+        <input id="detail-new-password" type="password" class="form-control form-control-sm" placeholder="Nouveau mot de passe (min. 8)" />
+      </div>
+      <div id="detail-nav-section" class="d-none">
+        <hr class="my-3">
+        <div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em;margin-bottom:8px">🔗 Navigation rapide</div>
+        <div class="d-flex gap-2 flex-wrap" id="detail-nav-links"></div>
+      </div>
+    </div>
+    <div class="p-4 border-top bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteUser()"><i data-feather="trash-2" style="width:13px"></i> Supprimer</button>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-outline-primary" onclick="updateUserRole()"><i data-feather="save" style="width:13px"></i> Sauvegarder rôle</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="resetPassword()"><i data-feather="key" style="width:13px"></i> Reset MDP</button>
+        <button class="btn btn-sm btn-outline-info" onclick="sendResetEmail()"><i data-feather="mail" style="width:13px"></i> Email de réinitialisation</button>
+        <button class="btn btn-sm btn-light" onclick="closeDetail()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allUsers = [], allOrgs = [];
+let filteredUsers = [];
+let currentPage = 1;
+let currentUserId = null;
+
+function roleBadge(role) {
+  const labels = { ADMIN: 'Admin', EXPEDITEUR: 'Expéditeur', TRANSPORTER: 'Transporteur', DRIVER: 'Chauffeur' };
+  return `<span class="role-badge role-${role}">${labels[role] ?? role}</span>`;
+}
+
+function orgName(tenantId) {
+  const org = allOrgs.find(o => o.tenantId === tenantId);
+  return org ? (org.raisonSociale ?? '—') : (tenantId === 'admin' ? '—' : '—');
+}
+
+// ── Column filter dropdowns ───────────────────────────────────────────────
+function toggleColFilter(btn) {
+  const dd = btn.nextElementSibling;
+  const wasOpen = dd.classList.contains('show');
+  document.querySelectorAll('.col-filter-dropdown').forEach(d => d.classList.remove('show'));
+  document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
+  if (!wasOpen) { dd.classList.add('show'); btn.classList.add('active'); }
+}
+function clearColFilter(...ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); applyFilters(); }
+function clearColStatut(selector) { const checkboxes = document.querySelectorAll(selector); const allChecked = [...checkboxes].every(c => c.checked); checkboxes.forEach(c => c.checked = !allChecked); applyFilters(); }
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.col-filter-wrap')) {
+    document.querySelectorAll('.col-filter-dropdown').forEach(d => d.classList.remove('show'));
+    document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
+  }
+});
+
+// ── Quick filter ──────────────────────────────────────────────────────────
+function setQuickFilter(el) {
+  document.querySelectorAll('.toggle-group .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function resetAllFilters() {
+  document.querySelectorAll('.toggle-group .btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('search-global').value = '';
+  document.getElementById('f-sort').value = 'newest';
+  ['cf-email','cf-tenant'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.querySelectorAll('.cf-role').forEach(c => c.checked = true);
+  applyFilters();
+}
+
+// ── Filtrage ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const quickFilter = document.querySelector('.toggle-group .btn.active')?.dataset?.quick ?? '';
+  const q = document.getElementById('search-global')?.value?.toLowerCase().trim() ?? '';
+  const sort = document.getElementById('f-sort')?.value ?? 'newest';
+  const cfEmail = document.getElementById('cf-email')?.value?.toLowerCase().trim() ?? '';
+  const cfTenant = document.getElementById('cf-tenant')?.value ?? '';
+  const cfRoles = [...document.querySelectorAll('.cf-role:checked')].map(c => c.value);
+
+  filteredUsers = allUsers.filter(u => {
+    if (quickFilter && u.role !== quickFilter) return false;
+    if (q && !u.email.toLowerCase().includes(q)) return false;
+    if (cfEmail && !u.email.toLowerCase().includes(cfEmail)) return false;
+    if (cfTenant && u.tenantId !== cfTenant) return false;
+    if (cfRoles.length > 0 && cfRoles.length < 4 && !cfRoles.includes(u.role)) return false;
+    return true;
+  });
+
+  if (sort === 'newest') filteredUsers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  else if (sort === 'oldest') filteredUsers.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  else if (sort === 'email') filteredUsers.sort((a, b) => a.email.localeCompare(b.email));
+
+  const badge = document.getElementById('badge-total');
+  if (filteredUsers.length > 0) {
+    badge.textContent = `${filteredUsers.length} utilisateur${filteredUsers.length > 1 ? 's' : ''}`;
+    badge.style.display = 'inline-block';
+  } else { badge.style.display = 'none'; }
+
+  currentPage = 1;
+  renderTable();
+}
+
+function getPageSize() {
+  const v = document.getElementById('page-size-select').value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderTable() {
+  const pageSize = getPageSize();
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  if (currentPage > totalPages) currentPage = 1;
+  const start = pageSize === Infinity ? 0 : (currentPage - 1) * pageSize;
+  const sliced = pageSize === Infinity ? filteredUsers : filteredUsers.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('tbody-all');
+  if (filteredUsers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">👤</div>Aucun utilisateur trouvé.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(u => `
+      <tr onclick="openDetail('${u.id}')">
+        <td><div class="fw-semibold">${u.email}</div></td>
+        <td>${roleBadge(u.role)}</td>
+        <td class="d-none d-md-table-cell small">${orgName(u.tenantId)}</td>
+        <td class="d-none d-lg-table-cell text-muted small" style="font-size:.72rem">${u.id.slice(0, 8)}…</td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(u.createdAt)}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();openDetail('${u.id}')">
+            <i data-feather="eye" style="width:13px"></i>
+          </button>
+        </td>
+      </tr>`).join('');
+  }
+  if (typeof feather !== 'undefined') feather.replace();
+
+  const showing = pageSize === Infinity
+    ? `${filteredUsers.length} utilisateur${filteredUsers.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, filteredUsers.length)}–${Math.min(start + pageSize, filteredUsers.length)} sur ${filteredUsers.length}`;
+  document.getElementById('pagination-info').textContent = showing;
+
+  const controls = document.getElementById('pagination-controls');
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return; }
+  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= delta) {
+      html += `<li class="page-item ${p === currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - currentPage) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+
+function openDetail(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  currentUserId = id;
+  document.getElementById('detail-email').textContent = u.email;
+  document.getElementById('detail-role').innerHTML = roleBadge(u.role);
+  document.getElementById('detail-tenant').innerHTML = u.tenantId !== 'admin'
+    ? `<a href="admin-utilisateurs.html" class="text-decoration-none fw-semibold">${orgName(u.tenantId)}</a>`
+    : '—';
+  document.getElementById('detail-id').textContent = u.id;
+  document.getElementById('detail-created').textContent = UI.formatDate(u.createdAt);
+  document.getElementById('detail-role-select').value = u.role;
+  document.getElementById('detail-new-password').value = '';
+
+  // Navigation rapide
+  const navLinks = document.getElementById('detail-nav-links');
+  let linksHtml = '';
+  if (u.role === 'EXPEDITEUR' || u.role === 'TRANSPORTER') linksHtml += `<a href="admin-utilisateurs.html" class="btn btn-sm btn-outline-primary"><i data-feather="building" style="width:13px"></i> Voir l'organisation</a>`;
+  if (u.role === 'DRIVER') linksHtml += `<a href="admin-chauffeurs.html" class="btn btn-sm btn-outline-success"><i data-feather="user" style="width:13px"></i> Voir les chauffeurs</a>`;
+  if (linksHtml) {
+    navLinks.innerHTML = linksHtml;
+    document.getElementById('detail-nav-section').classList.remove('d-none');
+  } else {
+    document.getElementById('detail-nav-section').classList.add('d-none');
+  }
+
+  document.getElementById('detail-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeDetail() { document.getElementById('detail-overlay').style.display = 'none'; currentUserId = null; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+async function updateUserRole() {
+  if (!currentUserId) return;
+  const newRole = document.getElementById('detail-role-select').value;
+  try {
+    await api.put(`/auth/users/${currentUserId}`, { role: newRole });
+    UI.toast(`Rôle mis à jour : ${newRole}`, 'success');
+    await loadUsers();
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function resetPassword() {
+  if (!currentUserId) return;
+  const pwd = document.getElementById('detail-new-password').value;
+  if (!pwd || pwd.length < 8) { UI.toast('Le mot de passe doit faire au moins 8 caractères.', 'warning'); return; }
+  try {
+    await api.put(`/auth/users/${currentUserId}/password`, { newPassword: pwd });
+    UI.toast('Mot de passe réinitialisé.', 'success');
+    document.getElementById('detail-new-password').value = '';
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function sendResetEmail() {
+  if (!currentUserId) return;
+  const u = allUsers.find(x => x.id === currentUserId);
+  if (!u) return;
+  try {
+    await api.post('/auth/reset-password', { email: u.email });
+    UI.toast(`Email de réinitialisation envoyé à ${u.email}`, 'success');
+  } catch (err) { UI.toast(err.error ?? 'Erreur lors de l\'envoi', 'danger'); }
+}
+
+async function deleteUser() {
+  if (!currentUserId) return;
+  const u = allUsers.find(x => x.id === currentUserId);
+  if (!confirm(`Supprimer l'utilisateur ${u?.email} ? Cette action est irréversible.`)) return;
+  try {
+    await api.delete(`/auth/users/${currentUserId}`);
+    UI.toast('Utilisateur supprimé.', 'success');
+    closeDetail();
+    await loadUsers();
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function loadUsers() {
+  try {
+    const [usersRes, expedRes, transRes] = await Promise.all([
+      api.get('/auth/users').catch(() => null),
+      api.get('/company/company?page=1&limit=500').catch(() => null),
+      api.get('/company/transporter?page=1&limit=500').catch(() => null),
+    ]);
+
+    if (!usersRes) {
+      document.getElementById('alert-container').innerHTML =
+        `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <strong>Erreur de chargement</strong> — Impossible de récupérer la liste des utilisateurs.
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+      return;
+    }
+
+    const unpack = res => {
+      if (!res) return [];
+      if (Array.isArray(res)) return res;
+      if (Array.isArray(res?.data)) return res.data;
+      if (Array.isArray(res?.data?.data)) return res.data.data;
+      return [];
+    };
+
+    allUsers = unpack(usersRes);
+    allOrgs = [...unpack(expedRes), ...unpack(transRes)];
+
+    // Populate tenant filter
+    const tenants = [...new Set(allUsers.map(u => u.tenantId))].filter(t => t !== 'admin').sort();
+    const tenantSelect = document.getElementById('cf-tenant');
+    tenantSelect.innerHTML = '<option value="">Toutes</option>' +
+      tenants.map(t => `<option value="${t}">${orgName(t)}</option>`).join('');
+
+    // Check all role checkboxes by default
+    document.querySelectorAll('.cf-role').forEach(c => c.checked = true);
+
+    console.log(`Utilisateurs chargés : ${allUsers.length}`);
+    applyFilters();
+  } catch (err) {
+    console.error('Erreur chargement utilisateurs:', err);
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Erreur</strong> — ${err.error ?? err.message ?? 'Erreur inconnue'}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+  await loadUsers();
+
+  document.getElementById('page-size-select').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+});
+</script>
+</body>
+</html>

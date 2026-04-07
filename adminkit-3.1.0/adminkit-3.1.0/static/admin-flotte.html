@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Flotte globale | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .page-size-select { width:auto; display:inline-block; }
+    .truck-avatar { width:36px;height:36px;border-radius:8px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .driver-avatar { width:24px;height:24px;border-radius:50%;background:rgba(26,75,110,.1);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--cu-navy,#1A4B6E);flex-shrink:0; }
+    .global-filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+    .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
+    .toggle-group .btn { border-radius:0; border:none; font-size:.78rem; padding:5px 14px; background:transparent; color:#6c757d; font-weight:500; transition: all .15s; position:relative; }
+    .toggle-group .btn:hover { background:#f8f9fa; color:#333; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+    .toggle-group .btn .check-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6c757d; margin-right:5px; vertical-align:middle; transition: background .15s; }
+    .toggle-group .btn.active .check-dot { background:#fff; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Flotte</strong> Globale</h1>
+          <span class="badge bg-success rounded-pill fs-6" id="badge-available" style="display:none"></span>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Filtres rapides -->
+        <div class="global-filter-bar">
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" data-quick="" onclick="setQuickFilter(this)"><span class="check-dot"></span>Tous</button>
+              <button class="btn" data-quick="AVAILABLE" onclick="setQuickFilter(this)"><span class="check-dot"></span>Disponibles</button>
+              <button class="btn" data-quick="BUSY" onclick="setQuickFilter(this)"><span class="check-dot"></span>En transit</button>
+            </div>
+            <div class="ms-auto">
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" title="Réinitialiser">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtres avancés -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body" style="display:none">
+            <div class="row g-2">
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Recherche</label>
+                <input id="f-search" class="form-control form-control-sm" placeholder="Immatriculation, marque…" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="AVAILABLE">Disponible</option>
+                  <option value="BUSY">En transit</option>
+                  <option value="MAINTENANCE">Maintenance</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Type</label>
+                <select id="f-type" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Transporteur</label>
+                <select id="f-transporter" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                </select>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Véhicule</th>
+                  <th>Transporteur</th>
+                  <th>Type</th>
+                  <th class="d-none d-md-table-cell">Capacité</th>
+                  <th class="d-none d-lg-table-cell">Base</th>
+                  <th>Chauffeur</th>
+                  <th>Statut</th>
+                  <th class="d-none d-md-table-cell">Missions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-all">
+                <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="text-muted small" id="pagination-info">—</div>
+              <div class="d-flex align-items-center gap-1">
+                <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                <select id="page-size-select" class="form-select form-select-sm page-size-select" style="width:70px">
+                  <option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Tous</option>
+                </select>
+              </div>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Détail véhicule ─────────────────────────────────── -->
+<div id="detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeDetail()">
+  <div style="background:#fff;border-radius:14px;max-width:640px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
+    <div class="d-flex align-items-center gap-3 p-4 border-bottom">
+      <div style="width:52px;height:52px;border-radius:12px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cu-orange,#F97316)" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold" id="detail-title">—</h5>
+        <div class="text-muted small" id="detail-subtitle"></div>
+      </div>
+      <div id="detail-badge"></div>
+      <button class="btn btn-sm btn-light ms-2" onclick="closeDetail()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4">
+      <div class="row g-3">
+        <div class="col-12">
+          <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">🚛 Identification</div>
+          <div class="row g-2">
+            <div class="col-6"><div class="text-muted small">Immatriculation</div><div class="fw-semibold" id="detail-immat">—</div></div>
+            <div class="col-6"><div class="text-muted small">Type</div><div class="fw-semibold" id="detail-type">—</div></div>
+            <div class="col-6"><div class="text-muted small">Marque / Modèle</div><div class="fw-semibold" id="detail-marque">—</div></div>
+            <div class="col-6"><div class="text-muted small">Capacité max</div><div class="fw-semibold" id="detail-capacite">—</div></div>
+            <div class="col-6"><div class="text-muted small">Châssis</div><div class="fw-semibold" id="detail-chassis">—</div></div>
+            <div class="col-6"><div class="text-muted small">Base</div><div class="fw-semibold" id="detail-base">—</div></div>
+          </div>
+        </div>
+        <div class="col-12"><hr class="my-1"></div>
+        <div class="col-12">
+          <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">👤 Affectation</div>
+          <div class="row g-2">
+            <div class="col-12"><div class="text-muted small">Chauffeur assigné</div><div class="fw-semibold" id="detail-driver">—</div></div>
+            <div class="col-12"><div class="text-muted small">Transporteur</div><div class="fw-semibold" id="detail-transporter">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="px-4 pb-4 d-flex gap-2 justify-content-end">
+      <button class="btn btn-sm btn-light" onclick="closeDetail()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allTrucks = [], allTransporters = [], allDrivers = [];
+let filteredTrucks = [];
+let currentPage = 1;
+
+function truckBadge(statut) {
+  const map = { AVAILABLE: { cls: 'bg-success', label: 'Disponible' }, BUSY: { cls: 'bg-primary', label: 'En transit' }, MAINTENANCE: { cls: 'bg-warning text-dark', label: 'Maintenance' } };
+  const s = map[statut] ?? { cls: 'bg-secondary', label: statut };
+  return `<span class="badge ${s.cls}">${s.label}</span>`;
+}
+
+// ── Filtres avancés toggle ────────────────────────────────────────────────
+let filterPanelOpen = false;
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  document.getElementById('filter-panel').style.display = filterPanelOpen ? '' : 'none';
+  document.getElementById('filter-chevron').style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+function resetFilters() { resetAllFilters(); }
+
+// ── Quick filter ──────────────────────────────────────────────────────────
+function setQuickFilter(el) {
+  document.querySelectorAll('.toggle-group .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function resetAllFilters() {
+  document.querySelectorAll('.toggle-group .btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  ['f-search','f-statut','f-type','f-transporter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  applyFilters();
+}
+
+// ── Filtrage ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const quickFilter = document.querySelector('.toggle-group .btn.active')?.dataset?.quick ?? '';
+  const q = document.getElementById('f-search')?.value?.toLowerCase().trim() ?? '';
+  const fStatut = document.getElementById('f-statut')?.value ?? '';
+  const fType = document.getElementById('f-type')?.value ?? '';
+  const fTransporter = document.getElementById('f-transporter')?.value ?? '';
+
+  filteredTrucks = allTrucks.filter(t => {
+    if (quickFilter && t.statut !== quickFilter) return false;
+    if (q && !(t.immatriculation + ' ' + t.marque + ' ' + t.modele + ' ' + t.typeVehicule).toLowerCase().includes(q)) return false;
+    if (fStatut && t.statut !== fStatut) return false;
+    if (fType && t.typeVehicule !== fType) return false;
+    if (fTransporter && t.tenantId !== fTransporter) return false;
+    return true;
+  });
+
+  const availCount = filteredTrucks.filter(t => t.statut === 'AVAILABLE').length;
+  const badge = document.getElementById('badge-available');
+  if (availCount > 0) { badge.textContent = `${availCount} disponible${availCount > 1 ? 's' : ''}`; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+
+  const activeCount = [q, fStatut, fType, fTransporter].filter(Boolean).length;
+  const filterBadge = document.getElementById('filter-badge');
+  if (activeCount > 0) { filterBadge.textContent = activeCount; filterBadge.classList.remove('d-none'); }
+  else { filterBadge.classList.add('d-none'); }
+  const rc = document.getElementById('filter-result-count');
+  if (rc) rc.textContent = `${filteredTrucks.length} résultat${filteredTrucks.length !== 1 ? 's' : ''} sur ${allTrucks.length}`;
+
+  currentPage = 1;
+  renderTable();
+}
+
+function getPageSize() {
+  const v = document.getElementById('page-size-select').value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderTable() {
+  const pageSize = getPageSize();
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filteredTrucks.length / pageSize));
+  if (currentPage > totalPages) currentPage = 1;
+  const start = pageSize === Infinity ? 0 : (currentPage - 1) * pageSize;
+  const sliced = pageSize === Infinity ? filteredTrucks : filteredTrucks.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('tbody-all');
+  if (filteredTrucks.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">🚚</div>Aucun véhicule trouvé.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(t => {
+      const transporter = allTransporters.find(tr => tr.tenantId === t.tenantId);
+      const driver = allDrivers.find(d => d.id === t.driverId);
+      const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
+      const driverName = driver ? `${driver.prenom ?? ''} ${driver.nom ?? ''}`.trim() : '—';
+      const driverInitials = driver ? `${driver.prenom?.[0] ?? ''}${driver.nom?.[0] ?? ''}`.toUpperCase() : '';
+
+      return `
+      <tr onclick="openDetail('${t.id}')">
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="truck-avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <div>
+              <div class="fw-semibold">${t.immatriculation ?? '—'}</div>
+              <div class="text-muted small">${t.marque ?? ''} ${t.modele ?? ''}</div>
+            </div>
+          </div>
+        </td>
+        <td class="small">${transporter ? `<a href="#" onclick="event.stopPropagation();openTransporterProfile('${transporter.id}')" class="text-decoration-none fw-semibold">${transName}</a>` : '—'}</td>
+        <td><span class="badge bg-light text-dark">${t.typeVehicule ?? '—'}</span></td>
+        <td class="d-none d-md-table-cell fw-semibold">${t.capaciteMax ? t.capaciteMax + ' T' : '—'}</td>
+        <td class="d-none d-lg-table-cell text-muted small">${t.villeBase ?? '—'}, ${t.paysBase ?? ''}</td>
+        <td>${driver ? `<div class="d-flex align-items-center gap-1"><div class="driver-avatar">${driverInitials}</div><a href="#" onclick="event.stopPropagation();openDriverProfile('${driver.id}')" class="text-decoration-none small fw-semibold">${driverName}</a></div>` : '<span class="text-muted small">—</span>'}</td>
+        <td>${truckBadge(t.statut)}</td>
+        <td class="d-none d-md-table-cell text-muted small">—</td>
+      </tr>`;
+    }).join('');
+  }
+  if (typeof feather !== 'undefined') feather.replace();
+
+  const showing = pageSize === Infinity
+    ? `${filteredTrucks.length} véhicule${filteredTrucks.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, filteredTrucks.length)}–${Math.min(start + pageSize, filteredTrucks.length)} sur ${filteredTrucks.length}`;
+  document.getElementById('pagination-info').textContent = showing;
+
+  const controls = document.getElementById('pagination-controls');
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return; }
+  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= delta) {
+      html += `<li class="page-item ${p === currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - currentPage) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+
+function openDetail(id) {
+  const t = allTrucks.find(x => x.id === id);
+  if (!t) return;
+  const transporter = allTransporters.find(tr => tr.tenantId === t.tenantId);
+  const driver = allDrivers.find(d => d.id === t.driverId);
+  const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
+  const driverName = driver ? `${driver.prenom ?? ''} ${driver.nom ?? ''}`.trim() : 'Aucun';
+
+  document.getElementById('detail-title').textContent = t.immatriculation ?? '—';
+  document.getElementById('detail-subtitle').textContent = `${t.marque ?? ''} ${t.modele ?? ''}`;
+  document.getElementById('detail-badge').innerHTML = truckBadge(t.statut);
+  document.getElementById('detail-immat').textContent = t.immatriculation ?? '—';
+  document.getElementById('detail-type').textContent = t.typeVehicule ?? '—';
+  document.getElementById('detail-marque').textContent = `${t.marque ?? ''} ${t.modele ?? ''}`.trim() || '—';
+  document.getElementById('detail-capacite').textContent = t.capaciteMax ? `${t.capaciteMax} T` : '—';
+  document.getElementById('detail-chassis').textContent = t.chassis ?? '—';
+  document.getElementById('detail-base').textContent = `${t.villeBase ?? '—'}, ${t.paysBase ?? ''}`;
+  document.getElementById('detail-driver').innerHTML = driverName !== 'Aucun'
+    ? `<a href="#" onclick="openDriverProfile('${driver.id}')" class="text-decoration-none fw-semibold">${driverName}</a>`
+    : 'Aucun';
+  document.getElementById('detail-transporter').innerHTML = transporter
+    ? `<a href="#" onclick="openTransporterProfile('${transporter.id}')" class="text-decoration-none fw-semibold">${transName}</a>`
+    : '—';
+  document.getElementById('detail-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeDetail() { document.getElementById('detail-overlay').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+function openTransporterProfile(id) {
+  window.location.href = `admin-organisation-detail.html?id=${id}`;
+}
+
+function openDriverProfile(id) {
+  window.location.href = `admin-chauffeurs.html#driver-${id}`;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const [trucksRes, transRes, driversRes] = await Promise.all([
+    api.get('/fleet/trucks'),
+    api.get('/company/transporter?page=1&limit=500').catch(() => []),
+    api.get('/fleet/drivers').catch(() => []),
+  ]);
+
+  function unpack(res) {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+
+  allTrucks = unpack(trucksRes);
+  allTransporters = unpack(transRes);
+  allDrivers = unpack(driversRes);
+
+  // Populate filtres avancés
+  const transSelect = document.getElementById('f-transporter');
+  transSelect.innerHTML = '<option value="">Tous</option>' +
+    allTransporters.map(t => `<option value="${t.tenantId}">${t.raisonSociale ?? t.nom ?? t.tenantId}</option>`).join('');
+
+  const types = [...new Set(allTrucks.map(t => t.typeVehicule).filter(Boolean))].sort();
+  const typeSelect = document.getElementById('f-type');
+  typeSelect.innerHTML = '<option value="">Tous</option>' +
+    types.map(t => `<option>${t}</option>`).join('');
+
+  filteredTrucks = [...allTrucks];
+  applyFilters();
+
+  document.getElementById('page-size-select').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+});
+</script>
+</body>
+</html>

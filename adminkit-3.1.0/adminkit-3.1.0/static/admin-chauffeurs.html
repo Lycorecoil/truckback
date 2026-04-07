@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Chauffeurs globaux | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .page-size-select { width:auto; display:inline-block; }
+    .driver-avatar-lg { width:40px;height:40px;border-radius:50%;background:rgba(26,75,110,.1);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--cu-navy,#1A4B6E);flex-shrink:0; }
+    .global-filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+    .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
+    .toggle-group .btn { border-radius:0; border:none; font-size:.78rem; padding:5px 14px; background:transparent; color:#6c757d; font-weight:500; transition: all .15s; position:relative; }
+    .toggle-group .btn:hover { background:#f8f9fa; color:#333; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+    .toggle-group .btn .check-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6c757d; margin-right:5px; vertical-align:middle; transition: background .15s; }
+    .toggle-group .btn.active .check-dot { background:#fff; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h3 mb-0"><strong>Chauffeurs</strong> Globaux</h1>
+          <span class="badge bg-success rounded-pill fs-6" id="badge-available" style="display:none"></span>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Filtres rapides -->
+        <div class="global-filter-bar">
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" data-quick="" onclick="setQuickFilter(this)"><span class="check-dot"></span>Tous</button>
+              <button class="btn" data-quick="AVAILABLE" onclick="setQuickFilter(this)"><span class="check-dot"></span>Disponibles</button>
+              <button class="btn" data-quick="BUSY" onclick="setQuickFilter(this)"><span class="check-dot"></span>En mission</button>
+            </div>
+            <div class="ms-auto">
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" title="Réinitialiser">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtres avancés -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body" style="display:none">
+            <div class="row g-2">
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Recherche</label>
+                <input id="f-search" class="form-control form-control-sm" placeholder="Nom, prénom, permis…" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="AVAILABLE">Disponible</option>
+                  <option value="BUSY">En mission</option>
+                  <option value="SUSPENDED">Suspendu</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Transporteur</label>
+                <select id="f-transporter" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">N° Permis</label>
+                <input id="f-permis" class="form-control form-control-sm" placeholder="Rechercher…" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ajouté depuis</label>
+                <input id="f-date-debut" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ajouté jusqu'au</label>
+                <input id="f-date-fin" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Chauffeur</th>
+                  <th>Transporteur</th>
+                  <th>Téléphone</th>
+                  <th class="d-none d-md-table-cell">N° Permis</th>
+                  <th class="d-none d-md-table-cell">Type Permis</th>
+                  <th>Véhicule assigné</th>
+                  <th>Statut</th>
+                  <th class="d-none d-md-table-cell">Ajouté le</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-all">
+                <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="text-muted small" id="pagination-info">—</div>
+              <div class="d-flex align-items-center gap-1">
+                <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                <select id="page-size-select" class="form-select form-select-sm page-size-select" style="width:70px">
+                  <option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Tous</option>
+                </select>
+              </div>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Détail chauffeur ─────────────────────────────────── -->
+<div id="detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeDetail()">
+  <div style="background:#fff;border-radius:14px;max-width:640px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
+    <div class="d-flex align-items-center gap-3 p-4 border-bottom">
+      <div style="width:52px;height:52px;border-radius:12px;background:rgba(30,58,138,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem;font-weight:700;color:#1e3a8a" id="detail-avatar">—</div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold" id="detail-name">—</h5>
+        <div class="text-muted small" id="detail-transporter-sub"></div>
+      </div>
+      <div id="detail-badge"></div>
+      <button class="btn btn-sm btn-light ms-2" onclick="closeDetail()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4">
+      <div class="row g-3">
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Téléphone</div><div class="fw-semibold" id="detail-telephone">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">N° Permis</div><div class="fw-semibold" id="detail-permis">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Type de permis</div><div class="fw-semibold" id="detail-type-permis">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Véhicule assigné</div><div class="fw-semibold" id="detail-truck">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Transporteur</div><div class="fw-semibold" id="detail-transporter">—</div></div>
+        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Ajouté le</div><div class="fw-semibold" id="detail-created">—</div></div>
+      </div>
+    </div>
+    <div class="px-4 pb-4 d-flex justify-content-end gap-2" id="detail-actions"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allDrivers = [], allTransporters = [], allTrucks = [];
+let filteredDrivers = [];
+let currentPage = 1;
+
+function driverBadge(statut) {
+  const map = { AVAILABLE: { cls: 'bg-success', label: 'Disponible' }, BUSY: { cls: 'bg-primary', label: 'En mission' }, SUSPENDED: { cls: 'bg-warning text-dark', label: 'Suspendu' }, DELETED: { cls: 'bg-danger', label: 'Supprimé' } };
+  const s = map[statut] ?? { cls: 'bg-secondary', label: statut };
+  return `<span class="badge ${s.cls}">${s.label}</span>`;
+}
+
+// ── Filtres avancés toggle ────────────────────────────────────────────────
+let filterPanelOpen = false;
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  document.getElementById('filter-panel').style.display = filterPanelOpen ? '' : 'none';
+  document.getElementById('filter-chevron').style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+function resetFilters() { resetAllFilters(); }
+
+// ── Quick filter ──────────────────────────────────────────────────────────
+function setQuickFilter(el) {
+  document.querySelectorAll('.toggle-group .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function resetAllFilters() {
+  document.querySelectorAll('.toggle-group .btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  ['f-search','f-statut','f-transporter','f-permis','f-date-debut','f-date-fin'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  applyFilters();
+}
+
+// ── Filtrage ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const quickFilter = document.querySelector('.toggle-group .btn.active')?.dataset?.quick ?? '';
+  const q = document.getElementById('f-search')?.value?.toLowerCase().trim() ?? '';
+  const fStatut = document.getElementById('f-statut')?.value ?? '';
+  const fTransporter = document.getElementById('f-transporter')?.value ?? '';
+  const fPermis = document.getElementById('f-permis')?.value?.toLowerCase().trim() ?? '';
+  const fDateDebut = document.getElementById('f-date-debut')?.value ?? '';
+  const fDateFin = document.getElementById('f-date-fin')?.value ?? '';
+
+  filteredDrivers = allDrivers.filter(d => {
+    if (quickFilter && d.statut !== quickFilter) return false;
+    if (q && !(d.prenom + ' ' + d.nom + ' ' + d.numeroPermis).toLowerCase().includes(q)) return false;
+    if (fStatut && d.statut !== fStatut) return false;
+    if (fTransporter && d.tenantId !== fTransporter) return false;
+    if (fPermis && !(d.numeroPermis ?? '').toLowerCase().includes(fPermis)) return false;
+    if (fDateDebut && (d.createdAt ?? '') < fDateDebut) return false;
+    if (fDateFin && (d.createdAt ?? '') > fDateFin + 'T23:59:59') return false;
+    return true;
+  });
+
+  const availCount = filteredDrivers.filter(d => d.statut === 'AVAILABLE').length;
+  const badge = document.getElementById('badge-available');
+  if (availCount > 0) { badge.textContent = `${availCount} disponible${availCount > 1 ? 's' : ''}`; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+
+  const activeCount = [q, fStatut, fTransporter, fPermis, fDateDebut, fDateFin].filter(Boolean).length;
+  const filterBadge = document.getElementById('filter-badge');
+  if (activeCount > 0) { filterBadge.textContent = activeCount; filterBadge.classList.remove('d-none'); }
+  else { filterBadge.classList.add('d-none'); }
+  const rc = document.getElementById('filter-result-count');
+  if (rc) rc.textContent = `${filteredDrivers.length} résultat${filteredDrivers.length !== 1 ? 's' : ''} sur ${allDrivers.length}`;
+
+  currentPage = 1;
+  renderTable();
+}
+
+function getPageSize() {
+  const v = document.getElementById('page-size-select').value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderTable() {
+  const pageSize = getPageSize();
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filteredDrivers.length / pageSize));
+  if (currentPage > totalPages) currentPage = 1;
+  const start = pageSize === Infinity ? 0 : (currentPage - 1) * pageSize;
+  const sliced = pageSize === Infinity ? filteredDrivers : filteredDrivers.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('tbody-all');
+  if (filteredDrivers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">👤</div>Aucun chauffeur trouvé.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(d => {
+      const transporter = allTransporters.find(t => t.tenantId === d.tenantId);
+      const truck = allTrucks.find(t => t.id === d.truckId);
+      const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
+      const truckName = truck ? `${truck.immatriculation ?? ''} (${truck.marque ?? ''} ${truck.modele ?? ''})`.trim() : '—';
+      const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase();
+
+      return `
+      <tr onclick="openDetail('${d.id}')">
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="driver-avatar-lg">${initials || '?'}</div>
+            <div>
+              <div class="fw-semibold">${d.prenom ?? '—'} ${d.nom ?? ''}</div>
+              <div class="text-muted small">${d.numeroPermis ?? ''}</div>
+            </div>
+          </div>
+        </td>
+        <td class="small">${transporter ? `<a href="#" onclick="event.stopPropagation();openTransporterProfile('${transporter.id}')" class="text-decoration-none fw-semibold">${transName}</a>` : '—'}</td>
+        <td class="small">${d.telephone ?? '—'}</td>
+        <td class="d-none d-md-table-cell text-muted small">${d.numeroPermis ?? '—'}</td>
+        <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark">${d.typePermis ?? '—'}</span></td>
+        <td class="small">${truck ? `<a href="#" onclick="event.stopPropagation();openTruckDetail('${truck.id}')" class="text-decoration-none fw-semibold">${truckName}</a>` : '<span class="text-muted small">—</span>'}</td>
+        <td>${driverBadge(d.statut)}</td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(d.createdAt)}</td>
+      </tr>`;
+    }).join('');
+  }
+  if (typeof feather !== 'undefined') feather.replace();
+
+  const showing = pageSize === Infinity
+    ? `${filteredDrivers.length} chauffeur${filteredDrivers.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, filteredDrivers.length)}–${Math.min(start + pageSize, filteredDrivers.length)} sur ${filteredDrivers.length}`;
+  document.getElementById('pagination-info').textContent = showing;
+
+  const controls = document.getElementById('pagination-controls');
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return; }
+  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= delta) {
+      html += `<li class="page-item ${p === currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - currentPage) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+
+function openDetail(id) {
+  const d = allDrivers.find(x => x.id === id);
+  if (!d) return;
+  const transporter = allTransporters.find(t => t.tenantId === d.tenantId);
+  const truck = allTrucks.find(t => t.id === d.truckId);
+  const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
+  const truckName = truck ? `${truck.immatriculation ?? ''} — ${truck.marque ?? ''} ${truck.modele ?? ''}`.trim() : 'Aucun';
+  const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase() || '?';
+
+  document.getElementById('detail-avatar').textContent = initials;
+  document.getElementById('detail-name').textContent = `${d.prenom ?? ''} ${d.nom ?? ''}`.trim() || '—';
+  document.getElementById('detail-transporter-sub').textContent = transName;
+  document.getElementById('detail-badge').innerHTML = driverBadge(d.statut);
+  document.getElementById('detail-telephone').textContent = d.telephone ?? '—';
+  document.getElementById('detail-permis').textContent = d.numeroPermis ?? '—';
+  document.getElementById('detail-type-permis').textContent = d.typePermis ?? '—';
+  document.getElementById('detail-truck').innerHTML = truckName !== 'Aucun'
+    ? `<a href="#" onclick="openTruckDetail('${truck.id}')" class="text-decoration-none fw-semibold">${truckName}</a>`
+    : 'Aucun';
+  document.getElementById('detail-transporter').innerHTML = transporter
+    ? `<a href="#" onclick="openTransporterProfile('${transporter.id}')" class="text-decoration-none fw-semibold">${transName}</a>`
+    : '—';
+
+  const actions = document.getElementById('detail-actions');
+  const navLinks = `
+    <div class="me-auto d-flex gap-2 flex-wrap">
+      <a href="admin-chauffeur-detail.html?id=${d.id}" class="btn btn-sm btn-outline-primary"><i data-feather="eye" style="width:13px"></i> Voir le détail complet</a>
+      ${truck ? `<a href="#" onclick="openTruckDetail('${truck.id}')" class="btn btn-sm btn-outline-info"><i data-feather="truck" style="width:13px"></i> Voir le véhicule</a>` : ''}
+      ${transporter ? `<a href="#" onclick="openTransporterProfile('${transporter.id}')" class="btn btn-sm btn-outline-secondary"><i data-feather="building" style="width:13px"></i> Voir le transporteur</a>` : ''}
+      <a href="admin-expeditions.html" class="btn btn-sm btn-outline-success"><i data-feather="package" style="width:13px"></i> Voir les missions</a>
+    </div>`;
+
+  if (d.statut === 'AVAILABLE' || d.statut === 'BUSY') {
+    actions.innerHTML = `${navLinks}<button class="btn btn-sm btn-warning" onclick="suspendDriver('${d.id}')"><i data-feather="pause-circle" style="width:13px" class="me-1"></i> Suspendre</button><button class="btn btn-sm btn-light" onclick="closeDetail()">Fermer</button>`;
+  } else if (d.statut === 'SUSPENDED') {
+    actions.innerHTML = `${navLinks}<button class="btn btn-sm btn-success" onclick="reactivateDriver('${d.id}')"><i data-feather="check-circle" style="width:13px" class="me-1"></i> Réactiver</button><button class="btn btn-sm btn-light" onclick="closeDetail()">Fermer</button>`;
+  } else {
+    actions.innerHTML = `${navLinks}<button class="btn btn-sm btn-light" onclick="closeDetail()">Fermer</button>`;
+  }
+
+  document.getElementById('detail-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeDetail() { document.getElementById('detail-overlay').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+function openTransporterProfile(id) {
+  window.location.href = `admin-organisation-detail.html?id=${id}`;
+}
+
+function openTruckDetail(id) {
+  window.location.href = `admin-flotte.html#truck-${id}`;
+}
+
+async function suspendDriver(id) {
+  try {
+    await api.put(`/fleet/drivers/${id}`, { statut: 'SUSPENDED' });
+    UI.toast('Chauffeur suspendu.', 'success');
+    closeDetail();
+    await reload();
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function reactivateDriver(id) {
+  try {
+    await api.put(`/fleet/drivers/${id}`, { statut: 'AVAILABLE' });
+    UI.toast('Chauffeur réactivé.', 'success');
+    closeDetail();
+    await reload();
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+}
+
+async function reload() {
+  const res = await api.get('/fleet/drivers');
+  allDrivers = Array.isArray(res) ? res : (res?.data?.data ?? res?.data ?? []);
+  applyFilters();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const [driversRes, transRes, trucksRes] = await Promise.all([
+    api.get('/fleet/drivers'),
+    api.get('/company/transporter?page=1&limit=500').catch(() => []),
+    api.get('/fleet/trucks').catch(() => []),
+  ]);
+
+  function unpack(res) {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+
+  allDrivers = unpack(driversRes);
+  allTransporters = unpack(transRes);
+  allTrucks = unpack(trucksRes);
+
+  // Populate filtres avancés
+  const transSelect = document.getElementById('f-transporter');
+  transSelect.innerHTML = '<option value="">Tous</option>' +
+    allTransporters.map(t => `<option value="${t.tenantId}">${t.raisonSociale ?? t.nom ?? t.tenantId}</option>`).join('');
+
+  filteredDrivers = [...allDrivers];
+  applyFilters();
+
+  document.getElementById('page-size-select').addEventListener('change', () => { currentPage = 1; applyFilters(); });
+});
+</script>
+</body>
+</html>

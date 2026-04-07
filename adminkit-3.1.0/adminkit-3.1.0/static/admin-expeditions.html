@@ -8,6 +8,41 @@
   <link href="css/app.css" rel="stylesheet">
   <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .interest-card { border:1px solid #e9ecef; border-radius:8px; padding:14px 16px; margin-bottom:10px; }
+    .interest-card:hover { background:#f8f9fa; }
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .page-size-select { width:auto; display:inline-block; }
+    .detail-field { margin-bottom:10px; }
+    .detail-label { font-size:.78rem; color:#6c757d; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:2px; }
+    .detail-value { font-size:.92rem; font-weight:500; }
+    .timeline-item { position:relative; padding-left:24px; padding-bottom:16px; border-left:2px solid #e9ecef; }
+    .timeline-item:last-child { border-left-color:transparent; padding-bottom:0; }
+    .timeline-item::before { content:''; position:absolute; left:-6px; top:2px; width:10px; height:10px; border-radius:50%; background:var(--cu-orange,#F97316); }
+    .timeline-item.done::before { background:var(--cu-success,#10B981); }
+    .timeline-date { font-size:.72rem; color:#6c757d; }
+    .timeline-text { font-size:.85rem; font-weight:500; }
+
+    /* Stat cards */
+    .stat-card { border-left:4px solid; transition:box-shadow .15s; }
+    .stat-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
+    .stat-card.blue { border-left-color:#3b7ddd; }
+    .stat-card.orange { border-left-color:#f0ad4e; }
+    .stat-card.cyan { border-left-color:#17a2b8; }
+    .stat-card.green { border-left-color:#28a745; }
+    .stat-card.purple { border-left-color:#6f42c1; }
+    .stat-card.teal { border-left-color:#20c997; }
+    .stat-icon { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .stat-icon.blue { background:rgba(59,125,221,.12); color:#3b7ddd; }
+    .stat-icon.orange { background:rgba(240,173,78,.12); color:#f0ad4e; }
+    .stat-icon.cyan { background:rgba(23,162,184,.12); color:#17a2b8; }
+    .stat-icon.green { background:rgba(40,167,69,.12); color:#28a745; }
+    .stat-icon.purple { background:rgba(111,66,193,.12); color:#6f42c1; }
+    .stat-icon.teal { background:rgba(32,201,151,.12); color:#20c997; }
+
+    #filter-panel { display:block; }
+    #filter-chevron.rotated { transform:rotate(180deg); }
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -18,8 +53,11 @@
       <ul class="sidebar-nav">
         <li class="sidebar-header">Administration</li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
-        <li class="sidebar-item active"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Expéditions</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
       </ul>
     </div>
   </nav>
@@ -45,44 +83,178 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <h1 class="h3 mb-0"><strong>Gestion des Expéditions</strong></h1>
           <span class="badge bg-danger rounded-pill fs-6" id="badge-interests" style="display:none"></span>
         </div>
 
         <div id="alert-container"></div>
 
-        <!-- Filtres -->
-        <div class="card mb-3">
-          <div class="card-body py-2">
-            <div class="d-flex gap-2 flex-wrap align-items-center">
-              <button class="btn btn-sm btn-primary filter-btn active" data-statut="">Toutes</button>
-              <button class="btn btn-sm btn-outline-warning filter-btn" data-statut="PENDING">En attente</button>
-              <button class="btn btn-sm btn-outline-secondary filter-btn" data-statut="PROPOSED">Proposées</button>
-              <button class="btn btn-sm btn-outline-info filter-btn" data-statut="ACCEPTED">Acceptées</button>
-              <button class="btn btn-sm btn-outline-primary filter-btn" data-statut="IN_PROGRESS">En cours</button>
-              <button class="btn btn-sm btn-outline-success filter-btn" data-statut="DELIVERED">Livrées</button>
-              <button class="btn btn-sm btn-outline-danger filter-btn" data-statut="CANCELLED">Annulées</button>
-              <div class="ms-auto">
-                <input id="search-input" type="text" class="form-control form-control-sm" placeholder="Rechercher…" style="width:200px">
+        <!-- ── 6 CARTES DE STATISTIQUES ──────────────────────────────────── -->
+        <div class="row mb-3">
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card blue">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon blue"><i data-feather="package" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">Total</div>
+                    <h4 class="mb-0 fw-bold" id="stat-total">—</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card orange">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon orange"><i data-feather="clock" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">En attente</div>
+                    <h4 class="mb-0 fw-bold" id="stat-pending">—</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card cyan">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon cyan"><i data-feather="truck" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">En cours</div>
+                    <h4 class="mb-0 fw-bold" id="stat-inprogress">—</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card green">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon green"><i data-feather="check-circle" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">Livrées</div>
+                    <h4 class="mb-0 fw-bold" id="stat-delivered">—</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card purple">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon purple"><i data-feather="trending-up" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">Taux accompl.</div>
+                    <h4 class="mb-0 fw-bold" id="stat-rate">—</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card teal">
+              <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon teal"><i data-feather="dollar-sign" style="width:20px"></i></div>
+                  <div>
+                    <div class="text-muted small mb-0">Valeur (mois)</div>
+                    <h4 class="mb-0 fw-bold" id="stat-value" style="font-size:.95rem">—</h4>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Table -->
+        <!-- ── FILTRES ──────────────────────────────────────────────────── -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle rotated" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body">
+            <div class="row g-2">
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="PENDING">En attente</option>
+                  <option value="PROPOSED">Proposée</option>
+                  <option value="ACCEPTED">Acceptée</option>
+                  <option value="IN_PROGRESS">En cours</option>
+                  <option value="DELIVERED">Livrée</option>
+                  <option value="CANCELLED">Annulée</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Pays de départ</label>
+                <select id="f-pays-depart" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville de départ</label>
+                <select id="f-ville-depart" class="form-select form-select-sm city-select" onchange="applyFilters()"><option value="">Toutes</option></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Pays d'arrivée</label>
+                <select id="f-pays-arrivee" class="form-select form-select-sm country-select" onchange="applyFilters()"></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville d'arrivée</label>
+                <select id="f-ville-arrivee" class="form-select form-select-sm city-select" onchange="applyFilters()"><option value="">Toutes</option></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Marchandise</label>
+                <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Du</label>
+                <input id="f-date-debut" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Au</label>
+                <input id="f-date-fin" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix min (FCFA)</label>
+                <input id="f-prix-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Prix max (FCFA)</label>
+                <input id="f-prix-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" oninput="applyFilters()" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TABLEAU ───────────────────────────────────────────────────── -->
         <div class="card">
           <div class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="table-light">
                 <tr>
                   <th>Réf.</th>
-                  <th>Trajet</th>
-                  <th>Marchandise</th>
+                  <th>Ville de départ</th>
+                  <th>Ville d'arrivée</th>
+                  <th>Type de marchandise</th>
                   <th class="d-none d-md-table-cell">Date</th>
                   <th class="d-none d-md-table-cell">Prix</th>
                   <th>Statut</th>
-                  <th>Intérêts</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
@@ -90,6 +262,26 @@
                 <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="text-muted small" id="pagination-info">—</div>
+              <div class="d-flex align-items-center gap-1">
+                <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                <select id="page-size-select" class="form-select form-select-sm page-size-select" style="width:70px">
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="all">Tous</option>
+                </select>
+              </div>
+            </div>
+            <nav>
+              <ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul>
+            </nav>
           </div>
         </div>
 
@@ -102,128 +294,440 @@
   </div>
 </div>
 
-<!-- ── OVERLAY : Gérer les intérêts d'une expédition ─────────────────── -->
-<div id="interest-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:9999;overflow-y:auto;padding:32px 16px">
-  <div style="max-width:700px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+<!-- ── OVERLAY : Détail expédition ─────────────────────────────────── -->
+<div id="detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeDetailOverlay()">
+  <div style="background:#fff;border-radius:14px;max-width:720px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
     <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
       <div>
-        <h5 class="mb-0">Transporteurs intéressés</h5>
-        <div class="text-muted small mt-1" id="interest-mission-info"></div>
+        <h5 class="mb-0 fw-bold" id="detail-title">—</h5>
+        <div class="text-muted small mt-1" id="detail-subtitle"></div>
       </div>
-      <button class="btn btn-sm btn-light" onclick="closeInterestOverlay()"><i data-feather="x" style="width:14px"></i></button>
+      <div class="d-flex gap-2 align-items-center">
+        <span id="detail-badge"></span>
+        <button class="btn btn-sm btn-light" onclick="closeDetailOverlay()"><i data-feather="x" style="width:14px"></i></button>
+      </div>
     </div>
     <div class="p-4">
-      <div id="interest-list"></div>
+      <div class="row g-3 mb-4">
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Départ</div><div class="detail-value" id="detail-depart">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Arrivée</div><div class="detail-value" id="detail-arrivee">—</div></div></div>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Marchandise</div><div class="detail-value" id="detail-marchandise">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Poids</div><div class="detail-value" id="detail-poids">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Prix transport</div><div class="detail-value" id="detail-prix">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Date d'annonce</div><div class="detail-value" id="detail-date">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Emballage</div><div class="detail-value" id="detail-emballage">—</div></div></div>
+        <div class="col-6"><div class="detail-field"><div class="detail-label">Quantité</div><div class="detail-value" id="detail-quantite">—</div></div></div>
+      </div>
+      <div id="detail-comment-wrap" class="mb-4 d-none"><div class="detail-label">Commentaire</div><div class="detail-value" id="detail-comment" style="background:#f8f9fa;padding:10px 14px;border-radius:8px;font-size:.85rem"></div></div>
+      <div class="mb-4"><div class="detail-label mb-2">Historique des statuts</div><div id="detail-timeline"></div></div>
+      <div id="detail-interests-section" class="d-none"><div class="detail-label mb-2">Transporteurs intéressés (<span id="detail-interests-count">0</span>)</div><div id="detail-interests-list"></div></div>
+      <div id="detail-nav-section" class="d-none">
+        <hr class="my-3">
+        <div class="detail-label mb-2">🔗 Navigation rapide</div>
+        <div class="d-flex gap-2 flex-wrap" id="detail-nav-links"></div>
+      </div>
     </div>
+    <div class="p-4 border-top bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span class="text-muted small">Créé le <span id="detail-created">—</span></span>
+      <div class="d-flex gap-2">
+        <span id="detail-propose-wrap"></span>
+        <button class="btn btn-sm btn-light" onclick="closeDetailOverlay()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Éditer expédition ─────────────────────────────────── -->
+<div id="edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeEditOverlay()">
+  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
+    <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+      <h5 class="mb-0 fw-bold">Modifier l'expédition</h5>
+      <button class="btn btn-sm btn-light" onclick="closeEditOverlay()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4">
+      <div id="edit-alert"></div>
+      <div class="mb-3"><label class="form-label fw-semibold small">Marchandise</label><input id="edit-marchandise" class="form-control form-control-sm" /></div>
+      <div class="row g-2 mb-3">
+        <div class="col-6"><label class="form-label fw-semibold small">Poids (T)</label><input id="edit-poids" type="number" class="form-control form-control-sm" step="0.1" /></div>
+        <div class="col-6"><label class="form-label fw-semibold small">Prix transport (FCFA)</label><input id="edit-prix" type="number" class="form-control form-control-sm" /></div>
+      </div>
+      <div class="mb-3"><label class="form-label fw-semibold small">Statut</label>
+        <select id="edit-statut" class="form-select form-select-sm">
+          <option value="PENDING">En attente</option>
+          <option value="PROPOSED">Proposée</option>
+          <option value="ACCEPTED">Acceptée</option>
+          <option value="IN_PROGRESS">En cours</option>
+          <option value="DELIVERED">Livrée</option>
+          <option value="CANCELLED">Annulée</option>
+        </select>
+      </div>
+      <div class="mb-3"><label class="form-label fw-semibold small">Commentaire</label><textarea id="edit-commentaire" class="form-control form-control-sm" rows="2"></textarea></div>
+    </div>
+    <div class="p-4 border-top bg-light d-flex justify-content-end gap-2">
+      <button class="btn btn-sm btn-light" onclick="closeEditOverlay()">Annuler</button>
+      <button class="btn btn-sm btn-primary" id="btn-save-edit" onclick="saveEditShipment()">
+        <i data-feather="save" style="width:13px"></i> Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY : Gérer les intérêts ─────────────────────────────────── -->
+<div id="interest-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:10000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px">
+  <div style="background:#fff;border-radius:14px;max-width:700px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
+    <div class="d-flex justify-content-between align-items-center p-4 border-bottom">
+      <div><h5 class="mb-0">Transporteurs intéressés</h5><div class="text-muted small mt-1" id="interest-mission-info"></div></div>
+      <button class="btn btn-sm btn-light" onclick="closeInterestOverlay()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="p-4"><div id="interest-list"></div></div>
     <div class="p-4 border-top bg-light">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span class="text-muted small">Ou proposer directement à un transporteur sans intérêt :</span>
-        <button class="btn btn-outline-primary btn-sm" onclick="openDirectPropose()">
-          <i data-feather="send" style="width:13px"></i> Proposition directe
-        </button>
+        <span class="text-muted small">Ou proposer directement :</span>
+        <button class="btn btn-outline-primary btn-sm" onclick="openDirectPropose()"><i data-feather="send" style="width:13px"></i> Proposition directe</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ── OVERLAY : Proposition directe ─────────────────────────────────── -->
-<div id="propose-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:480px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+<div id="propose-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:10001;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:520px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">Proposer la mission</h5>
       <button class="btn btn-sm btn-light" onclick="closeProposeOverlay()"><i data-feather="x" style="width:14px"></i></button>
     </div>
     <p class="text-muted small mb-3" id="propose-mission-info"></p>
-    <label class="form-label fw-semibold">Sélectionner un transporteur</label>
-    <select id="propose-select" class="form-select mb-4">
-      <option value="">— Choisir un transporteur —</option>
-    </select>
+    <div class="mb-3">
+      <label class="form-label fw-semibold small">Transporteur</label>
+      <select id="propose-select" class="form-select form-select-sm"><option value="">— Choisir —</option></select>
+    </div>
     <div class="d-flex gap-2 justify-content-end">
-      <button class="btn btn-outline-secondary" onclick="closeProposeOverlay()">Annuler</button>
-      <button class="btn btn-primary" id="btn-confirm-propose">
-        <i data-feather="send" style="width:13px"></i> Envoyer la proposition
-      </button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="closeProposeOverlay()">Annuler</button>
+      <button class="btn btn-sm btn-primary" id="btn-confirm-propose"><i data-feather="send" style="width:13px"></i> Envoyer</button>
     </div>
   </div>
 </div>
 
-<style>
-.interest-card { border:1px solid #e9ecef; border-radius:8px; padding:14px 16px; margin-bottom:10px; }
-.interest-card:hover { background:#f8f9fa; }
-</style>
-
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let allShipments = [], allTransporters = [];
+let allShipments = [], allTransporters = [], allCompanies = [], allTrucks = [], allDrivers = [];
 let currentShipmentId = null;
+let _currentPage = 1;
+
+// ── Toggle filtre panel ───────────────────────────────────────────────────
+function toggleFilters() {
+  const panel = document.getElementById('filter-panel');
+  const chevron = document.getElementById('filter-chevron');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  chevron.classList.toggle('rotated', !visible);
+}
+
+// ── Reset all filters ─────────────────────────────────────────────────────
+function resetAllFilters() {
+  ['f-statut','f-pays-depart','f-pays-arrivee','f-ville-depart','f-ville-arrivee'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  applyFilters();
+}
+
+// ── Filter badge count ────────────────────────────────────────────────────
+function updateFilterBadge() {
+  const ids = ['f-statut','f-pays-depart','f-pays-arrivee','f-ville-depart','f-ville-arrivee','f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'];
+  const active = ids.filter(id => { const el = document.getElementById(id); return el && el.value; }).length;
+  const badge = document.getElementById('filter-badge');
+  if (badge) { badge.textContent = active; badge.classList.toggle('d-none', active === 0); }
+}
+
+// ── Stats cards ───────────────────────────────────────────────────────────
+function updateStats(list) {
+  const total = list.length;
+  const pending = list.filter(s => s.statut === 'PENDING').length;
+  const inProgress = list.filter(s => s.statut === 'IN_PROGRESS').length;
+  const delivered = list.filter(s => s.statut === 'DELIVERED').length;
+  const rate = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const valueMonth = list.filter(s => (s.dateAnnonce ?? '').startsWith(monthStr) && s.prixTransport)
+    .reduce((sum, s) => sum + s.prixTransport, 0);
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-inprogress').textContent = inProgress;
+  document.getElementById('stat-delivered').textContent = delivered;
+  document.getElementById('stat-rate').textContent = rate + ' %';
+  document.getElementById('stat-value').textContent = valueMonth > 0 ? valueMonth.toLocaleString('fr-FR') : '0';
+}
 
 // ── Badge intérêts ────────────────────────────────────────────────────────
 function updateInterestBadge(list) {
   const withInterests = list.filter(s => s.statut === 'PENDING' && s.interests?.length > 0);
   const badge = document.getElementById('badge-interests');
   if (withInterests.length > 0) {
-    badge.textContent = `${withInterests.length} expédition(s) avec des intérêts en attente`;
+    badge.textContent = `${withInterests.length} expédition(s) avec des intérêts`;
     badge.style.display = 'inline-block';
-  } else {
-    badge.style.display = 'none';
-  }
+  } else { badge.style.display = 'none'; }
+}
+
+// ── Filtrage ──────────────────────────────────────────────────────────────
+function getFilteredShipments() {
+  const statut     = document.getElementById('f-statut')?.value ?? '';
+  const paysDepart = document.getElementById('f-pays-depart')?.value ?? '';
+  const paysArrivee= document.getElementById('f-pays-arrivee')?.value ?? '';
+  const villeDepart= document.getElementById('f-ville-depart')?.value ?? '';
+  const villeArrivee=document.getElementById('f-ville-arrivee')?.value ?? '';
+  const marchandise= document.getElementById('f-marchandise')?.value?.trim().toLowerCase() ?? '';
+  const dateDebut  = document.getElementById('f-date-debut')?.value ?? '';
+  const dateFin    = document.getElementById('f-date-fin')?.value ?? '';
+  const prixMin    = document.getElementById('f-prix-min')?.value ? Number(document.getElementById('f-prix-min').value) : null;
+  const prixMax    = document.getElementById('f-prix-max')?.value ? Number(document.getElementById('f-prix-max').value) : null;
+
+  return allShipments.filter(s => {
+    if (statut && s.statut !== statut) return false;
+    if (paysDepart && s.paysDepart !== paysDepart) return false;
+    if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
+    if (villeDepart && s.villeDepart !== villeDepart) return false;
+    if (villeArrivee && s.villeArrivee !== villeArrivee) return false;
+    if (marchandise && !(s.marchandise ?? '').toLowerCase().includes(marchandise)) return false;
+    if (dateDebut && s.dateAnnonce < dateDebut) return false;
+    if (dateFin && s.dateAnnonce > dateFin) return false;
+    if (prixMin !== null && (s.prixTransport ?? 0) < prixMin) return false;
+    if (prixMax !== null && (s.prixTransport ?? 0) > prixMax) return false;
+    return true;
+  });
+}
+
+function applyFilters() {
+  _currentPage = 1;
+  updateFilterBadge();
+  const filtered = getFilteredShipments();
+  renderTable(filtered);
 }
 
 // ── Render table ──────────────────────────────────────────────────────────
-function renderTable(list) {
+function getPageSize() {
+  const v = document.getElementById('page-size-select').value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderTable(filtered) {
+  const pageSize = getPageSize();
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (_currentPage > totalPages) _currentPage = 1;
+
+  const start = pageSize === Infinity ? 0 : (_currentPage - 1) * pageSize;
+  const sliced = pageSize === Infinity ? filtered : filtered.slice(start, start + pageSize);
+
   const tbody = document.getElementById('tbody-all');
-  if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
-    return;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">📦</div>Aucune expédition trouvée.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(s => {
+      const canPropose = s.statut === 'PENDING';
+      return `
+      <tr onclick="openDetailOverlay('${s.id}')" title="Voir le détail">
+        <td><strong>#${s.id.slice(0,8)}</strong></td>
+        <td>
+          <div class="fw-semibold">${s.villeDepart ?? '—'}</div>
+          <div class="text-muted small">${s.paysDepart ?? ''}</div>
+        </td>
+        <td>
+          <div class="fw-semibold">${s.villeArrivee ?? '—'}</div>
+          <div class="text-muted small">${s.paysArrivee ?? ''}</div>
+        </td>
+        <td class="text-muted small">${s.marchandise ?? '—'}${s.poids ? ' — ' + s.poids + 'T' : ''}</td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(s.dateAnnonce)}</td>
+        <td class="d-none d-md-table-cell fw-semibold">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+        <td>${UI.shipmentBadge(s.statut)}</td>
+        <td class="text-end">
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" onclick="event.stopPropagation();openEditOverlay('${s.id}')" title="Modifier">
+              <i data-feather="edit-2" style="width:12px"></i>
+            </button>
+            ${canPropose ? `<button class="btn btn-outline-success" onclick="event.stopPropagation();openProposeOverlay('${s.id}')" title="Proposer">
+              <i data-feather="send" style="width:12px"></i>
+            </button>` : ''}
+            ${s.statut !== 'CANCELLED' && s.statut !== 'DELIVERED' ? `<button class="btn btn-outline-danger" onclick="event.stopPropagation();cancelShipment('${s.id}')" title="Annuler">
+              <i data-feather="x" style="width:12px"></i>
+            </button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
   }
-  tbody.innerHTML = list.map(s => {
-    const nbInterests = s.interests?.length ?? 0;
-    const canPropose  = s.statut === 'PENDING';
-    return `
-    <tr>
-      <td><strong>#${s.id.slice(0,8)}</strong></td>
-      <td>
-        <div class="fw-semibold">${s.villeDepart} → ${s.villeArrivee}</div>
-        <div class="text-muted small">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div>
-      </td>
-      <td class="text-muted small">${s.marchandise} — ${s.poids}T</td>
-      <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(s.dateAnnonce)}</td>
-      <td class="d-none d-md-table-cell fw-semibold">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
-      <td>${UI.shipmentBadge(s.statut)}</td>
-      <td>
-        ${nbInterests > 0
-          ? `<button class="btn btn-sm btn-warning" onclick="openInterestOverlay('${s.id}')">
-               <i data-feather="eye" style="width:13px"></i> ${nbInterests} intérêt(s)
-             </button>`
-          : `<span class="text-muted small">—</span>`
-        }
-      </td>
-      <td class="text-end">
-        ${canPropose
-          ? `<button class="btn btn-sm btn-primary" onclick="openProposeOverlay('${s.id}')">
-               <i data-feather="send" style="width:13px"></i> Proposer
-             </button>`
-          : `<span class="text-muted small">—</span>`
-        }
-      </td>
-    </tr>`;
-  }).join('');
+  if (typeof feather !== 'undefined') feather.replace();
+
+  const showing = pageSize === Infinity
+    ? `${filtered.length} expédition${filtered.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, filtered.length)}–${Math.min(start + pageSize, filtered.length)} sur ${filtered.length}`;
+  document.getElementById('pagination-info').textContent = showing;
+  const rc = document.getElementById('filter-result-count');
+  if (rc) rc.textContent = filtered.length !== allShipments.length ? `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allShipments.length}` : '';
+
+  const controls = document.getElementById('pagination-controls');
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return; }
+
+  let html = `<li class="page-item ${_currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - _currentPage) <= delta) {
+      html += `<li class="page-item ${p === _currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - _currentPage) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${_currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { _currentPage = p; applyFilters(); }
+
+// ── Cancel shipment ───────────────────────────────────────────────────────
+async function cancelShipment(id) {
+  if (!confirm('Annuler cette expédition ?')) return;
+  try {
+    await api.put(`/shipments/${id}`, { statut: 'CANCELLED' });
+    UI.toast('Expédition annulée.', 'success');
+    await reload();
+  } catch (err) {
+    UI.toast(err.error ?? 'Erreur', 'danger');
+  }
+}
+
+// ── Edit overlay ──────────────────────────────────────────────────────────
+function openEditOverlay(id) {
+  const s = allShipments.find(x => x.id === id);
+  if (!s) return;
+  currentShipmentId = id;
+
+  document.getElementById('edit-marchandise').value = s.marchandise ?? '';
+  document.getElementById('edit-poids').value = s.poids ?? '';
+  document.getElementById('edit-prix').value = s.prixTransport ?? '';
+  document.getElementById('edit-statut').value = s.statut ?? 'PENDING';
+  document.getElementById('edit-commentaire').value = s.commentaireGeneral ?? '';
+  document.getElementById('edit-alert').innerHTML = '';
+
+  document.getElementById('edit-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
 }
 
-// ── Overlay intérêts ──────────────────────────────────────────────────────
-function openInterestOverlay(id) {
+function closeEditOverlay() {
+  document.getElementById('edit-overlay').style.display = 'none';
+  currentShipmentId = null;
+}
+
+async function saveEditShipment() {
+  if (!currentShipmentId) return;
+  const btn = document.getElementById('btn-save-edit');
+  UI.loading(btn, true);
+  try {
+    const payload = {
+      marchandise: document.getElementById('edit-marchandise').value.trim(),
+      poids: document.getElementById('edit-poids').value ? Number(document.getElementById('edit-poids').value) : undefined,
+      prixTransport: document.getElementById('edit-prix').value ? Number(document.getElementById('edit-prix').value) : undefined,
+      statut: document.getElementById('edit-statut').value,
+      commentaireGeneral: document.getElementById('edit-commentaire').value.trim() || undefined,
+    };
+    await api.put(`/shipments/${currentShipmentId}`, payload);
+    UI.toast('Expédition mise à jour.', 'success');
+    closeEditOverlay();
+    await reload();
+  } catch (err) {
+    document.getElementById('edit-alert').innerHTML = `<div class="alert alert-danger py-2 small">${err.error ?? 'Erreur'}</div>`;
+  } finally { UI.loading(btn, false); }
+}
+
+// ── Detail overlay ────────────────────────────────────────────────────────
+function openDetailOverlay(id) {
   currentShipmentId = id;
   const s = allShipments.find(x => x.id === id);
   if (!s) return;
 
-  document.getElementById('interest-mission-info').textContent =
-    `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
+  document.getElementById('detail-title').textContent = `Expédition #${id.slice(0, 8).toUpperCase()}`;
+  document.getElementById('detail-subtitle').textContent = `${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}`;
+  document.getElementById('detail-badge').innerHTML = UI.shipmentBadge(s.statut);
+  document.getElementById('detail-depart').textContent = `${s.villeDepart ?? '—'}, ${s.paysDepart ?? ''}`;
+  document.getElementById('detail-arrivee').textContent = `${s.villeArrivee ?? '—'}, ${s.paysArrivee ?? ''}`;
+  document.getElementById('detail-marchandise').textContent = s.marchandise ?? '—';
+  document.getElementById('detail-poids').textContent = s.poids ? `${s.poids} T` : '—';
+  document.getElementById('detail-prix').textContent = s.prixTransport ? `${s.prixTransport.toLocaleString('fr-FR')} FCFA` : '—';
+  document.getElementById('detail-date').textContent = UI.formatDate(s.dateAnnonce);
+  document.getElementById('detail-emballage').textContent = s.emballage ?? '—';
+  document.getElementById('detail-quantite').textContent = s.quantite ?? '—';
+
+  if (s.commentaireGeneral) {
+    document.getElementById('detail-comment').textContent = s.commentaireGeneral;
+    document.getElementById('detail-comment-wrap').classList.remove('d-none');
+  } else { document.getElementById('detail-comment-wrap').classList.add('d-none'); }
+
+  const timeline = document.getElementById('detail-timeline');
+  const statusHistory = [{ statut: 'PENDING', label: 'En attente', date: s.dateAnnonce }];
+  if (['PROPOSED','ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut)) statusHistory.push({ statut: 'PROPOSED', label: 'Proposée', date: s.updatedAt ?? s.dateAnnonce });
+  if (['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut)) statusHistory.push({ statut: 'ACCEPTED', label: 'Acceptée', date: s.updatedAt ?? s.dateAnnonce });
+  if (['IN_PROGRESS','DELIVERED'].includes(s.statut)) statusHistory.push({ statut: 'IN_PROGRESS', label: 'En cours', date: s.updatedAt ?? s.dateAnnonce });
+  if (s.statut === 'DELIVERED') statusHistory.push({ statut: 'DELIVERED', label: 'Livrée', date: s.updatedAt ?? s.dateAnnonce });
+  if (s.statut === 'CANCELLED') statusHistory.push({ statut: 'CANCELLED', label: 'Annulée', date: s.updatedAt ?? s.dateAnnonce });
+
+  timeline.innerHTML = statusHistory.map((h, i) => `<div class="timeline-item ${i < statusHistory.length - 1 || s.statut !== 'PENDING' ? 'done' : ''}"><div class="timeline-text">${h.label}</div><div class="timeline-date">${UI.formatDate(h.date)}</div></div>`).join('');
 
   const interests = s.interests ?? [];
-  const list = document.getElementById('interest-list');
+  const section = document.getElementById('detail-interests-section');
+  if (interests.length > 0) {
+    section.classList.remove('d-none');
+    document.getElementById('detail-interests-count').textContent = interests.length;
+    document.getElementById('detail-interests-list').innerHTML = interests.map(i => {
+      const transporter = allTransporters.find(t => t.tenantId === i.transporterTenantId);
+      const name = transporter ? (transporter.raisonSociale ?? transporter.nom ?? i.transporterTenantId?.slice(0,8)) : (i.transporterTenantId?.slice(0,8) ?? '—');
+      const date = new Date(i.createdAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      return `<div class="interest-card d-flex justify-content-between align-items-center"><div><div class="fw-semibold">${name}</div><div class="text-muted small">Intérêt le ${date}</div></div>${s.statut === 'PENDING' ? `<button class="btn btn-sm btn-success" onclick="proposeFromInterest('${id}','${i.transporterId}','${i.transporterTenantId ?? ''}')"><i data-feather="check-circle" style="width:13px"></i> Proposer</button>` : '<span class="badge bg-secondary">Déjà traitée</span>'}</div>`;
+    }).join('');
+  } else { section.classList.add('d-none'); }
 
+  const proposeWrap = document.getElementById('detail-propose-wrap');
+  proposeWrap.innerHTML = s.statut === 'PENDING' ? `<button class="btn btn-sm btn-primary" onclick="closeDetailOverlay();openProposeOverlay('${id}')"><i data-feather="send" style="width:13px"></i> Proposer</button>` : '';
+
+  // Navigation rapide
+  const navSection = document.getElementById('detail-nav-section');
+  const navLinks = document.getElementById('detail-nav-links');
+  const expediteur = allCompanies.find(c => c.tenantId === s.companyTenantId);
+  const transporteur = s.transporterTenantId ? allTransporters.find(t => t.tenantId === s.transporterTenantId) : null;
+  const truck = s.truckId ? allTrucks.find(t => t.id === s.truckId) : null;
+  const driver = s.driverId ? allDrivers.find(d => d.id === s.driverId) : null;
+
+  let linksHtml = '';
+  if (expediteur) linksHtml += `<a href="admin-organisation-detail.html?id=${expediteur.id}" class="btn btn-sm btn-outline-primary"><i data-feather="building" style="width:13px"></i> Voir l'expéditeur</a>`;
+  if (transporteur) linksHtml += `<a href="admin-organisation-detail.html?id=${transporteur.id}" class="btn btn-sm btn-outline-info"><i data-feather="truck" style="width:13px"></i> Voir le transporteur</a>`;
+  if (truck) linksHtml += `<a href="admin-flotte.html" class="btn btn-sm btn-outline-secondary"><i data-feather="truck" style="width:13px"></i> Voir le véhicule</a>`;
+  if (driver) linksHtml += `<a href="admin-chauffeur-detail.html?id=${driver.id}" class="btn btn-sm btn-outline-success"><i data-feather="user" style="width:13px"></i> Voir le chauffeur</a>`;
+
+  if (linksHtml) {
+    navLinks.innerHTML = linksHtml;
+    navSection.classList.remove('d-none');
+  } else {
+    navSection.classList.add('d-none');
+  }
+
+  document.getElementById('detail-created').textContent = UI.formatDate(s.createdAt);
+  document.getElementById('detail-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeDetailOverlay() { document.getElementById('detail-overlay').style.display = 'none'; }
+
+// ── Interest overlay ──────────────────────────────────────────────────────
+function openInterestOverlay(id) {
+  currentShipmentId = id;
+  const s = allShipments.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('interest-mission-info').textContent = `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
+  const interests = s.interests ?? [];
+  const list = document.getElementById('interest-list');
   if (interests.length === 0) {
     list.innerHTML = '<p class="text-muted text-center py-3">Aucun transporteur intéressé.</p>';
   } else {
@@ -231,46 +735,30 @@ function openInterestOverlay(id) {
       const transporter = allTransporters.find(t => t.tenantId === i.transporterTenantId);
       const name = transporter ? (transporter.raisonSociale ?? transporter.nom ?? i.transporterTenantId?.slice(0,8)) : (i.transporterTenantId?.slice(0,8) ?? '—');
       const date = new Date(i.createdAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-      return `
-        <div class="interest-card d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">${name}</div>
-            <div class="text-muted small">Intérêt le ${date}</div>
-          </div>
-          <button class="btn btn-sm btn-success" onclick="proposeFromInterest('${id}', '${i.transporterId}', '${i.transporterTenantId ?? ''}')">
-            <i data-feather="check-circle" style="width:13px"></i> Proposer cette mission
-          </button>
-        </div>`;
+      const transLink = transporter ? `<a href="admin-organisation-detail.html?id=${transporter.id}" class="fw-semibold text-decoration-none">${name}</a>` : `<span class="fw-semibold">${name}</span>`;
+      return `<div class="interest-card d-flex justify-content-between align-items-center"><div><div>${transLink}</div><div class="text-muted small">Intérêt le ${date}</div></div><button class="btn btn-sm btn-success" onclick="proposeFromInterest('${id}','${i.transporterId}','${i.transporterTenantId ?? ''}')"><i data-feather="check-circle" style="width:13px"></i> Proposer</button></div>`;
     }).join('');
   }
-
-  document.getElementById('interest-overlay').style.display = 'block';
+  document.getElementById('interest-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
 }
 
-function closeInterestOverlay() {
-  document.getElementById('interest-overlay').style.display = 'none';
-}
+function closeInterestOverlay() { document.getElementById('interest-overlay').style.display = 'none'; }
 
 async function proposeFromInterest(shipmentId, transporterId, transporterTenantId) {
   try {
     await api.post(`/shipments/${shipmentId}/propose`, { transporterId, transporterTenantId: transporterTenantId || undefined });
-    UI.toast('Mission proposée au transporteur — il recevra une notification.', 'success');
-    closeInterestOverlay();
+    UI.toast('Mission proposée au transporteur.', 'success');
+    closeInterestOverlay(); closeDetailOverlay();
     await reload();
-  } catch (err) {
-    UI.toast(err.error ?? 'Erreur', 'danger');
-  }
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
 }
 
-// ── Overlay proposition directe ───────────────────────────────────────────
+// ── Propose overlay ───────────────────────────────────────────────────────
 function openProposeOverlay(id) {
   currentShipmentId = id;
   const s = allShipments.find(x => x.id === id);
-  if (s) {
-    document.getElementById('propose-mission-info').textContent =
-      `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
-  }
+  if (s) document.getElementById('propose-mission-info').textContent = `#${id.slice(0,8)} — ${s.villeDepart} → ${s.villeArrivee} — ${s.marchandise} (${s.poids}T)`;
 
   const select = document.getElementById('propose-select');
   select.innerHTML = '<option value="">— Choisir un transporteur —</option>' +
@@ -278,98 +766,73 @@ function openProposeOverlay(id) {
 
   document.getElementById('propose-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
-
-  // Pré-sélectionner si les intéressés existent
-  const s2 = allShipments.find(x => x.id === id);
-  if (s2?.interests?.length > 0) {
-    select.value = s2.interests[0].transporterTenantId;
-  }
 }
 
-function closeProposeOverlay() {
-  document.getElementById('propose-overlay').style.display = 'none';
-}
+function closeProposeOverlay() { document.getElementById('propose-overlay').style.display = 'none'; }
+function openDirectPropose() { closeInterestOverlay(); openProposeOverlay(currentShipmentId); }
 
-function openDirectPropose() {
-  closeInterestOverlay();
-  openProposeOverlay(currentShipmentId);
-}
-
-// ── Confirm propose ───────────────────────────────────────────────────────
 async function confirmPropose() {
   const select = document.getElementById('propose-select');
   const transporterId = select.value;
   if (!transporterId) { UI.toast('Sélectionnez un transporteur.', 'warning'); return; }
-  const option = select.options[select.selectedIndex];
-  const transporterTenantId = option.dataset.tenant || undefined;
-
+  const transporterTenantId = select.options[select.selectedIndex].dataset.tenant || undefined;
   const btn = document.getElementById('btn-confirm-propose');
   UI.loading(btn, true);
   try {
     await api.post(`/shipments/${currentShipmentId}/propose`, { transporterId, transporterTenantId });
-    UI.toast('Mission proposée ! Le transporteur recevra une notification.', 'success');
-    closeProposeOverlay();
+    UI.toast('Mission proposée !', 'success');
+    closeProposeOverlay(); closeDetailOverlay();
     await reload();
-  } catch (err) {
-    UI.toast(err.error ?? 'Erreur', 'danger');
-  } finally { UI.loading(btn, false); }
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
+  finally { UI.loading(btn, false); }
 }
 
-// ── Reload data ───────────────────────────────────────────────────────────
+// ── Reload ────────────────────────────────────────────────────────────────
 async function reload() {
-  const res = await api.get('/shipments');
-  allShipments = Array.isArray(res) ? res : (res?.data?.data ?? res?.data ?? []);
+  const res = await api.get('/shipments').catch(() => null);
+  allShipments = !res ? [] : Array.isArray(res) ? res : (res?.data?.data ?? res?.data ?? []);
   updateInterestBadge(allShipments);
-  const activeFilter = document.querySelector('.filter-btn.active')?.dataset?.statut ?? '';
-  const q = document.getElementById('search-input').value.toLowerCase().trim();
-  let filtered = activeFilter ? allShipments.filter(s => s.statut === activeFilter) : allShipments;
-  if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
-  renderTable(filtered);
+  updateStats(allShipments);
+  applyFilters();
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInterestOverlay(); closeProposeOverlay(); } });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeInterestOverlay(); closeProposeOverlay(); closeDetailOverlay(); closeEditOverlay(); }
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
+  fillCountrySelects();
+  bindCitySelects();
 
-  // Charger expéditions + transporteurs en parallèle
-  const [shipmentsRes, transportersRes] = await Promise.all([
-    api.get('/shipments'),
-    api.get('/company/transporter').catch(() => []),
+  const [shipmentsRes, transportersRes, companiesRes, trucksRes, driversRes] = await Promise.all([
+    api.get('/shipments').catch(() => null),
+    api.get('/company/transporter').catch(() => null),
+    api.get('/company/company').catch(() => null),
+    api.get('/fleet/trucks').catch(() => null),
+    api.get('/fleet/drivers').catch(() => null),
   ]);
-  allShipments   = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data?.data ?? shipmentsRes?.data ?? []);
-  allTransporters = Array.isArray(transportersRes?.data) ? transportersRes.data : (transportersRes?.data?.data ?? []);
+
+  function unpack(res) {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+
+  allShipments = unpack(shipmentsRes);
+  allTransporters = unpack(transportersRes);
+  allCompanies = unpack(companiesRes);
+  allTrucks = unpack(trucksRes);
+  allDrivers = unpack(driversRes);
 
   updateInterestBadge(allShipments);
-  renderTable(allShipments);
+  updateStats(allShipments);
+  applyFilters();
 
-  // Filtres
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => {
-        b.className = 'btn btn-sm btn-outline-secondary filter-btn';
-      });
-      btn.classList.remove('btn-outline-secondary');
-      btn.classList.add('btn-primary', 'active');
-      const f = btn.dataset.statut;
-      const q = document.getElementById('search-input').value.toLowerCase().trim();
-      let filtered = f ? allShipments.filter(s => s.statut === f) : allShipments;
-      if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
-      renderTable(filtered);
-    });
-  });
-
-  // Recherche
-  document.getElementById('search-input').addEventListener('input', function () {
-    const q = this.value.toLowerCase().trim();
-    const f = document.querySelector('.filter-btn.active')?.dataset?.statut ?? '';
-    let filtered = f ? allShipments.filter(s => s.statut === f) : allShipments;
-    if (q) filtered = filtered.filter(s => (s.villeDepart + s.villeArrivee + s.marchandise).toLowerCase().includes(q));
-    renderTable(filtered);
-  });
-
-  // Bouton confirmer proposition
+  document.getElementById('page-size-select').addEventListener('change', () => { _currentPage = 1; applyFilters(); });
   document.getElementById('btn-confirm-propose').addEventListener('click', confirmPropose);
 });
 </script>

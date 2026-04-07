@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Détail Organisation | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .stat-card { border-left:4px solid; }
+    .stat-card.blue { border-left-color:#3b7ddd; }
+    .stat-card.orange { border-left-color:#f0ad4e; }
+    .stat-card.cyan { border-left-color:#17a2b8; }
+    .stat-card.green { border-left-color:#28a745; }
+    .stat-card.purple { border-left-color:#6f42c1; }
+    .stat-card.teal { border-left-color:#20c997; }
+    .stat-icon { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .stat-icon.blue { background:rgba(59,125,221,.12); color:#3b7ddd; }
+    .stat-icon.orange { background:rgba(240,173,78,.12); color:#f0ad4e; }
+    .stat-icon.cyan { background:rgba(23,162,184,.12); color:#17a2b8; }
+    .stat-icon.green { background:rgba(40,167,69,.12); color:#28a745; }
+    .stat-icon.purple { background:rgba(111,66,193,.12); color:#6f42c1; }
+    .stat-icon.teal { background:rgba(32,201,151,.12); color:#20c997; }
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .top-dest-list { list-style: none; padding: 0; margin: 0; }
+    .top-dest-list li { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: .82rem; border-bottom: 1px solid #f0f0f0; }
+    .top-dest-list li:last-child { border-bottom: none; }
+    .top-dest-list .badge-count { background: rgba(249,115,22,.1); color: var(--cu-orange,#F97316); padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+    .org-header { background: linear-gradient(135deg, #1A4B6E 0%, #143D5A 100%); color: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; }
+    .org-avatar { width:64px;height:64px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;flex-shrink:0; }
+    .btn-gradient { transition: all .2s ease; }
+    .btn-gradient:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,75,110,.35) !important; color: #fff; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="admin-utilisateurs.html">Organisations</a></li>
+            <li class="breadcrumb-item active" id="breadcrumb-org">—</li>
+          </ol>
+        </nav>
+
+        <div id="alert-container"></div>
+
+        <!-- Header organisation -->
+        <div class="org-header" id="org-header" style="display:none">
+          <div class="d-flex align-items-center gap-3">
+            <div id="org-avatar" class="org-avatar">—</div>
+            <div class="flex-grow-1">
+              <h4 class="mb-1 fw-bold" id="org-name">—</h4>
+              <div id="org-sub" class="small" style="opacity:.85">—</div>
+            </div>
+            <div id="org-badge"></div>
+          </div>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="row mb-3" id="stats-row" style="display:none">
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card blue"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon blue"><i data-feather="package" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Total</div><h4 class="mb-0 fw-bold" id="stat-total">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card orange"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon orange"><i data-feather="clock" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">En attente</div><h4 class="mb-0 fw-bold" id="stat-pending">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card cyan"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon cyan"><i data-feather="truck" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">En cours</div><h4 class="mb-0 fw-bold" id="stat-inprogress">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card green"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon green"><i data-feather="check-circle" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Livrées</div><h4 class="mb-0 fw-bold" id="stat-delivered">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card purple"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon purple"><i data-feather="trending-up" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Taux accompl.</div><h4 class="mb-0 fw-bold" id="stat-rate">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-2">
+            <div class="card stat-card teal"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon teal"><i data-feather="dollar-sign" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Valeur totale</div><h4 class="mb-0 fw-bold" id="stat-value" style="font-size:.9rem">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="row mb-3" id="charts-row" style="display:none">
+          <div class="col-lg-8">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Volume d'expéditions</h5></div>
+              <div class="card-body"><canvas id="chart-volume" height="110"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Top destinations</h5></div>
+              <div class="card-body">
+                <ul class="top-dest-list" id="list-top-dest"><li class="text-muted py-2">Chargement…</li></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section transporteur uniquement -->
+        <div id="transporter-section" style="display:none">
+          <div class="row mb-3">
+            <div class="col-sm-6 col-xl-3">
+              <a href="admin-flotte.html" class="text-decoration-none">
+                <div class="card card-clickable" style="cursor:pointer;transition:box-shadow .15s"><div class="card-body py-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon orange"><i data-feather="truck" style="width:20px"></i></div>
+                    <div><div class="text-muted small mb-0">Véhicules</div><h4 class="mb-0 fw-bold" id="stat-trucks">—</h4></div>
+                  </div>
+                </div></div>
+              </a>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <a href="admin-chauffeurs.html" class="text-decoration-none">
+                <div class="card card-clickable" style="cursor:pointer;transition:box-shadow .15s"><div class="card-body py-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon cyan"><i data-feather="users" style="width:20px"></i></div>
+                    <div><div class="text-muted small mb-0">Chauffeurs</div><h4 class="mb-0 fw-bold" id="stat-drivers">—</h4></div>
+                  </div>
+                </div></div>
+              </a>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card"><div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon green"><i data-feather="check" style="width:20px"></i></div>
+                  <div><div class="text-muted small mb-0">Missions livrées</div><h4 class="mb-0 fw-bold" id="stat-completed">—</h4></div>
+                </div>
+              </div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card"><div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon purple"><i data-feather="dollar-sign" style="width:20px"></i></div>
+                  <div><div class="text-muted small mb-0">Revenus générés</div><h4 class="mb-0 fw-bold" id="stat-revenue" style="font-size:.95rem">—</h4></div>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau expéditions -->
+        <div class="card" id="shipments-table-card" style="display:none">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="card-title mb-0">Expéditions</h5>
+            <div class="d-flex gap-2 align-items-center">
+              <select id="filter-statut" class="form-select form-select-sm" style="width:150px" onchange="renderTable()">
+                <option value="">Tous les statuts</option>
+                <option value="PENDING">En attente</option>
+                <option value="PROPOSED">Proposée</option>
+                <option value="ACCEPTED">Acceptée</option>
+                <option value="IN_PROGRESS">En cours</option>
+                <option value="DELIVERED">Livrée</option>
+                <option value="CANCELLED">Annulée</option>
+              </select>
+              <a href="admin-expeditions.html" class="btn-gradient d-inline-flex align-items-center gap-2 px-4 py-2 text-decoration-none" style="background:linear-gradient(135deg,#1A4B6E 0%,#143D5A 100%);color:#fff;border-radius:8px;font-weight:500;font-size:.82rem;transition:all .2s;box-shadow:0 2px 8px rgba(26,75,110,.25)">
+                <i data-feather="package" style="width:14px"></i>
+                Voir toutes les expéditions
+              </a>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light"><tr>
+                <th>Réf.</th><th>Trajet</th><th>Marchandise</th>
+                <th class="d-none d-md-table-cell">Date</th>
+                <th class="d-none d-md-table-cell">Prix</th>
+                <th>Statut</th>
+              </tr></thead>
+              <tbody id="tbody-shipments"><tr><td colspan="6" class="text-center py-4 text-muted">Chargement...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="text-muted small" id="pagination-info">—</div>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let orgData = null, orgShipments = [], allTrucks = [], allDrivers = [];
+let _currentPage = 1;
+let _chartVolume = null;
+
+function statusBadge(statut) {
+  const map = { ACTIVE: 'bg-success', SUSPENDED: 'bg-warning text-dark', INACTIVE: 'bg-secondary' };
+  return `<span class="badge ${map[statut] ?? 'bg-secondary'}">${statut ?? 'ACTIVE'}</span>`;
+}
+
+function getLast6Months() {
+  const months = [], d = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    months.push(`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`);
+  }
+  return months;
+}
+function monthLabel(ym) {
+  const [y, mo] = ym.split('-');
+  return new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+}
+
+function buildVolumeChart(shipments) {
+  const months = getLast6Months();
+  const counts = months.map(m => shipments.filter(s => (s.dateAnnonce ?? '').startsWith(m)).length);
+  if (_chartVolume) _chartVolume.destroy();
+  _chartVolume = new Chart(document.getElementById('chart-volume'), {
+    type: 'line',
+    data: {
+      labels: months.map(monthLabel),
+      datasets: [{ label: 'Expéditions', data: counts,
+        borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.12)',
+        tension: 0.3, fill: true, pointRadius: 4 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+}
+
+function buildTopDestinations(shipments) {
+  const freq = {};
+  shipments.forEach(s => {
+    if (!s.villeDepart || !s.villeArrivee) return;
+    const key = `${s.villeDepart} → ${s.villeArrivee}`;
+    freq[key] = (freq[key] ?? 0) + 1;
+  });
+  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const list = document.getElementById('list-top-dest');
+  if (sorted.length === 0) { list.innerHTML = '<li class="text-muted py-2">Aucune donnée.</li>'; return; }
+  list.innerHTML = sorted.map(([route, count]) => `<li><span>${route}</span><span class="badge-count">${count}</span></li>`).join('');
+}
+
+function renderTable() {
+  const filterStatut = document.getElementById('filter-statut').value;
+  const filtered = orgShipments.filter(s => !filterStatut || s.statut === filterStatut);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (_currentPage > totalPages) _currentPage = 1;
+  const start = (_currentPage - 1) * pageSize;
+  const sliced = filtered.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('tbody-shipments');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">📦</div>Aucune expédition trouvée.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(s => `
+      <tr onclick="window.location.href='admin-expeditions.html'" title="Voir dans Toutes les expéditions">
+        <td><strong>#${s.id.slice(0,8)}</strong></td>
+        <td><div class="fw-semibold">${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</div>
+            <div class="text-muted small">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</div></td>
+        <td class="text-muted small">${s.marchandise ?? '—'}${s.poids ? ' — ' + s.poids + 'T' : ''}</td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(s.dateAnnonce)}</td>
+        <td class="d-none d-md-table-cell fw-semibold">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+        <td>${UI.shipmentBadge(s.statut)}</td>
+      </tr>`).join('');
+  }
+
+  const showing = `${Math.min(start + 1, filtered.length)}–${Math.min(start + pageSize, filtered.length)} sur ${filtered.length}`;
+  document.getElementById('pagination-info').textContent = showing;
+
+  const controls = document.getElementById('pagination-controls');
+  if (totalPages <= 1) { controls.innerHTML = ''; return; }
+  let html = `<li class="page-item ${_currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage - 1});return false;">‹</a></li>`;
+  for (let p = 1; p <= totalPages; p++) {
+    html += `<li class="page-item ${p === _currentPage ? 'active' : ''}">
+      <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+  }
+  html += `<li class="page-item ${_currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { _currentPage = p; renderTable(); }
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  // Get org ID from URL params
+  const params = new URLSearchParams(window.location.search);
+  const orgId = params.get('id');
+  if (!orgId) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger">Aucune organisation spécifiée. <a href="admin-utilisateurs.html">← Retour aux organisations</a></div>`;
+    return;
+  }
+
+  // Load org data
+  const [expedRes, transRes] = await Promise.all([
+    api.get('/company/company?page=1&limit=500').catch(() => []),
+    api.get('/company/transporter?page=1&limit=500').catch(() => []),
+  ]);
+
+  function unpack(res) {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+
+  const allExpediteurs = unpack(expedRes);
+  const allTransporters = unpack(transRes);
+  const allOrgs = [...allExpediteurs, ...allTransporters];
+
+  orgData = allOrgs.find(o => o.id === orgId);
+  if (!orgData) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger">Organisation introuvable. <a href="admin-utilisateurs.html">← Retour aux organisations</a></div>`;
+    return;
+  }
+
+  const isTransporter = allTransporters.some(t => t.id === orgId);
+  const initials = (orgData.raisonSociale ?? orgData.companyName ?? '?')[0].toUpperCase();
+
+  // Header
+  document.getElementById('org-header').style.display = '';
+  document.getElementById('org-avatar').textContent = initials;
+  document.getElementById('org-name').textContent = orgData.raisonSociale ?? orgData.companyName ?? '—';
+  document.getElementById('org-sub').textContent = `${orgData.formeJuridique ?? ''} — ${orgData.ville ?? ''}, ${orgData.pays ?? ''}`;
+  document.getElementById('org-badge').innerHTML = statusBadge(orgData.statut);
+  document.getElementById('breadcrumb-org').textContent = orgData.raisonSociale ?? orgData.companyName ?? '—';
+
+  // Load shipments
+  const shipmentsRes = await api.get('/shipments').catch(() => null);
+  const allShipments = !shipmentsRes ? [] : Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data?.data ?? shipmentsRes?.data ?? []);
+
+  if (isTransporter) {
+    orgShipments = allShipments.filter(s => s.transporterTenantId === orgData.tenantId || s.transporterId === orgData.tenantId);
+  } else {
+    orgShipments = allShipments.filter(s => s.companyTenantId === orgData.tenantId || s.companyId === orgData.id);
+  }
+
+  // Stats
+  const total = orgShipments.length;
+  const pending = orgShipments.filter(s => s.statut === 'PENDING').length;
+  const inProgress = orgShipments.filter(s => s.statut === 'IN_PROGRESS').length;
+  const delivered = orgShipments.filter(s => s.statut === 'DELIVERED').length;
+  const rate = total > 0 ? Math.round((delivered / total) * 100) : 0;
+  const totalValue = orgShipments.reduce((sum, s) => sum + (s.prixTransport ?? 0), 0);
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-inprogress').textContent = inProgress;
+  document.getElementById('stat-delivered').textContent = delivered;
+  document.getElementById('stat-rate').textContent = rate + ' %';
+  document.getElementById('stat-value').textContent = totalValue > 0 ? totalValue.toLocaleString('fr-FR') + ' FCFA' : '0 FCFA';
+  document.getElementById('stats-row').style.display = '';
+
+  // Transporter-specific stats
+  if (isTransporter) {
+    const [trucksRes, driversRes] = await Promise.all([
+      api.get('/fleet/trucks').catch(() => []),
+      api.get('/fleet/drivers').catch(() => []),
+    ]);
+
+    function unpackArr(res) {
+      if (!res) return [];
+      if (Array.isArray(res)) return res;
+      if (Array.isArray(res?.data)) return res.data;
+      if (Array.isArray(res?.data?.data)) return res.data.data;
+      return [];
+    }
+
+    allTrucks = unpackArr(trucksRes);
+    allDrivers = unpackArr(driversRes);
+
+    const trucks = allTrucks.filter(t => t.transporterTenantId === orgData.tenantId);
+    const drivers = allDrivers.filter(d => d.transporterTenantId === orgData.tenantId);
+    const completed = orgShipments.filter(s => s.statut === 'DELIVERED').length;
+    const revenue = orgShipments.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut))
+      .reduce((sum, s) => sum + (s.prixTransport ?? 0), 0);
+
+    document.getElementById('stat-trucks').textContent = trucks.length;
+    document.getElementById('stat-drivers').textContent = drivers.length;
+    document.getElementById('stat-completed').textContent = completed;
+    document.getElementById('stat-revenue').textContent = revenue > 0 ? revenue.toLocaleString('fr-FR') + ' FCFA' : '0 FCFA';
+    document.getElementById('transporter-section').style.display = '';
+  }
+
+  // Charts
+  document.getElementById('charts-row').style.display = '';
+  buildVolumeChart(orgShipments);
+  buildTopDestinations(orgShipments);
+
+  // Table
+  document.getElementById('shipments-table-card').style.display = '';
+  orgShipments.sort((a, b) => new Date(b.dateAnnonce) - new Date(a.dateAnnonce));
+  renderTable();
+});
+</script>
+</body>
+</html>

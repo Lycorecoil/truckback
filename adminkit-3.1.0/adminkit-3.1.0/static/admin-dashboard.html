@@ -8,6 +8,15 @@
   <link href="css/app.css" rel="stylesheet">
   <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .top-dest-list { list-style:none; padding:0; margin:0; }
+    .top-dest-list li { display:flex; justify-content:space-between; align-items:center;
+                        padding:6px 0; font-size:.85rem; border-bottom:1px solid var(--cu-border); }
+    .top-dest-list li:last-child { border-bottom:none; }
+    .top-dest-list .badge-count { background:rgba(249,115,22,.1); color:var(--cu-orange,#F97316);
+                                   padding:2px 8px; border-radius:20px; font-size:.72rem; font-weight:600; }
+    .filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:12px; }
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -20,6 +29,9 @@
         <li class="sidebar-item active"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
       </ul>
     </div>
   </nav>
@@ -31,7 +43,8 @@
         <ul class="navbar-nav navbar-align">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
             </a>
             <div class="dropdown-menu dropdown-menu-end">
               <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
@@ -44,127 +57,204 @@
     <main class="content">
       <div class="container-fluid p-0">
 
-        <h1 class="h3 mb-3"><strong>Dashboard</strong> Global</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h3 mb-1 fw-bold">Dashboard Global</h1>
+            <p class="text-muted mb-0">Vue d'ensemble de la plateforme Elimmekatruck</p>
+          </div>
+          <a href="admin-expeditions.html" class="btn btn-danger btn-lg px-4 fw-semibold" style="font-size:1.05rem">
+            <i class="align-middle me-2" data-feather="package" style="width:20px;height:20px"></i> Toutes les expéditions
+          </a>
+        </div>
 
-        <!-- Alertes opérationnelles -->
         <div id="alert-container"></div>
 
-        <!-- KPI -->
-        <div class="row">
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row"><div class="col mt-0"><h5 class="card-title">Expéditions</h5></div>
-                <div class="col-auto"><div class="stat text-primary"><i class="align-middle" data-feather="package"></i></div></div></div>
-                <h1 class="mt-1 mb-3" id="kpi-shipments">—</h1>
-                <div class="mb-0 text-muted">Total toutes périodes</div>
+        <!-- KPIs -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3">
+            <a href="admin-utilisateurs.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(249,115,22,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#FFF7ED">
+                  <i data-feather="briefcase" style="width:22px;height:22px;color:#F97316"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-companies">—</div>
+                <div class="cu-kpi-label">Entreprises</div>
+                <div class="cu-kpi-sub">Expéditeurs + transporteurs</div>
               </div>
-            </div>
+            </a>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row"><div class="col mt-0"><h5 class="card-title">En cours</h5></div>
-                <div class="col-auto"><div class="stat text-warning"><i class="align-middle" data-feather="truck"></i></div></div></div>
-                <h1 class="mt-1 mb-3" id="kpi-active">—</h1>
-                <div class="mb-0 text-muted">Missions actives</div>
+          <div class="col-6 col-xl-3">
+            <a href="admin-expeditions.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(26,75,110,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:rgba(26,75,110,.08)">
+                  <i data-feather="package" style="width:22px;height:22px;color:#1A4B6E"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-shipments">—</div>
+                <div class="cu-kpi-label">Expéditions</div>
+                <div class="cu-kpi-sub">Total toutes périodes</div>
               </div>
-            </div>
+            </a>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row"><div class="col mt-0"><h5 class="card-title">Camions</h5></div>
-                <div class="col-auto"><div class="stat text-success"><i class="align-middle" data-feather="truck"></i></div></div></div>
-                <h1 class="mt-1 mb-3" id="kpi-trucks">—</h1>
-                <div class="mb-0 text-muted">Dans la plateforme</div>
+          <div class="col-6 col-xl-3">
+            <a href="admin-flotte.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(16,185,129,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#F0FDF4">
+                  <i data-feather="truck" style="width:22px;height:22px;color:#10B981"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-trucks">—</div>
+                <div class="cu-kpi-label">Véhicules</div>
+                <div class="cu-kpi-sub">Dans la plateforme</div>
               </div>
-            </div>
+            </a>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <div class="row"><div class="col mt-0"><h5 class="card-title">Chauffeurs</h5></div>
-                <div class="col-auto"><div class="stat text-info"><i class="align-middle" data-feather="users"></i></div></div></div>
-                <h1 class="mt-1 mb-3" id="kpi-drivers">—</h1>
-                <div class="mb-0 text-muted">Enregistrés</div>
+          <div class="col-6 col-xl-3">
+            <a href="admin-chauffeurs.html" style="text-decoration:none;color:inherit;display:block;height:100%">
+              <div class="cu-kpi-card h-100" style="cursor:pointer;transition:box-shadow .15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(59,130,246,.18)'" onmouseleave="this.style.boxShadow=''">
+                <div class="cu-kpi-icon" style="background:#EFF6FF">
+                  <i data-feather="users" style="width:22px;height:22px;color:#3B82F6"></i>
+                </div>
+                <div class="cu-kpi-value" id="kpi-drivers">—</div>
+                <div class="cu-kpi-label">Chauffeurs</div>
+                <div class="cu-kpi-sub">Enregistrés</div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
 
-        <!-- GRAPHIQUES -->
+        <!-- Graphiques -->
         <div class="row">
           <div class="col-lg-8">
             <div class="card">
-              <div class="card-header"><h5 class="card-title mb-0">Volume d'expéditions par mois</h5></div>
-              <div class="card-body"><canvas id="chart-volume" height="110"></canvas></div>
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Volume d'expéditions</h5>
+                <select id="period-select" class="form-select form-select-sm" style="width:130px">
+                  <option value="7">7 jours</option>
+                  <option value="30">30 jours</option>
+                  <option value="90">90 jours</option>
+                  <option value="180" selected>6 mois</option>
+                  <option value="365">1 an</option>
+                </select>
+              </div>
+              <div class="card-body">
+                <canvas id="chart-volume" height="110"></canvas>
+              </div>
             </div>
           </div>
           <div class="col-lg-4">
             <div class="card">
               <div class="card-header"><h5 class="card-title mb-0">Répartition par statut</h5></div>
-              <div class="card-body d-flex align-items-center justify-content-center">
-                <canvas id="chart-donut" height="220"></canvas>
+              <div class="card-body">
+                <canvas id="chart-donut" height="260"></canvas>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="row">
+        <div class="row mt-3">
           <div class="col-lg-12">
             <div class="card">
               <div class="card-header"><h5 class="card-title mb-0">Valeur totale des transports par mois (FCFA)</h5></div>
-              <div class="card-body"><canvas id="chart-revenue" height="80"></canvas></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- STATS PLATEFORME -->
-        <div class="row">
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
               <div class="card-body">
-                <h6 class="card-title text-muted mb-2">Taux de matching</h6>
-                <h2 class="mb-1" id="stat-matching">—</h2>
-                <small class="text-muted">Expéditions avec transporteur / total</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="card-title text-muted mb-2">Valeur totale (30j)</h6>
-                <h2 class="mb-1" id="stat-value30">—</h2>
-                <small class="text-muted">Somme des prix de transport</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="card-title text-muted mb-2">Délai moyen matching</h6>
-                <h2 class="mb-1" id="stat-delay">—</h2>
-                <small class="text-muted">PENDING → ACCEPTED</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="card-title text-muted mb-2">Organisations actives</h6>
-                <h2 class="mb-1" id="stat-orgs">—</h2>
-                <small class="text-muted">Expéditeurs + Transporteurs</small>
+                <canvas id="chart-revenue" height="80"></canvas>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- TOP ACTEURS -->
-        <div class="row">
+        <!-- Stats plateforme -->
+        <div class="row g-3 mt-1">
+          <div class="col-sm-6 col-xl-4">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#FFF7ED">
+                <i data-feather="percent" style="width:20px;height:20px;color:#F97316"></i>
+              </div>
+              <div class="cu-kpi-value" id="stat-matching">—</div>
+              <div class="cu-kpi-label">Taux de matching</div>
+              <div class="cu-kpi-sub">Expéditions avec transporteur / total</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:#F0FDF4">
+                <i data-feather="dollar-sign" style="width:20px;height:20px;color:#10B981"></i>
+              </div>
+              <div class="cu-kpi-value" style="font-size:1.2rem" id="stat-value30">—</div>
+              <div class="cu-kpi-label">Valeur totale (30 jours)</div>
+              <div class="cu-kpi-sub">Somme des prix de transport</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="cu-kpi-card">
+              <div class="cu-kpi-icon" style="background:rgba(26,75,110,.08)">
+                <i data-feather="clock" style="width:20px;height:20px;color:#1A4B6E"></i>
+              </div>
+              <div class="cu-kpi-value" id="stat-delay">—</div>
+              <div class="cu-kpi-label">Délai moyen matching</div>
+              <div class="cu-kpi-sub">En attente → Acceptée</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tops -->
+        <div class="row g-3 mt-1">
+          <div class="col-sm-12 col-xl-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i data-feather="map-pin" class="align-middle me-1" style="width:15px;height:15px"></i>
+                  Top destinations
+                  <span id="badge-dest-total" class="badge bg-light text-dark ms-1 fw-normal fs-6">—</span>
+                </h5>
+              </div>
+              <div class="card-body">
+                <ul class="top-dest-list" id="list-top-dest">
+                  <li class="text-muted py-2">Chargement…</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-12 col-xl-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i data-feather="truck" class="align-middle me-1" style="width:15px;height:15px"></i>
+                  Types de véhicules
+                  <span id="badge-veh-total" class="badge bg-light text-dark ms-1 fw-normal fs-6">—</span>
+                </h5>
+              </div>
+              <div class="card-body">
+                <ul class="top-dest-list" id="list-top-vehicles">
+                  <li class="text-muted py-2">Chargement…</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-12 col-xl-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i data-feather="layers" class="align-middle me-1" style="width:15px;height:15px"></i>
+                  Capacités demandées
+                  <span id="badge-cap-total" class="badge bg-light text-dark ms-1 fw-normal fs-6">—</span>
+                </h5>
+              </div>
+              <div class="card-body">
+                <ul class="top-dest-list" id="list-top-capacities">
+                  <li class="text-muted py-2">Chargement…</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top acteurs -->
+        <div class="row g-3 mt-1">
           <div class="col-lg-6">
             <div class="card">
-              <div class="card-header"><h5 class="card-title mb-0">Top 5 expéditeurs</h5></div>
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Top 5 expéditeurs</h5>
+                <a href="admin-expeditions.html" class="btn btn-sm btn-outline-secondary">Voir les expéditions →</a>
+              </div>
               <table class="table table-hover my-0">
                 <thead><tr><th>Société</th><th>Expéditions</th><th>Valeur totale</th></tr></thead>
                 <tbody id="tbody-top-expediteurs">
@@ -186,27 +276,70 @@
           </div>
         </div>
 
-        <!-- DERNIÈRES EXPÉDITIONS -->
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
+        <!-- Dernières expéditions -->
+        <div class="card mt-3">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="card-title mb-0">Dernières expéditions</h5>
-            <a href="admin-expeditions.html" class="btn btn-sm btn-primary">Voir tout</a>
+            <a href="admin-expeditions.html" class="btn btn-sm btn-danger">→ Toutes les expéditions</a>
+          </div>
+          <div class="card-body pb-0">
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-md-5">
+                <input type="text" id="filter-marchandise" class="form-control form-control-sm" placeholder="Filtrer par marchandise…">
+              </div>
+              <div class="col-12 col-md-4">
+                <select id="filter-statut" class="form-select form-select-sm">
+                  <option value="">Tous les statuts</option>
+                  <option value="PENDING">En attente</option>
+                  <option value="PROPOSED">Recommandée</option>
+                  <option value="ACCEPTED">Acceptée</option>
+                  <option value="IN_PROGRESS">En cours</option>
+                  <option value="DELIVERED">Livrée</option>
+                  <option value="CANCELLED">Annulée</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-3">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                  <select id="page-size-select" class="form-select form-select-sm" style="width:auto">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="all">Tous</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
           <table class="table table-hover my-0">
             <thead>
-              <tr><th>Réf.</th><th>Trajet</th><th>Marchandise</th><th class="d-none d-md-table-cell">Date</th><th>Statut</th></tr>
+              <tr>
+                <th>Réf.</th>
+                <th>Trajet</th>
+                <th>Marchandise</th>
+                <th>Date</th>
+                <th>Statut</th>
+              </tr>
             </thead>
             <tbody id="tbody-shipments">
               <tr><td colspan="5" class="text-center py-4 text-muted">Chargement...</td></tr>
             </tbody>
           </table>
+          <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="text-muted small" id="pagination-info">—</div>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
+          </div>
         </div>
 
       </div>
     </main>
 
     <footer class="footer">
-      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+      <div class="container-fluid">
+        <div class="row text-muted">
+          <div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div>
+        </div>
+      </div>
     </footer>
   </div>
 </div>
@@ -214,94 +347,118 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-function getLast6Months() {
-  const months = [];
-  const d = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
-    months.push(`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`);
+// ── Helpers graphiques ────────────────────────────────────────────────────────
+let _chartVolume = null, _chartRevenue = null, _chartDonut = null;
+let _allShipmentsForCharts = [];
+
+function getPeriodLabels(days) {
+  const labels = [], d = new Date();
+  if (days <= 30) {
+    for (let i = days - 1; i >= 0; i--) {
+      const dt = new Date(d); dt.setDate(dt.getDate() - i);
+      labels.push(dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }));
+    }
+  } else {
+    const months = Math.ceil(days / 30);
+    for (let i = months - 1; i >= 0; i--) {
+      const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      labels.push(m.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }));
+    }
   }
-  return months;
+  return labels;
 }
 
-function monthLabel(ym) {
-  const [y, mo] = ym.split('-');
-  return new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+function getPeriodKeys(days) {
+  const keys = [], d = new Date();
+  if (days <= 30) {
+    for (let i = days - 1; i >= 0; i--) {
+      const dt = new Date(d); dt.setDate(dt.getDate() - i);
+      keys.push(dt.toISOString().split('T')[0]);
+    }
+  } else {
+    const months = Math.ceil(days / 30);
+    for (let i = months - 1; i >= 0; i--) {
+      const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      keys.push(`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`);
+    }
+  }
+  return keys;
 }
 
-function buildVolumeChart(shipments) {
-  const months = getLast6Months();
-  const counts = months.map(m => shipments.filter(s => (s.dateAnnonce ?? '').startsWith(m)).length);
-  new Chart(document.getElementById('chart-volume'), {
+function shipmentDateStr(s) {
+  // dateAnnonce est le champ métier; createdAt est le fallback MongoDB
+  const raw = s.dateAnnonce ?? s.createdAt ?? '';
+  if (!raw) return '';
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? '' : d.toISOString();
+}
+
+function buildCharts() {
+  const days = parseInt(document.getElementById('period-select').value, 10);
+  const since = new Date(Date.now() - days * 24 * 3600 * 1000);
+  const filtered = _allShipmentsForCharts.filter(s => {
+    const ds = shipmentDateStr(s);
+    return ds && new Date(ds) >= since;
+  });
+  const keys = getPeriodKeys(days);
+  const labels = getPeriodLabels(days);
+
+  const counts = keys.map(k => filtered.filter(s => shipmentDateStr(s).startsWith(k)).length);
+  const revenues = keys.map(k =>
+    filtered.filter(s => shipmentDateStr(s).startsWith(k) && s.prixTransport)
+            .reduce((sum, s) => sum + s.prixTransport, 0));
+
+  const statuts   = ['PENDING','PROPOSED','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
+  const statLabels= ['En attente','Recommandée','Acceptée','En cours','Livrée','Annulée'];
+  const colors    = ['#F97316','#9b59b6','#5bc0de','#1A4B6E','#10B981','#EF4444'];
+  const statData  = statuts.map(s => filtered.filter(x => x.statut === s).length);
+
+  if (_chartVolume) _chartVolume.destroy();
+  if (_chartRevenue) _chartRevenue.destroy();
+  if (_chartDonut) _chartDonut.destroy();
+
+  _chartVolume = new Chart(document.getElementById('chart-volume'), {
     type: 'line',
     data: {
-      labels: months.map(monthLabel),
-      datasets: [{
-        label: 'Expéditions',
-        data: counts,
-        borderColor: '#3b7ddd',
-        backgroundColor: 'rgba(59,125,221,0.12)',
-        tension: 0.3,
-        fill: true,
-        pointRadius: 4,
-      }]
+      labels,
+      datasets: [{ label: 'Expéditions', data: counts,
+        borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.12)',
+        tension: 0.3, fill: true, pointRadius: days <= 30 ? 2 : 4 }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-    }
+    options: { plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
   });
-}
 
-function buildRevenueChart(shipments) {
-  const months = getLast6Months();
-  const revenues = months.map(m =>
-    shipments
-      .filter(s => (s.dateAnnonce ?? '').startsWith(m) && s.prixTransport)
-      .reduce((sum, s) => sum + s.prixTransport, 0)
-  );
-  new Chart(document.getElementById('chart-revenue'), {
+  _chartRevenue = new Chart(document.getElementById('chart-revenue'), {
     type: 'bar',
     data: {
-      labels: months.map(monthLabel),
-      datasets: [{
-        label: 'Valeur (FCFA)',
-        data: revenues,
-        backgroundColor: 'rgba(40,167,69,0.75)',
-        borderRadius: 4,
-      }]
+      labels,
+      datasets: [{ label: 'Valeur (FCFA)', data: revenues,
+        backgroundColor: 'rgba(249,115,22,0.75)', borderRadius: 4 }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('fr-FR') } }
-      }
-    }
+    options: { plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true,
+                 ticks: { callback: v => v.toLocaleString('fr-FR') } } } }
   });
-}
 
-function buildDonut(shipments) {
-  const statuts = ['PENDING','ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'];
-  const labels  = ['En attente','Acceptée','En cours','Livrée','Annulée'];
-  const colors  = ['#f0ad4e','#5bc0de','#3b7ddd','#28a745','#dc3545'];
-  const data    = statuts.map(s => shipments.filter(x => x.statut === s).length);
-  if (data.every(v => v === 0)) return;
-  new Chart(document.getElementById('chart-donut'), {
+  const isEmpty = statData.every(v => v === 0);
+  _chartDonut = new Chart(document.getElementById('chart-donut'), {
     type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
-    options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+    data: isEmpty
+      ? { labels: ['Aucune donnée'], datasets: [{ data: [1], backgroundColor: ['#f3f4f6'], borderColor: ['#e5e7eb'], borderWidth: 2 }] }
+      : { labels: statLabels, datasets: [{ data: statData, backgroundColor: colors, borderWidth: 2 }] },
+    options: { plugins: { legend: { position: 'bottom' }, tooltip: { enabled: !isEmpty } }, cutout: '65%' }
   });
 }
 
-function buildStats(shipments, expediteurs, transporteurs) {
+// ── Stats plateforme ──────────────────────────────────────────────────────────
+function buildStats(shipments) {
   const total = shipments.length;
 
-  // Taux de matching : ont trouvé un transporteur (pas PENDING)
   const matched = shipments.filter(s => s.statut !== 'PENDING').length;
   const rate = total > 0 ? Math.round((matched / total) * 100) : 0;
   document.getElementById('stat-matching').textContent = rate + ' %';
 
-  // Valeur totale 30j
   const since30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
   const val30 = shipments
     .filter(s => s.prixTransport && new Date(s.dateAnnonce) >= since30)
@@ -309,58 +466,132 @@ function buildStats(shipments, expediteurs, transporteurs) {
   document.getElementById('stat-value30').textContent =
     val30 > 0 ? val30.toLocaleString('fr-FR') + ' FCFA' : '0 FCFA';
 
-  // Délai moyen matching (PENDING→ACCEPTED) — approximé avec updatedAt
-  const accepted = shipments.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut) && s.dateAnnonce && s.updatedAt);
+  const accepted = shipments.filter(s =>
+    ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut) && s.dateAnnonce && s.updatedAt);
   if (accepted.length > 0) {
     const avgMs = accepted.reduce((sum, s) =>
       sum + (new Date(s.updatedAt) - new Date(s.dateAnnonce)), 0) / accepted.length;
     const hours = Math.round(avgMs / (1000 * 3600));
-    document.getElementById('stat-delay').textContent = hours < 24 ? hours + ' h' : Math.round(hours / 24) + ' j';
+    document.getElementById('stat-delay').textContent =
+      hours < 24 ? hours + ' h' : Math.round(hours / 24) + ' j';
   } else {
     document.getElementById('stat-delay').textContent = '—';
   }
-
-  // Organisations actives
-  document.getElementById('stat-orgs').textContent = expediteurs.length + transporteurs.length;
 }
 
+// ── Top destinations ──────────────────────────────────────────────────────────
+function buildTopDestinations(shipments) {
+  const freq = {};
+  shipments.forEach(s => {
+    if (!s.villeDepart || !s.villeArrivee) return;
+    const key = `${s.villeDepart} → ${s.villeArrivee}`;
+    freq[key] = (freq[key] ?? 0) + 1;
+  });
+  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const total = Object.values(freq).reduce((a, b) => a + b, 0);
+
+  document.getElementById('badge-dest-total').textContent = total + ' trajets';
+
+  const list = document.getElementById('list-top-dest');
+  if (sorted.length === 0) {
+    list.innerHTML = '<li class="text-muted py-2">Aucune donnée.</li>';
+    return;
+  }
+  list.innerHTML = sorted.map(([route, count]) => `
+    <li>
+      <span>${route}</span>
+      <span class="badge-count">${count}</span>
+    </li>`).join('');
+}
+
+// ── Types de véhicules les plus demandés ──────────────────────────────────────
+function buildTopVehicleTypes(trucks) {
+  const freq = {};
+  trucks.forEach(t => {
+    if (!t.typeVehicule) return;
+    freq[t.typeVehicule] = (freq[t.typeVehicule] ?? 0) + 1;
+  });
+  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const total = trucks.length;
+
+  document.getElementById('badge-veh-total').textContent = total + ' véhicules';
+
+  const list = document.getElementById('list-top-vehicles');
+  if (sorted.length === 0) {
+    list.innerHTML = '<li class="text-muted py-2">Aucun véhicule enregistré.</li>';
+    return;
+  }
+  list.innerHTML = sorted.map(([type, count]) => `
+    <li>
+      <span>${type}</span>
+      <span class="badge-count">${count}</span>
+    </li>`).join('');
+}
+
+// ── Capacités les plus demandées ──────────────────────────────────────────────
+function buildTopCapacities(trucks) {
+  const ranges = [
+    { label: '≤ 10 T',    min: 0,  max: 10  },
+    { label: '11 – 20 T', min: 11, max: 20  },
+    { label: '21 – 30 T', min: 21, max: 30  },
+    { label: '31 – 40 T', min: 31, max: 40  },
+    { label: '> 40 T',    min: 41, max: Infinity },
+  ];
+  ranges.forEach(r => {
+    r.count = trucks.filter(t => t.capaciteMax >= r.min && t.capaciteMax <= r.max).length;
+  });
+  const sorted = ranges.filter(r => r.count > 0).sort((a, b) => b.count - a.count);
+  const total = trucks.filter(t => t.capaciteMax != null).length;
+
+  document.getElementById('badge-cap-total').textContent = total + ' camions';
+
+  const list = document.getElementById('list-top-capacities');
+  if (sorted.length === 0) {
+    list.innerHTML = '<li class="text-muted py-2">Aucune donnée.</li>';
+    return;
+  }
+  list.innerHTML = sorted.map(r => `
+    <li>
+      <span>${r.label}</span>
+      <span class="badge-count">${r.count}</span>
+    </li>`).join('');
+}
+
+// ── Alertes ───────────────────────────────────────────────────────────────────
 function buildAlerts(shipments) {
   const alerts = [];
-
-  // PENDING > 48h
   const cutoff48 = new Date(Date.now() - 48 * 3600 * 1000);
   const oldPending = shipments.filter(s => s.statut === 'PENDING' && new Date(s.dateAnnonce) < cutoff48);
   if (oldPending.length > 0) {
     alerts.push(`<div class="alert alert-warning alert-dismissible fade show mb-2" role="alert">
-      <strong>${oldPending.length} expédition${oldPending.length > 1 ? 's' : ''}</strong> en PENDING depuis plus de 48h sans transporteur.
-      <a href="admin-expeditions.html" class="alert-link ms-1">Voir →</a>
+      <strong>${oldPending.length} expédition${oldPending.length > 1 ? 's' : ''}</strong>
+      en attente depuis plus de 48h sans transporteur.
+      <a href="admin-expeditions.html" class="alert-link ms-1">Voir → Toutes les expéditions</a>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`);
   }
-
-  // IN_PROGRESS > 7 jours (retard potentiel)
   const cutoff7d = new Date(Date.now() - 7 * 24 * 3600 * 1000);
   const late = shipments.filter(s => s.statut === 'IN_PROGRESS' && new Date(s.dateAnnonce) < cutoff7d);
   if (late.length > 0) {
     alerts.push(`<div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
-      <strong>${late.length} mission${late.length > 1 ? 's' : ''}</strong> en cours depuis plus de 7 jours — retard potentiel.
-      <a href="admin-expeditions.html" class="alert-link ms-1">Voir →</a>
+      <strong>${late.length} mission${late.length > 1 ? 's' : ''}</strong>
+      en cours depuis plus de 7 jours — retard potentiel.
+      <a href="admin-expeditions.html" class="alert-link ms-1">Voir → Toutes les expéditions</a>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`);
   }
-
   if (alerts.length > 0) {
     document.getElementById('alert-container').innerHTML = alerts.join('');
   }
 }
 
+// ── Top acteurs ───────────────────────────────────────────────────────────────
 function buildTopTables(shipments, expediteurs, transporteurs) {
   const orgName = (list, tenantId) => {
     const o = list.find(x => x.tenantId === tenantId);
-    return o?.raisonSociale ?? o?.companyName ?? tenantId?.slice(0, 8) + '…';
+    return o?.raisonSociale ?? o?.companyName ?? (tenantId?.slice(0, 8) + '…');
   };
 
-  // Top expéditeurs — groupés par companyTenantId
   const expFreq = {};
   shipments.forEach(s => {
     const key = s.companyTenantId ?? null;
@@ -369,18 +600,15 @@ function buildTopTables(shipments, expediteurs, transporteurs) {
     expFreq[key].count++;
     expFreq[key].value += s.prixTransport ?? 0;
   });
-
-  const tbodyExp = document.getElementById('tbody-top-expediteurs');
   const topExp = Object.entries(expFreq).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
-  tbodyExp.innerHTML = topExp.length === 0
+  document.getElementById('tbody-top-expediteurs').innerHTML = topExp.length === 0
     ? '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>'
-    : topExp.map(([tid, stats]) => `<tr>
+    : topExp.map(([tid, st]) => `<tr>
         <td><strong>${orgName(expediteurs, tid)}</strong></td>
-        <td>${stats.count}</td>
-        <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+        <td>${st.count}</td>
+        <td>${st.value > 0 ? st.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
       </tr>`).join('');
 
-  // Top transporteurs — groupés par transporterTenantId (toutes missions acceptées)
   const transFreq = {};
   shipments.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED'].includes(s.statut)).forEach(s => {
     const key = s.transporterTenantId ?? null;
@@ -389,31 +617,100 @@ function buildTopTables(shipments, expediteurs, transporteurs) {
     transFreq[key].count++;
     transFreq[key].value += s.prixTransport ?? 0;
   });
-
-  const tbodyTrans = document.getElementById('tbody-top-transporteurs');
   const topTrans = Object.entries(transFreq).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
-  tbodyTrans.innerHTML = topTrans.length === 0
+  document.getElementById('tbody-top-transporteurs').innerHTML = topTrans.length === 0
     ? '<tr><td colspan="3" class="text-center py-3 text-muted">Aucune donnée.</td></tr>'
-    : topTrans.map(([tid, stats]) => `<tr>
+    : topTrans.map(([tid, st]) => `<tr>
         <td><strong>${orgName(transporteurs, tid)}</strong></td>
-        <td>${stats.count}</td>
-        <td>${stats.value > 0 ? stats.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
+        <td>${st.count}</td>
+        <td>${st.value > 0 ? st.value.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
       </tr>`).join('');
 }
 
+// ── Tableau "Dernières expéditions" ───────────────────────────────────────────
+let _allShipments = [];
+let _currentPage  = 1;
+
+function getPageSize() {
+  const v = document.getElementById('page-size-select').value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderShipmentsTable() {
+  const filterMarc   = document.getElementById('filter-marchandise').value.trim().toLowerCase();
+  const filterStatut = document.getElementById('filter-statut').value;
+  const pageSize     = getPageSize();
+
+  const filtered = _allShipments.filter(s => {
+    if (filterMarc && !(s.marchandise ?? '').toLowerCase().includes(filterMarc)) return false;
+    if (filterStatut && s.statut !== filterStatut) return false;
+    return true;
+  });
+
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (_currentPage > totalPages) _currentPage = 1;
+
+  const start  = pageSize === Infinity ? 0 : (_currentPage - 1) * pageSize;
+  const sliced = pageSize === Infinity ? filtered : filtered.slice(start, start + pageSize);
+
+  const tbody = document.getElementById('tbody-shipments');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">📦</div>Aucune expédition ne correspond aux filtres.</td></tr>';
+  } else {
+    tbody.innerHTML = sliced.map(s => `
+      <tr onclick="location.href='admin-expeditions.html'" style="cursor:pointer">
+        <td><strong>#${s.id.slice(0,8)}</strong></td>
+        <td>${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}<br><small class="text-muted">${s.paysDepart ?? ''} → ${s.paysArrivee ?? ''}</small></td>
+        <td>${s.marchandise ?? '—'}<br><small class="text-muted">${s.poids ? s.poids + ' T' : ''}</small></td>
+        <td>${UI.formatDate(s.dateAnnonce)}</td>
+        <td>${UI.shipmentBadge(s.statut)}</td>
+      </tr>`).join('');
+  }
+
+  const showing = pageSize === Infinity
+    ? `${filtered.length} expédition${filtered.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, filtered.length)}–${Math.min(start + pageSize, filtered.length)} sur ${filtered.length}`;
+  document.getElementById('pagination-info').textContent =
+    filtered.length !== _allShipments.length
+      ? `${showing} (${_allShipments.length} total)`
+      : showing;
+
+  const controls = document.getElementById('pagination-controls');
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return; }
+
+  let html = `<li class="page-item ${_currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - _currentPage) <= delta) {
+      html += `<li class="page-item ${p === _currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage(${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - _currentPage) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${_currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage(${_currentPage + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+}
+
+function goPage(p) { _currentPage = p; renderShipmentsTable(); }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
 
   const [shipmentsRes, trucksRes, driversRes, expedRes, transRes] = await Promise.all([
-    api.get('/shipments'),
-    api.get('/fleet/trucks'),
-    api.get('/fleet/drivers'),
-    api.get('/company/company?page=1&limit=200'),
-    api.get('/company/transporter?page=1&limit=200'),
+    api.get('/shipments?page=1&limit=2000').catch(() => null),
+    api.get('/fleet/trucks').catch(() => null),
+    api.get('/fleet/drivers').catch(() => null),
+    api.get('/company/company?page=1&limit=200').catch(() => null),
+    api.get('/company/transporter?page=1&limit=200').catch(() => null),
   ]);
 
   function unpack(res) {
+    if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.data)) return res.data;
     if (Array.isArray(res?.data?.data)) return res.data.data;
@@ -425,32 +722,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   const expediteurs   = unpack(expedRes);
   const transporteurs = unpack(transRes);
 
+  document.getElementById('kpi-companies').textContent = expediteurs.length + transporteurs.length;
   document.getElementById('kpi-shipments').textContent = shipments.length;
-  document.getElementById('kpi-active').textContent    = shipments.filter(s => ['IN_PROGRESS','ACCEPTED'].includes(s.statut)).length;
   document.getElementById('kpi-trucks').textContent    = trucks.length;
   document.getElementById('kpi-drivers').textContent   = drivers.length;
 
-  buildVolumeChart(shipments);
-  buildRevenueChart(shipments);
-  buildDonut(shipments);
-  buildStats(shipments, expediteurs, transporteurs);
+  _allShipmentsForCharts = shipments;
+  buildCharts();
+  buildStats(shipments);
   buildAlerts(shipments);
+
+  document.getElementById('period-select').addEventListener('change', () => buildCharts());
+
+  buildTopDestinations(shipments);
+  buildTopVehicleTypes(trucks);
+  buildTopCapacities(trucks);
   buildTopTables(shipments, expediteurs, transporteurs);
 
-  const tbody = document.getElementById('tbody-shipments');
-  if (shipments.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Aucune expédition.</td></tr>';
-  } else {
-    tbody.innerHTML = shipments.slice(0, 10).map(s => `
-      <tr>
-        <td><strong>#${s.id.slice(0,8)}</strong></td>
-        <td>${s.villeDepart} → ${s.villeArrivee}</td>
-        <td>${s.marchandise} — ${s.poids}T</td>
-        <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
-        <td>${UI.shipmentBadge(s.statut)}</td>
-      </tr>
-    `).join('');
-  }
+  _allShipments = [...shipments].sort((a, b) => new Date(b.dateAnnonce) - new Date(a.dateAnnonce));
+  renderShipmentsTable();
+
+  document.getElementById('filter-marchandise').addEventListener('input', () => { _currentPage = 1; renderShipmentsTable(); });
+  document.getElementById('filter-statut').addEventListener('change',    () => { _currentPage = 1; renderShipmentsTable(); });
+  document.getElementById('page-size-select').addEventListener('change', () => { _currentPage = 1; renderShipmentsTable(); });
 });
 </script>
 </body>

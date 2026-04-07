@@ -8,6 +8,26 @@
   <link href="css/app.css" rel="stylesheet">
   <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .page-size-select { width:auto; display:inline-block; }
+    .global-filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+    .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
+    .toggle-group .btn {
+      border-radius:0; border:none; font-size:.78rem; padding:5px 14px;
+      background:transparent; color:#6c757d; font-weight:500;
+      transition: all .15s; position:relative;
+    }
+    .toggle-group .btn:hover { background:#f8f9fa; color:#333; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+    .toggle-group .btn .check-dot {
+      display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:#6c757d; margin-right:5px; vertical-align:middle;
+      transition: background .15s;
+    }
+    .toggle-group .btn.active .check-dot { background:#fff; }
+    .count-badge { background:rgba(249,115,22,.1); color:var(--cu-orange,#F97316); padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight:600; }
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -20,6 +40,9 @@
         <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
         <li class="sidebar-item active"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
       </ul>
     </div>
   </nav>
@@ -46,9 +69,12 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h1 class="h3 mb-0"><strong>Organisations</strong></h1>
-          <input id="search-input" type="text" class="form-control" placeholder="Rechercher..." style="width:220px">
+          <span class="badge bg-primary rounded-pill fs-6" id="badge-total" style="display:none"></span>
         </div>
 
+        <div id="alert-container"></div>
+
+        <!-- Tabs -->
         <ul class="nav nav-tabs mb-3">
           <li class="nav-item"><button class="nav-link active" data-tab="expediteurs">
             Expéditeurs <span class="badge bg-secondary ms-1" id="badge-expediteurs">0</span>
@@ -58,6 +84,88 @@
           </button></li>
         </ul>
 
+        <!-- Filtres rapides -->
+        <div class="global-filter-bar">
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" data-quick="" onclick="setQuickFilter(this)"><span class="check-dot"></span>Tous</button>
+              <button class="btn" data-quick="ACTIVE" onclick="setQuickFilter(this)"><span class="check-dot"></span>Actifs</button>
+              <button class="btn" data-quick="SUSPENDED" onclick="setQuickFilter(this)"><span class="check-dot"></span>Suspendus</button>
+            </div>
+            <input id="search-global" type="text" class="form-control form-control-sm" placeholder="Rechercher (société, email, représentant…)" style="width:260px" oninput="applyFilters()">
+            <div class="ms-auto">
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" title="Réinitialiser">
+                <i data-feather="x" style="width:13px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtres avancés -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body" style="display:none">
+            <div class="row g-2">
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Société</label>
+                <input id="f-societe" class="form-control form-control-sm" placeholder="Rechercher…" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Représentant</label>
+                <input id="f-rep" class="form-control form-control-sm" placeholder="Rechercher…" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Pays</label>
+                <select id="f-pays" class="form-select form-select-sm" onchange="applyFilters()"><option value="">Tous</option></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville</label>
+                <select id="f-ville" class="form-select form-select-sm" onchange="applyFilters()"><option value="">Toutes</option></select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Statut</label>
+                <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="ACTIVE">Actif</option>
+                  <option value="SUSPENDED">Suspendu</option>
+                  <option value="INACTIVE">Inactif</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Inscrit depuis</label>
+                <input id="f-date-from" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Inscrit jusqu'au</label>
+                <input id="f-date-to" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <!-- Transporteurs uniquement -->
+              <div class="col-md-3 col-6 trans-only d-none">
+                <label class="form-label small mb-1">Flotte min</label>
+                <input id="f-flotte-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6 trans-only d-none">
+                <label class="form-label small mb-1">Flotte max</label>
+                <input id="f-flotte-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" oninput="applyFilters()" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Expéditeurs -->
         <div id="tab-expediteurs">
           <div class="card">
             <div class="table-responsive">
@@ -65,19 +173,32 @@
                 <thead class="table-light"><tr>
                   <th>Société</th>
                   <th>Représentant</th>
-                  <th class="d-none d-md-table-cell">Pays / Ville</th>
-                  <th class="d-none d-lg-table-cell">Secteur</th>
+                  <th class="d-none d-md-table-cell">Pays</th>
+                  <th class="d-none d-lg-table-cell">Ville</th>
                   <th>Contact</th>
-                  <th>Statut</th>
                   <th class="d-none d-md-table-cell">Inscrit le</th>
-                  <th></th>
+                  <th>Statut</th>
+                  <th class="text-end">Actions</th>
                 </tr></thead>
                 <tbody id="tbody-expediteurs"><tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr></tbody>
               </table>
             </div>
+            <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="text-muted small" id="exp-pagination-info">—</div>
+                <div class="d-flex align-items-center gap-1">
+                  <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                  <select id="exp-page-size" class="form-select form-select-sm page-size-select" style="width:70px">
+                    <option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Tous</option>
+                  </select>
+                </div>
+              </div>
+              <nav><ul class="pagination pagination-sm mb-0" id="exp-pagination-controls"></ul></nav>
+            </div>
           </div>
         </div>
 
+        <!-- Tab Transporteurs -->
         <div id="tab-transporteurs" class="d-none">
           <div class="card">
             <div class="table-responsive">
@@ -85,15 +206,28 @@
                 <thead class="table-light"><tr>
                   <th>Société</th>
                   <th>Représentant</th>
-                  <th class="d-none d-md-table-cell">Pays / Ville</th>
-                  <th class="d-none d-lg-table-cell">Forme juridique</th>
-                  <th>Contact</th>
-                  <th>Statut</th>
+                  <th class="d-none d-md-table-cell">Pays</th>
+                  <th class="d-none d-lg-table-cell">Ville</th>
+                  <th>Flotte</th>
+                  <th>Chauffeurs</th>
                   <th class="d-none d-md-table-cell">Inscrit le</th>
-                  <th></th>
+                  <th>Statut</th>
+                  <th class="text-end">Actions</th>
                 </tr></thead>
-                <tbody id="tbody-transporteurs"><tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr></tbody>
+                <tbody id="tbody-transporteurs"><tr><td colspan="9" class="text-center py-4 text-muted">Chargement...</td></tr></tbody>
               </table>
+            </div>
+            <div class="card-body pt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="text-muted small" id="trans-pagination-info">—</div>
+                <div class="d-flex align-items-center gap-1">
+                  <label class="text-muted small mb-0 text-nowrap">Afficher</label>
+                  <select id="trans-page-size" class="form-select form-select-sm page-size-select" style="width:70px">
+                    <option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Tous</option>
+                  </select>
+                </div>
+              </div>
+              <nav><ul class="pagination pagination-sm mb-0" id="trans-pagination-controls"></ul></nav>
             </div>
           </div>
         </div>
@@ -109,11 +243,9 @@
 
 <!-- ── OVERLAY PROFIL ──────────────────────────────────────────────────────── -->
 <div id="profile-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px" onclick="if(event.target===this)closeProfile()">
-  <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.2);margin:auto">
-
-    <!-- Header -->
+  <div style="background:#fff;border-radius:14px;max-width:700px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);margin:auto">
     <div class="d-flex align-items-center gap-3 p-4 border-bottom">
-      <div id="profile-avatar" style="width:56px;height:56px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#3b7ddd;flex-shrink:0"></div>
+      <div id="profile-avatar" style="width:56px;height:56px;border-radius:12px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:var(--cu-orange,#F97316);flex-shrink:0"></div>
       <div class="flex-grow-1">
         <h5 class="mb-0 fw-bold" id="profile-name">—</h5>
         <div class="text-muted small" id="profile-sub">—</div>
@@ -121,60 +253,218 @@
       <div id="profile-badge"></div>
       <button class="btn btn-sm btn-light ms-2" onclick="closeProfile()"><i data-feather="x" style="width:14px"></i></button>
     </div>
-
-    <!-- Body -->
     <div class="p-4" id="profile-body"></div>
-
-    <!-- Footer actions -->
-    <div class="px-4 pb-4 d-flex gap-2 justify-content-end" id="profile-actions"></div>
+    <div class="p-4 border-top bg-light d-flex justify-content-between align-items-center flex-wrap gap-2" id="profile-actions"></div>
   </div>
 </div>
 
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let allExpediteurs = [], allTransporters = [], currentTab = 'expediteurs';
+let allExpediteurs = [], allTransporters = [];
+let fleetCount = {}, driverCount = {};
+let currentTab = 'expediteurs';
+let expPage = 1, transPage = 1;
+let filteredExpediteurs = [], filteredTransporters = [];
 
 function statusBadge(statut) {
-  const map = {
-    ACTIVE:    'bg-success',
-    SUSPENDED: 'bg-warning text-dark',
-    INACTIVE:  'bg-secondary',
-  };
+  const map = { ACTIVE: 'bg-success', SUSPENDED: 'bg-warning text-dark', INACTIVE: 'bg-secondary' };
   return `<span class="badge ${map[statut] ?? 'bg-secondary'}">${statut ?? 'ACTIVE'}</span>`;
 }
 
-function renderOrgs(list, tbodyId, extraCol) {
+// ── Filtres avancés toggle ────────────────────────────────────────────────
+let filterPanelOpen = false;
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  document.getElementById('filter-panel').style.display = filterPanelOpen ? '' : 'none';
+  document.getElementById('filter-chevron').style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+function resetFilters() { resetAllFilters(); }
+
+function showTabFilters(tab) {
+  document.querySelectorAll('.trans-only').forEach(el => el.classList.toggle('d-none', tab !== 'transporteurs'));
+}
+
+// ── Quick filter ──────────────────────────────────────────────────────────
+function setQuickFilter(el) {
+  document.querySelectorAll('.toggle-group .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function resetAllFilters() {
+  document.querySelectorAll('.toggle-group .btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('search-global').value = '';
+  ['f-societe','f-rep','f-pays','f-ville','f-statut','f-date-from','f-date-to','f-flotte-min','f-flotte-max']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  applyFilters();
+}
+
+// ── Filtrage ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const quickFilter = document.querySelector('.toggle-group .btn.active')?.dataset?.quick ?? '';
+  const q = document.getElementById('search-global')?.value?.toLowerCase().trim() ?? '';
+  const fSociete  = document.getElementById('f-societe')?.value?.toLowerCase().trim() ?? '';
+  const fRep      = document.getElementById('f-rep')?.value?.toLowerCase().trim() ?? '';
+  const fPays     = document.getElementById('f-pays')?.value ?? '';
+  const fVille    = document.getElementById('f-ville')?.value ?? '';
+  const fStatut   = document.getElementById('f-statut')?.value ?? '';
+  const fDateFrom = document.getElementById('f-date-from')?.value ?? '';
+  const fDateTo   = document.getElementById('f-date-to')?.value ?? '';
+  const fFlotteMin = document.getElementById('f-flotte-min')?.value ? Number(document.getElementById('f-flotte-min').value) : null;
+  const fFlotteMax = document.getElementById('f-flotte-max')?.value ? Number(document.getElementById('f-flotte-max').value) : null;
+
+  const baseFn = (o) => {
+    if (quickFilter && o.statut !== quickFilter) return false;
+    if (q) {
+      const match = [o.raisonSociale, o.email, o.telephone, o.ville, o.pays, o.nomRepresentant, o.prenomRepresentant]
+        .some(v => v?.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+    if (fSociete && !(o.raisonSociale ?? '').toLowerCase().includes(fSociete)) return false;
+    if (fRep && !((o.prenomRepresentant ?? '') + ' ' + (o.nomRepresentant ?? '')).toLowerCase().includes(fRep)) return false;
+    if (fPays && o.pays !== fPays) return false;
+    if (fVille && o.ville !== fVille) return false;
+    if (fStatut && o.statut !== fStatut) return false;
+    if (fDateFrom && o.createdAt < fDateFrom) return false;
+    if (fDateTo && o.createdAt > fDateTo + 'T23:59:59') return false;
+    return true;
+  };
+
+  filteredExpediteurs = allExpediteurs.filter(o => baseFn(o));
+  filteredTransporters = allTransporters.filter(o => {
+    if (!baseFn(o)) return false;
+    if (fFlotteMin !== null && (fleetCount[o.tenantId] ?? 0) < fFlotteMin) return false;
+    if (fFlotteMax !== null && (fleetCount[o.tenantId] ?? 0) > fFlotteMax) return false;
+    return true;
+  });
+
+  renderOrgs(filteredExpediteurs, 'tbody-expediteurs', 'exp');
+  renderOrgs(filteredTransporters, 'tbody-transporteurs', 'trans');
+
+  const total = currentTab === 'expediteurs' ? filteredExpediteurs.length : filteredTransporters.length;
+  const badge = document.getElementById('badge-total');
+  if (total > 0) { badge.textContent = `${total} organisation${total > 1 ? 's' : ''}`; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+
+  const activeCount = [q, fSociete, fRep, fPays, fVille, fStatut, fDateFrom, fDateTo,
+    fFlotteMin !== null ? '1' : '', fFlotteMax !== null ? '1' : ''].filter(Boolean).length;
+  const filterBadge = document.getElementById('filter-badge');
+  if (activeCount > 0) { filterBadge.textContent = activeCount; filterBadge.classList.remove('d-none'); }
+  else { filterBadge.classList.add('d-none'); }
+  const rc = document.getElementById('filter-result-count');
+  if (rc) {
+    const t = currentTab === 'expediteurs' ? filteredExpediteurs.length : filteredTransporters.length;
+    const tot = currentTab === 'expediteurs' ? allExpediteurs.length : allTransporters.length;
+    rc.textContent = `${t} résultat${t !== 1 ? 's' : ''} sur ${tot}`;
+  }
+}
+
+function getPageSize(selectId) {
+  const v = document.getElementById(selectId).value;
+  return v === 'all' ? Infinity : parseInt(v, 10);
+}
+
+function renderPagination(list, page, pageSize, infoId, controlsId) {
+  const totalPages = pageSize === Infinity ? 1 : Math.max(1, Math.ceil(list.length / pageSize));
+  if (page > totalPages) page = 1;
+  const start = pageSize === Infinity ? 0 : (page - 1) * pageSize;
+  const sliced = pageSize === Infinity ? list : list.slice(start, start + pageSize);
+  const showing = pageSize === Infinity
+    ? `${list.length} organisation${list.length !== 1 ? 's' : ''}`
+    : `${Math.min(start + 1, list.length)}–${Math.min(start + pageSize, list.length)} sur ${list.length}`;
+  document.getElementById(infoId).textContent = showing;
+  const controls = document.getElementById(controlsId);
+  if (pageSize === Infinity || totalPages <= 1) { controls.innerHTML = ''; return sliced; }
+  let html = `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage('${controlsId}', ${page - 1});return false;">‹</a></li>`;
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - page) <= delta) {
+      html += `<li class="page-item ${p === page ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="goPage('${controlsId}', ${p});return false;">${p}</a></li>`;
+    } else if (Math.abs(p - page) === delta + 1) {
+      html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+    }
+  }
+  html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="goPage('${controlsId}', ${page + 1});return false;">›</a></li>`;
+  controls.innerHTML = html;
+  return sliced;
+}
+
+function goPage(controlsId, p) {
+  if (controlsId === 'exp-pagination-controls') { expPage = p; renderOrgs(filteredExpediteurs, 'tbody-expediteurs', 'exp'); }
+  else { transPage = p; renderOrgs(filteredTransporters, 'tbody-transporteurs', 'trans'); }
+}
+
+function renderOrgs(list, tbodyId, prefix) {
   const tbody = document.getElementById(tbodyId);
-  if (!list || list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">Aucune organisation.</td></tr>`;
+  const pageSize = getPageSize(prefix === 'exp' ? 'exp-page-size' : 'trans-page-size');
+  const page = prefix === 'exp' ? expPage : transPage;
+  const sliced = renderPagination(list, page, pageSize,
+    prefix === 'exp' ? 'exp-pagination-info' : 'trans-pagination-info',
+    prefix === 'exp' ? 'exp-pagination-controls' : 'trans-pagination-controls');
+  if (!sliced || sliced.length === 0) {
+    const cols = prefix === 'exp' ? 8 : 9;
+    tbody.innerHTML = `<tr><td colspan="${cols}" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">🏢</div>Aucune organisation trouvée.</td></tr>`;
     return;
   }
-  tbody.innerHTML = list.map(o => `
-    <tr style="cursor:pointer" onclick="openProfile('${o.id}')">
-      <td>
-        <div class="fw-semibold">${o.raisonSociale ?? o.companyName ?? '—'}</div>
-        <div class="text-muted small">${o.formeJuridique ?? ''}</div>
-      </td>
-      <td>
-        <div>${o.prenomRepresentant ?? ''} ${o.nomRepresentant ?? ''}</div>
-        <div class="text-muted small">${o.fonctionRepresentant ?? ''}</div>
-      </td>
-      <td class="d-none d-md-table-cell text-muted small">${o.pays ?? '—'}<br>${o.ville ?? ''}</td>
-      <td class="d-none d-lg-table-cell text-muted small">${extraCol(o)}</td>
-      <td>
-        <div class="small">${o.email ?? '—'}</div>
-        <div class="text-muted small">${o.telephone ?? ''}</div>
-      </td>
-      <td>${statusBadge(o.statut)}</td>
-      <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(o.createdAt)}</td>
-      <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();openProfile('${o.id}')">
-          <i data-feather="eye" style="width:13px"></i>
-        </button>
-      </td>
-    </tr>
-  `).join('');
+
+  if (prefix === 'exp') {
+    tbody.innerHTML = sliced.map(o => `
+      <tr style="cursor:pointer" onclick="openProfile('${o.id}')">
+        <td>
+          <div class="fw-semibold">${o.raisonSociale ?? o.companyName ?? '—'}</div>
+          <div class="text-muted small">${o.formeJuridique ?? ''}</div>
+        </td>
+        <td>
+          <div>${o.prenomRepresentant ?? ''} ${o.nomRepresentant ?? ''}</div>
+          <div class="text-muted small">${o.fonctionRepresentant ?? ''}</div>
+        </td>
+        <td class="d-none d-md-table-cell text-muted small">${o.pays ?? '—'}</td>
+        <td class="d-none d-lg-table-cell text-muted small">${o.ville ?? '—'}</td>
+        <td>
+          <div class="small">${o.email ?? '—'}</div>
+          <div class="text-muted small">${o.telephone ?? ''}</div>
+        </td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(o.createdAt)}</td>
+        <td>${statusBadge(o.statut)}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();openProfile('${o.id}')" title="Voir le profil">
+            <i data-feather="eye" style="width:13px"></i>
+          </button>
+        </td>
+      </tr>`).join('');
+  } else {
+    tbody.innerHTML = sliced.map(o => {
+      const fc = fleetCount[o.tenantId] ?? 0;
+      const dc = driverCount[o.tenantId] ?? 0;
+      return `
+      <tr style="cursor:pointer" onclick="openProfile('${o.id}')">
+        <td>
+          <div class="fw-semibold">${o.raisonSociale ?? o.companyName ?? '—'}</div>
+          <div class="text-muted small">${o.formeJuridique ?? ''}</div>
+        </td>
+        <td>
+          <div>${o.prenomRepresentant ?? ''} ${o.nomRepresentant ?? ''}</div>
+          <div class="text-muted small">${o.fonctionRepresentant ?? ''}</div>
+        </td>
+        <td class="d-none d-md-table-cell text-muted small">${o.pays ?? '—'}</td>
+        <td class="d-none d-lg-table-cell text-muted small">${o.ville ?? '—'}</td>
+        <td><span class="count-badge">${fc}</span></td>
+        <td><span class="count-badge">${dc}</span></td>
+        <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(o.createdAt)}</td>
+        <td>${statusBadge(o.statut)}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();openProfile('${o.id}')" title="Voir le profil">
+            <i data-feather="eye" style="width:13px"></i>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
   if (typeof feather !== 'undefined') feather.replace();
 }
 
@@ -182,29 +472,39 @@ function openProfile(id) {
   const all = [...allExpediteurs, ...allTransporters];
   const o = all.find(x => x.id === id);
   if (!o) return;
-
   const initials = `${(o.raisonSociale ?? o.companyName ?? '?')[0]}`.toUpperCase();
+  const isTransporter = allTransporters.some(t => t.id === o.id);
+  const fc = fleetCount[o.tenantId] ?? 0;
+  const dc = driverCount[o.tenantId] ?? 0;
+
   document.getElementById('profile-avatar').textContent = initials;
   document.getElementById('profile-name').textContent = o.raisonSociale ?? o.companyName ?? '—';
   document.getElementById('profile-sub').textContent = `${o.formeJuridique ?? ''} — ${o.ville ?? ''}, ${o.pays ?? ''}`;
   document.getElementById('profile-badge').innerHTML = statusBadge(o.statut);
 
+  const tenantId = o.tenantId ?? '';
+  const companyId = o.id ?? '';
+
   document.getElementById('profile-body').innerHTML = `
     <div class="row g-3">
 
-      <div class="col-12"><h6 class="text-muted text-uppercase small fw-semibold mb-2">Informations légales</h6>
+      <div class="col-12">
+        <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">📋 Informations</div>
         <div class="row g-2">
           <div class="col-6"><div class="text-muted small">Raison sociale</div><div class="fw-semibold">${o.raisonSociale ?? '—'}</div></div>
           <div class="col-6"><div class="text-muted small">Forme juridique</div><div>${o.formeJuridique ?? '—'}</div></div>
           <div class="col-6"><div class="text-muted small">RCCM</div><div>${o.rccm ?? '—'}</div></div>
           <div class="col-6"><div class="text-muted small">IFU</div><div>${o.ifu ?? '—'}</div></div>
           ${o.secteurActivite ? `<div class="col-6"><div class="text-muted small">Secteur</div><div>${o.secteurActivite}</div></div>` : ''}
+          ${o.email ? `<div class="col-6"><div class="text-muted small">Email</div><div><a href="mailto:${o.email}" class="text-decoration-none">${o.email}</a></div></div>` : ''}
+          ${o.telephone ? `<div class="col-6"><div class="text-muted small">Téléphone</div><div><a href="tel:${o.telephone}" class="text-decoration-none">${o.telephone}</a></div></div>` : ''}
         </div>
       </div>
 
       <div class="col-12"><hr class="my-1"></div>
 
-      <div class="col-12"><h6 class="text-muted text-uppercase small fw-semibold mb-2">Localisation</h6>
+      <div class="col-12">
+        <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">📍 Localisation</div>
         <div class="row g-2">
           <div class="col-6"><div class="text-muted small">Pays</div><div>${o.pays ?? '—'}</div></div>
           <div class="col-6"><div class="text-muted small">Ville</div><div>${o.ville ?? '—'}</div></div>
@@ -214,44 +514,58 @@ function openProfile(id) {
 
       <div class="col-12"><hr class="my-1"></div>
 
-      <div class="col-12"><h6 class="text-muted text-uppercase small fw-semibold mb-2">Représentant</h6>
+      <div class="col-12">
+        <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">👤 Représentant</div>
         <div class="row g-2">
           <div class="col-6"><div class="text-muted small">Nom</div><div class="fw-semibold">${o.prenomRepresentant ?? ''} ${o.nomRepresentant ?? ''}</div></div>
           <div class="col-6"><div class="text-muted small">Fonction</div><div>${o.fonctionRepresentant ?? '—'}</div></div>
-          <div class="col-6"><div class="text-muted small">Email</div><div>${o.email ?? '—'}</div></div>
-          <div class="col-6"><div class="text-muted small">Téléphone</div><div>${o.telephone ?? '—'}</div></div>
+          ${o.emailRepresentant ? `<div class="col-6"><div class="text-muted small">Email</div><div><a href="mailto:${o.emailRepresentant}" class="text-decoration-none">${o.emailRepresentant}</a></div></div>` : (o.email ? `<div class="col-6"><div class="text-muted small">Email</div><div><a href="mailto:${o.email}" class="text-decoration-none">${o.email}</a></div></div>` : '')}
+          ${o.telephoneRepresentant ? `<div class="col-6"><div class="text-muted small">Téléphone</div><div><a href="tel:${o.telephoneRepresentant}" class="text-decoration-none">${o.telephoneRepresentant}</a></div></div>` : (o.telephone ? `<div class="col-6"><div class="text-muted small">Téléphone</div><div><a href="tel:${o.telephone}" class="text-decoration-none">${o.telephone}</a></div></div>` : '')}
         </div>
       </div>
 
+      ${isTransporter ? `
       <div class="col-12"><hr class="my-1"></div>
-
-      <div class="col-12"><h6 class="text-muted text-uppercase small fw-semibold mb-2">Compte</h6>
+      <div class="col-12">
+        <div style="font-size:.7rem;color:#6c757d;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">🚛 Flotte & Chauffeurs</div>
         <div class="row g-2">
-          <div class="col-6"><div class="text-muted small">Type</div><div>${o.type ?? '—'}</div></div>
-          <div class="col-6"><div class="text-muted small">Statut</div><div>${statusBadge(o.statut)}</div></div>
-          <div class="col-6"><div class="text-muted small">Inscrit le</div><div>${UI.formatDate(o.createdAt)}</div></div>
-          <div class="col-6"><div class="text-muted small">Mis à jour</div><div>${UI.formatDate(o.updatedAt)}</div></div>
+          <div class="col-6">
+            <a href="admin-flotte.html" class="text-decoration-none" style="display:block;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef">
+              <div class="text-muted small mb-1">Véhicules</div>
+              <div class="fw-bold fs-5" style="color:var(--cu-orange,#F97316)">${fc}</div>
+              <div class="text-primary small">→ Voir la flotte</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="admin-chauffeurs.html" class="text-decoration-none" style="display:block;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef">
+              <div class="text-muted small mb-1">Chauffeurs</div>
+              <div class="fw-bold fs-5" style="color:var(--cu-orange,#F97316)">${dc}</div>
+              <div class="text-primary small">→ Voir les chauffeurs</div>
+            </a>
+          </div>
         </div>
-      </div>
+      </div>` : ''}
 
-    </div>
-  `;
+    </div>`;
 
   document.getElementById('profile-actions').innerHTML = `
-    ${o.statut === 'ACTIVE'
-      ? `<button class="btn btn-sm btn-warning" onclick="toggleStatus('${o.id}','SUSPENDED')"><i data-feather="pause-circle" style="width:13px" class="me-1"></i> Suspendre</button>`
-      : `<button class="btn btn-sm btn-success" onclick="toggleStatus('${o.id}','ACTIVE')"><i data-feather="check-circle" style="width:13px" class="me-1"></i> Réactiver</button>`
-    }
-    <button class="btn btn-sm btn-light" onclick="closeProfile()">Fermer</button>
-  `;
+    <span class="text-muted small">Inscrit le ${UI.formatDate(o.createdAt)}</span>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <a href="admin-expeditions.html" class="btn btn-sm btn-outline-secondary"><i data-feather="package" style="width:13px"></i> Expéditions</a>
+      ${isTransporter ? `
+      <a href="admin-flotte.html" class="btn btn-sm btn-outline-info"><i data-feather="truck" style="width:13px"></i> Flotte</a>
+      <a href="admin-chauffeurs.html" class="btn btn-sm btn-outline-success"><i data-feather="users" style="width:13px"></i> Chauffeurs</a>` : ''}
+      ${o.statut === 'ACTIVE'
+        ? `<button class="btn btn-sm btn-warning" onclick="toggleStatus('${o.id}','SUSPENDED')"><i data-feather="pause-circle" style="width:13px" class="me-1"></i> Suspendre</button>`
+        : `<button class="btn btn-sm btn-success" onclick="toggleStatus('${o.id}','ACTIVE')"><i data-feather="check-circle" style="width:13px" class="me-1"></i> Réactiver</button>`}
+      <button class="btn btn-sm btn-light" onclick="closeProfile()">Fermer</button>
+    </div>`;
 
   document.getElementById('profile-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
 }
 
-function closeProfile() {
-  document.getElementById('profile-overlay').style.display = 'none';
-}
+function closeProfile() { document.getElementById('profile-overlay').style.display = 'none'; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProfile(); });
 
 async function toggleStatus(id, newStatut) {
@@ -261,21 +575,14 @@ async function toggleStatus(id, newStatut) {
     UI.toast(`Statut mis à jour : ${newStatut}`, 'success');
     closeProfile();
     location.reload();
-  } catch (err) {
-    UI.toast(err.error ?? 'Erreur', 'danger');
-  }
+  } catch (err) { UI.toast(err.error ?? 'Erreur', 'danger'); }
 }
 
-function applySearch(q) {
-  const filter = list => list.filter(o =>
-    [o.raisonSociale, o.email, o.telephone, o.ville, o.pays, o.nomRepresentant, o.prenomRepresentant]
-      .some(v => v?.toLowerCase().includes(q))
-  );
-  if (currentTab === 'expediteurs') {
-    renderOrgs(filter(allExpediteurs), 'tbody-expediteurs', o => o.secteurActivite ?? '—');
-  } else {
-    renderOrgs(filter(allTransporters), 'tbody-transporteurs', o => o.formeJuridique ?? '—');
-  }
+function populateFilter(id, values) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const sorted = [...new Set(values.filter(Boolean))].sort();
+  el.innerHTML = '<option value="">Tous</option>' + sorted.map(v => `<option>${v}</option>`).join('');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -290,26 +597,61 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('tab-transporteurs').classList.add('d-none');
       document.getElementById('tab-' + btn.dataset.tab).classList.remove('d-none');
       currentTab = btn.dataset.tab;
+      showTabFilters(currentTab);
+      applyFilters();
     });
   });
 
-  document.getElementById('search-input').addEventListener('input', function() {
-    applySearch(this.value.toLowerCase().trim());
-  });
-
-  const [expedRes, transRes] = await Promise.all([
-    api.get('/company/company?page=1&limit=200'),
-    api.get('/company/transporter?page=1&limit=200'),
+  const [expedRes, transRes, trucksRes, driversRes] = await Promise.all([
+    api.get('/company/company?page=1&limit=200').catch(() => null),
+    api.get('/company/transporter?page=1&limit=200').catch(() => null),
+    api.get('/fleet/trucks').catch(() => null),
+    api.get('/fleet/drivers').catch(() => null),
   ]);
 
-  allExpediteurs  = Array.isArray(expedRes?.data) ? expedRes.data : (expedRes?.data?.data ?? []);
-  allTransporters = Array.isArray(transRes?.data) ? transRes.data : (transRes?.data?.data ?? []);
+  function unpack(res) {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.data)) return res.data.data;
+    return [];
+  }
+
+  allExpediteurs  = unpack(expedRes);
+  allTransporters = unpack(transRes);
+  const allTrucksData = unpack(trucksRes);
+  const allDriversData = unpack(driversRes);
+
+  fleetCount = {};
+  driverCount = {};
+  allTrucksData.forEach(t => { fleetCount[t.tenantId] = (fleetCount[t.tenantId] ?? 0) + 1; });
+  allDriversData.forEach(d => { driverCount[d.tenantId] = (driverCount[d.tenantId] ?? 0) + 1; });
+
+  if (!expedRes && !transRes) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Erreur de chargement</strong> — Impossible de récupérer les données.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+  }
 
   document.getElementById('badge-expediteurs').textContent  = allExpediteurs.length;
   document.getElementById('badge-transporteurs').textContent = allTransporters.length;
 
-  renderOrgs(allExpediteurs,  'tbody-expediteurs',  o => o.secteurActivite ?? '—');
-  renderOrgs(allTransporters, 'tbody-transporteurs', o => o.formeJuridique ?? '—');
+  // Populate filtres avancés (pays/ville unifiés — basé sur onglet actif au chargement)
+  const allPays = [...new Set([...allExpediteurs, ...allTransporters].map(o => o.pays).filter(Boolean))].sort();
+  const allVilles = [...new Set([...allExpediteurs, ...allTransporters].map(o => o.ville).filter(Boolean))].sort();
+  const paysEl = document.getElementById('f-pays');
+  const villeEl = document.getElementById('f-ville');
+  if (paysEl) paysEl.innerHTML = '<option value="">Tous</option>' + allPays.map(v => `<option>${v}</option>`).join('');
+  if (villeEl) villeEl.innerHTML = '<option value="">Toutes</option>' + allVilles.map(v => `<option>${v}</option>`).join('');
+
+  filteredExpediteurs = [...allExpediteurs];
+  filteredTransporters = [...allTransporters];
+  applyFilters();
+
+  document.getElementById('exp-page-size').addEventListener('change', () => { expPage = 1; applyFilters(); });
+  document.getElementById('trans-page-size').addEventListener('change', () => { transPage = 1; applyFilters(); });
 });
 </script>
 </body>
