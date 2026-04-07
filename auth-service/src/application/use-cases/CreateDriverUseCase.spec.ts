@@ -12,6 +12,7 @@ jest.mock('../../infrastructure/queue/DriverCreatedPublisher', () => ({
 const makeRepositoryMock = (): jest.Mocked<IUserRepository> => ({
   findById:       jest.fn(),
   findByEmail:    jest.fn(),
+  findAll:        jest.fn(),
   save:           jest.fn(),
   delete:         jest.fn(),
   updatePassword: jest.fn().mockResolvedValue(undefined),
