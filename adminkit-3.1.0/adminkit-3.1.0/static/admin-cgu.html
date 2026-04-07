@@ -163,6 +163,17 @@
         <!-- ── Onglet Conformité ─────────────────────────────────────────── -->
         <div id="tab-conformite" class="d-none">
 
+          <!-- Avertissement : aucune version active -->
+          <div id="compliance-no-active-warning" class="alert border-0 d-none mb-4" style="background:rgba(255,193,7,.1);border-left:4px solid #ffc107 !important;border-radius:10px">
+            <div class="d-flex align-items-center gap-2">
+              <i data-feather="alert-triangle" style="width:18px;color:#e6a817"></i>
+              <div>
+                <span class="fw-semibold" style="color:#856404">Aucune version active</span>
+                <span class="text-muted ms-2 small">— Activez une version dans l'onglet Versions pour que la conformité soit calculée correctement.</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Statistiques -->
           <div class="row g-3 mb-4" id="compliance-stats">
             <div class="col-6 col-md-3">
@@ -394,7 +405,17 @@ function renderVersions() {
     : allVersions.filter(v => v.statut === currentFilter);
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="text-center py-5 text-muted"><i data-feather="inbox" style="width:40px;height:40px;opacity:.3"></i><p class="mt-3">Aucune version ${currentFilter !== 'all' ? currentFilter.toLowerCase() : ''}</p></div>`;
+    const isAllFilter = currentFilter === 'all';
+    list.innerHTML = isAllFilter
+      ? `<div class="text-center py-5">
+          <div style="font-size:3rem;margin-bottom:12px">📋</div>
+          <p class="fw-semibold mb-1">Aucune version des Conditions Générales d'Utilisation</p>
+          <p class="text-muted small mb-4">Créez votre première version pour permettre aux organisations d'accepter les conditions.</p>
+          <button class="btn btn-primary" onclick="openCreate()">
+            <i data-feather="plus" class="align-middle me-1" style="width:14px"></i>Créer la première version
+          </button>
+        </div>`
+      : `<div class="text-center py-5 text-muted"><i data-feather="inbox" style="width:40px;height:40px;opacity:.3"></i><p class="mt-3">Aucune version ${currentFilter.toLowerCase()}</p></div>`;
     feather.replace();
     return;
   }
@@ -451,13 +472,17 @@ function renderComplianceStats() {
   const nonConf = total - conf;
   const active  = allVersions.find(v => v.statut === 'ACTIVE');
 
-  document.getElementById('stat-total').textContent   = total;
-  document.getElementById('stat-conforme').textContent  = conf;
-  document.getElementById('stat-nonconf').textContent   = nonConf;
-  document.getElementById('stat-version').textContent   = active ? `v${active.version}` : '—';
+  document.getElementById('stat-total').textContent    = total;
+  document.getElementById('stat-conforme').textContent = conf;
+  document.getElementById('stat-nonconf').textContent  = nonConf;
+  document.getElementById('stat-version').textContent  = active ? `v${active.version}` : '—';
 
   const badge = document.getElementById('badge-nonconf');
   if (nonConf > 0) { badge.textContent = nonConf; badge.classList.remove('d-none'); }
+
+  // Avertissement si aucune version active — les données de conformité ne font pas référence
+  const warningEl = document.getElementById('compliance-no-active-warning');
+  if (!active && warningEl) warningEl.classList.remove('d-none');
 }
 
 function renderCompliance() {

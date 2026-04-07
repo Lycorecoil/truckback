@@ -102,7 +102,7 @@ export class CguService {
       termsAcceptedAt:      (org["termsAcceptedAt"] as Date | null) ?? null,
       conforme:             activeVersion
         ? org["termsAcceptedVersion"] === activeVersion.version
-        : true,
+        : false,
       versionAttendue:      activeVersion?.version ?? null,
     }));
   }
