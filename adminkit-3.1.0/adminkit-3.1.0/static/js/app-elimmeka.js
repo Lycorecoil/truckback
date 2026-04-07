@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Injecter "Mon profil" dans le dropdown si pas déjà présent
   const dropdownMenu = document.querySelector('.dropdown-menu.dropdown-menu-end');
-  if (dropdownMenu && !dropdownMenu.querySelector('.profil-link')) {
+  if (dropdownMenu && !dropdownMenu.querySelector('[href="profil.html"]')) {
     const profilLink = document.createElement('a');
     profilLink.className = 'dropdown-item profil-link';
     profilLink.href = 'profil.html';
