@@ -2,6 +2,12 @@ import type { BaseEntity } from "@jb226/generic-service";
 
 export type TruckStatus = "AVAILABLE" | "BUSY" | "MAINTENANCE";
 
+export interface TruckPhotos {
+  gauche?: string;
+  droite?: string;
+  avant?: string;
+}
+
 export interface Truck extends BaseEntity {
   tenantId: string;
   immatriculation: string;
@@ -12,7 +18,7 @@ export interface Truck extends BaseEntity {
   carrosserie?: string;
   gabarit?: string;
   capaciteMax: number;
-  photoUrl?: string;
+  photos?: TruckPhotos;
   statut: TruckStatus;
   driverId?: string;
   villeBase: string;

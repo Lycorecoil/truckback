@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Accepter la mission | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .truck-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+      user-select: none;
+      height: 100%;
+    }
+    .truck-card:hover {
+      border-color: #93c5fd;
+      box-shadow: 0 4px 20px rgba(59,125,221,.12);
+      transform: translateY(-2px);
+    }
+    .truck-card.selected {
+      border-color: #3b7ddd;
+      box-shadow: 0 0 0 4px rgba(59,125,221,.12), 0 4px 20px rgba(59,125,221,.15);
+    }
+    .truck-card.selected .truck-select-dot {
+      background: #3b7ddd;
+      border-color: #3b7ddd;
+    }
+    .truck-card.selected .truck-select-dot svg { display: block !important; }
+    .truck-select-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #d1d5db;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .truck-photo {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+    }
+    .truck-photo-placeholder {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #e8f0fe, #f0f4ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+    }
+    .truck-body { padding: 14px; }
+    .driver-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-size: .72rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .driver-tag.has-driver  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .driver-tag.no-driver   { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+    .mission-banner {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      border-radius: 14px;
+      padding: 22px 26px;
+      color: #fff;
+    }
+    .mission-route-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,.25);
+      position: relative;
+      margin: 0 14px;
+    }
+    .confirm-footer {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px 22px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── SIDEBAR ── -->
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- En-tête page -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <a href="transporteur-missions.html" class="btn btn-light">
+            <i class="align-middle" data-feather="arrow-left" style="width:16px"></i>
+          </a>
+          <div>
+            <h1 class="h3 mb-0 fw-bold" id="page-title">Accepter la mission</h1>
+            <p class="text-muted mb-0 small" id="page-subtitle">Sélectionnez le camion à affecter, puis confirmez</p>
+          </div>
+        </div>
+
+        <div id="alert-container" class="mb-3"></div>
+
+        <!-- Récap mission -->
+        <div id="mission-banner" class="mission-banner mb-4 d-none">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+              <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:3px">Mission</div>
+              <div class="fw-bold" style="font-size:1.05rem" id="ms-ref">—</div>
+            </div>
+            <span id="ms-badge" style="background:rgba(255,255,255,.12);color:#fff;border-radius:20px;padding:3px 12px;font-size:.72rem;font-weight:600">—</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <div>
+              <div style="font-size:.65rem;opacity:.5;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Départ</div>
+              <div class="fw-bold" style="font-size:1rem" id="ms-depart">—</div>
+              <div style="font-size:.75rem;opacity:.6" id="ms-pays-depart">—</div>
+            </div>
+            <div class="mission-route-line"></div>
+            <div style="text-align:center;flex-shrink:0">
+              <i data-feather="arrow-right" style="width:18px;height:18px;opacity:.5"></i>
+            </div>
+            <div class="mission-route-line"></div>
+            <div class="text-end">
+              <div style="font-size:.65rem;opacity:.5;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Arrivée</div>
+              <div class="fw-bold" style="font-size:1rem" id="ms-arrivee">—</div>
+              <div style="font-size:.75rem;opacity:.6" id="ms-pays-arrivee">—</div>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-3" style="font-size:.8rem">
+            <div><span style="opacity:.6">Marchandise :</span> <strong id="ms-marchandise">—</strong></div>
+            <div><span style="opacity:.6">Poids :</span> <strong id="ms-poids">—</strong></div>
+            <div><span style="opacity:.6">Prix :</span> <strong id="ms-prix" style="color:#fbbf24">—</strong></div>
+            <div><span style="opacity:.6">Date :</span> <strong id="ms-date">—</strong></div>
+          </div>
+        </div>
+
+        <!-- En-tête sélection camion -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <h5 class="mb-0 fw-bold">Choisir un camion</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span id="truck-count" class="badge bg-primary rounded-pill" style="font-size:.75rem">0 disponible</span>
+            <div class="position-relative" style="width:240px">
+              <i data-feather="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#9ca3af"></i>
+              <input id="search-truck" class="form-control form-control-sm" style="padding-left:32px;border-radius:8px" placeholder="Immatriculation, marque…" oninput="filterTrucks()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Grille camions -->
+        <div id="truck-grid" class="row g-3 mb-4">
+          <div class="col-12 text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div> Chargement des camions…
+          </div>
+        </div>
+
+        <!-- Footer confirmation -->
+        <div class="confirm-footer d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div id="selection-info" style="font-size:.88rem;color:#6b7280">
+            Aucun camion sélectionné
+          </div>
+          <div class="d-flex gap-2">
+            <a href="transporteur-missions.html" class="btn btn-light px-4">Annuler</a>
+            <button id="btn-confirm" class="btn btn-primary px-4 fw-semibold" disabled onclick="confirmAccept()">
+              <i class="align-middle me-1" data-feather="check-circle" style="width:16px"></i>
+              <span id="btn-confirm-label">Confirmer l'acceptation</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid">
+        <div class="row text-muted">
+          <div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let missionId   = null;
+let acceptMode  = 'accept';
+let shipment    = null;
+let allTrucks   = [];
+let allDrivers  = [];
+let selectedTruckId = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+
+  const params = new URLSearchParams(location.search);
+  missionId  = params.get('missionId');
+  acceptMode = params.get('mode') ?? 'accept';
+
+  if (!missionId) {
+    window.location.href = 'transporteur-missions.html';
+    return;
+  }
+
+  if (acceptMode === 'interest') {
+    document.getElementById('page-title').textContent    = 'Manifester mon intérêt';
+    document.getElementById('page-subtitle').textContent = 'Sélectionnez le camion que vous souhaitez proposer pour cette mission';
+    document.getElementById('btn-confirm-label').textContent = 'Envoyer mon intérêt';
+  }
+
+  try {
+    const [shipRes, trucksRes, driversRes] = await Promise.all([
+      api.get(`/shipments/${missionId}`),
+      api.get('/fleet/trucks'),
+      api.get('/fleet/drivers'),
+    ]);
+
+    shipment   = shipRes?.data ?? shipRes ?? {};
+    allTrucks  = Array.isArray(trucksRes)  ? trucksRes  : (trucksRes?.data  ?? []);
+    allDrivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
+
+    renderMission(shipment);
+
+    const available = allTrucks.filter(t => t.statut === 'AVAILABLE' && allDrivers.some(d => d.id === t.driverId));
+    document.getElementById('truck-count').textContent =
+      `${available.length} disponible${available.length !== 1 ? 's' : ''}`;
+
+    // En mode accept-proposal, pré-sélectionner le camion de l'intérêt manifesté
+    if (acceptMode === 'accept-proposal') {
+      const currentUser = Auth.getUser();
+      const myInterest  = shipment.interests?.find(i => i.transporterId === (currentUser?.sub ?? currentUser?.id));
+      if (myInterest?.truckId) {
+        selectedTruckId = myInterest.truckId;
+      }
+    }
+
+    renderTrucks(available);
+    updateSelectionInfo();
+    if (typeof feather !== 'undefined') feather.replace();
+
+  } catch (err) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger">Impossible de charger la mission : ${err.error ?? err.message ?? 'Erreur inconnue'}</div>`;
+  }
+});
+
+// ── Mission ───────────────────────────────────────────────────────────────────
+function renderMission(s) {
+  document.getElementById('ms-ref').textContent           = `Mission #${s.id?.slice(0,8)?.toUpperCase() ?? '—'}`;
+  document.getElementById('ms-depart').textContent        = s.villeDepart ?? '—';
+  document.getElementById('ms-arrivee').textContent       = s.villeArrivee ?? '—';
+  document.getElementById('ms-pays-depart').textContent   = s.paysDepart ?? '';
+  document.getElementById('ms-pays-arrivee').textContent  = s.paysArrivee ?? '';
+  document.getElementById('ms-marchandise').textContent   = s.marchandise ?? '—';
+  document.getElementById('ms-poids').textContent         = s.poids ? `${s.poids} T` : '—';
+  document.getElementById('ms-prix').textContent          = s.prixTransport
+    ? `${s.prixTransport.toLocaleString('fr-FR')} FCFA` : '—';
+  document.getElementById('ms-date').textContent          = UI.formatDate(s.dateAnnonce);
+  document.getElementById('ms-badge').textContent         = UI.statutLabel?.(s.statut) ?? s.statut ?? '—';
+  document.getElementById('mission-banner').classList.remove('d-none');
+}
+
+// ── Trucks ────────────────────────────────────────────────────────────────────
+function filterTrucks() {
+  const q = document.getElementById('search-truck').value.toLowerCase();
+  const base = allTrucks.filter(t => t.statut === 'AVAILABLE' && allDrivers.some(d => d.id === t.driverId));
+  const list = !q ? base : base.filter(t =>
+    [t.immatriculation, t.marque, t.modele, String(t.capaciteMax), t.typeVehicule]
+      .some(v => v?.toLowerCase().includes(q))
+  );
+  renderTrucks(list);
+}
+
+function renderTrucks(list) {
+  const grid = document.getElementById('truck-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="col-12 text-center py-5">
+      <div style="font-size:2.5rem;margin-bottom:12px">🚛</div>
+      <h6 class="text-muted fw-semibold">Aucun camion disponible</h6>
+      <p class="text-muted small mb-3">Tous vos camions sont en mission ou en maintenance.</p>
+      <a href="transporteur-flotte-add.html" class="btn btn-primary btn-sm">Ajouter un camion</a>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = list.map(t => {
+    const driver    = allDrivers.find(d => d.id === t.driverId);
+    const photoSrc  = t.photos?.avant ?? t.photos?.gauche ?? t.photos?.droite ?? null;
+    const isSelected = selectedTruckId === t.id;
+
+    const photoHtml = photoSrc
+      ? `<img src="${photoSrc}" class="truck-photo" alt="Photo ${t.immatriculation}">`
+      : `<div class="truck-photo-placeholder">🚛</div>`;
+
+    const driverHtml = driver
+      ? `<div class="driver-tag has-driver">
+           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+           ${driver.prenom} ${driver.nom}
+         </div>`
+      : `<div class="driver-tag no-driver">
+           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+           Aucun chauffeur assigné
+         </div>`;
+
+    return `
+    <div class="col-sm-6 col-xl-4">
+      <div class="truck-card ${isSelected ? 'selected' : ''}" onclick="selectTruck('${t.id}')">
+        ${photoHtml}
+        <div class="truck-body">
+          <div class="d-flex align-items-start justify-content-between mb-1">
+            <div>
+              <div class="fw-bold" style="font-size:.95rem">${t.immatriculation}</div>
+              <div class="text-muted small">${t.marque ?? ''} ${t.modele ?? ''}</div>
+            </div>
+            <div class="truck-select-dot">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="display:none"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="mb-1">
+            <span style="background:#eff6ff;color:#3b7ddd;border-radius:5px;padding:2px 8px;font-size:.7rem;font-weight:600;margin-right:4px">${t.typeVehicule ?? '—'}</span>
+            <span style="background:#eff6ff;color:#3b7ddd;border-radius:5px;padding:2px 8px;font-size:.7rem;font-weight:600;margin-right:4px">${t.capaciteMax ?? '?'} T</span>
+            <span style="background:#f3f4f6;color:#374151;border-radius:5px;padding:2px 8px;font-size:.7rem">${t.villeBase ?? '—'}</span>
+          </div>
+          ${driverHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+// ── Sélection ─────────────────────────────────────────────────────────────────
+function selectTruck(id) {
+  selectedTruckId = selectedTruckId === id ? null : id;
+  filterTrucks();
+  updateSelectionInfo();
+}
+
+function updateSelectionInfo() {
+  const truck  = allTrucks.find(t => t.id === selectedTruckId);
+  const driver = truck ? allDrivers.find(d => d.id === truck.driverId) : null;
+  const btn    = document.getElementById('btn-confirm');
+  const info   = document.getElementById('selection-info');
+
+  if (truck && driver) {
+    btn.disabled = false;
+    info.innerHTML = `<strong class="text-dark">${truck.immatriculation}</strong> — ${truck.marque ?? ''} ${truck.modele ?? ''}
+      <span class="ms-2 text-muted">• Chauffeur : ${driver.prenom} ${driver.nom}</span>`;
+  } else if (truck && !driver) {
+    btn.disabled = true;
+    info.innerHTML = `<strong class="text-dark">${truck.immatriculation}</strong>
+      <span class="ms-2 text-warning fw-semibold">⚠ Aucun chauffeur assigné — <a href="transporteur-chauffeurs.html" class="text-warning">Assigner →</a></span>`;
+  } else {
+    btn.disabled = true;
+    info.textContent = 'Aucun camion sélectionné';
+  }
+}
+
+// ── Confirmation ──────────────────────────────────────────────────────────────
+async function confirmAccept() {
+  if (!selectedTruckId || !missionId) return;
+
+  const truck  = allTrucks.find(t => t.id === selectedTruckId);
+  const driver = allDrivers.find(d => d.id === truck?.driverId);
+
+  if (!driver) return;
+
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Envoi…`;
+
+  try {
+    if (acceptMode === 'interest') {
+      await api.post(`/shipments/${missionId}/interest`, { truckId: selectedTruckId });
+      btn.innerHTML = `<i data-feather="check-circle" style="width:16px;height:16px" class="align-middle me-1"></i> Intérêt envoyé !`;
+      btn.classList.replace('btn-primary', 'btn-success');
+      if (typeof feather !== 'undefined') feather.replace();
+      setTimeout(() => { window.location.href = 'expeditions-disponibles.html'; }, 1400);
+      return;
+    }
+
+    const endpoint = acceptMode === 'accept-proposal'
+      ? `/shipments/${missionId}/accept-proposal`
+      : `/shipments/${missionId}/accept`;
+
+    await api.post(endpoint, { truckId: selectedTruckId, driverId: driver.id });
+
+    btn.innerHTML = `<i data-feather="check-circle" style="width:16px;height:16px" class="align-middle me-1"></i> Mission acceptée !`;
+    btn.classList.replace('btn-primary', 'btn-success');
+    if (typeof feather !== 'undefined') feather.replace();
+    setTimeout(() => { window.location.href = 'transporteur-missions.html?tab=mine'; }, 1400);
+
+  } catch (err) {
+    const msg = err.error ?? err.message ?? 'Erreur';
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    btn.disabled = false;
+    btn.innerHTML = `<i class="align-middle me-1" data-feather="check-circle" style="width:16px"></i> <span id="btn-confirm-label">${acceptMode === 'interest' ? "Envoyer mon intérêt" : "Confirmer l'acceptation"}</span>`;
+    if (typeof feather !== 'undefined') feather.replace();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+</script>
+</body>
+</html>

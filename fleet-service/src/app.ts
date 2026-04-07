@@ -37,6 +37,9 @@ app.get("/health", (_req, res) => {
 
 app.get("/metrics", metricsHandler);
 
+const UPLOAD_DIR = process.env["UPLOAD_DIR"] ?? "/app/uploads";
+app.use("/uploads", express.static(UPLOAD_DIR));
+
 app.use(jwtVerifyMiddleware);
 
 const truckService  = new TruckService(new TruckRepository());

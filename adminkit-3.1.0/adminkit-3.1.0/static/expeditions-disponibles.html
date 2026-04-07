@@ -170,6 +170,7 @@
 <script>
 let allShipments = [];
 let role = '';
+let currentUserId = '';
 let filterPanelOpen = true;
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────────
@@ -295,7 +296,7 @@ function renderCards(list) {
         <div class="d-flex flex-wrap gap-2 mb-3">
           <span class="cu-chip">${s.marchandise ?? '—'} ${s.poids ?? ''}T</span>
           ${s.emballage ? `<span class="cu-chip">${s.emballage}</span>` : ''}
-          ${s.paysDepart && s.paysDepart !== s.paysArrivee ? `<span class="cu-chip">🌍 ${s.paysDepart} → ${s.paysArrivee}</span>` : ''}
+          ${s.paysDepart && s.paysDepart !== s.paysArrivee ? `<span class="cu-chip">🌍 ${s.paysDepart} → ${s.paysArrivee}</span>` : `<span class="cu-chip">🏙 ${s.villeDepart} → ${s.villeArrivee}</span>`}
           <span class="cu-chip">📅 ${UI.formatDate(s.dateAnnonce)}</span>
         </div>
 
@@ -305,12 +306,19 @@ function renderCards(list) {
             <div class="cu-price">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</div>
           </div>
           <div class="d-flex gap-2">
-            ${role === 'TRANSPORTER' ? `
+            ${role === 'TRANSPORTER' ? (() => {
+              const alreadyInterested = s.interests?.some(i => i.transporterId === currentUserId);
+              return `
               <button class="btn btn-sm btn-outline-secondary" onclick="openDetail('${s.id}')">Détails</button>
-              <a class="btn btn-sm btn-primary" href="transporteur-accepter-mission.html?id=${s.id}">
-                Je suis intéressé
-              </a>
-            ` : `
+              ${alreadyInterested
+                ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelInterest('${s.id}', this)">
+                     <i class="align-middle me-1" data-feather="x-circle" style="width:13px"></i>Annuler mon intérêt
+                   </button>`
+                : `<a class="btn btn-sm btn-primary" href="transporteur-accepter.html?missionId=${s.id}&mode=interest">
+                     Je suis intéressé
+                   </a>`
+              }`;
+            })() : `
               <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">Gérer</a>
             `}
           </div>
@@ -319,6 +327,22 @@ function renderCards(list) {
     </div>`;
   }).join('');
   if (typeof feather !== 'undefined') feather.replace();
+}
+
+// ─── Annuler intérêt ───────────────────────────────────────────────────────────
+async function cancelInterest(id, btn) {
+  UI.loading(btn, true);
+  try {
+    await api.delete(`/shipments/${id}/interest`);
+    UI.toast('Intérêt annulé.', 'info');
+    const res = await api.get('/shipments');
+    const all = Array.isArray(res) ? res : (res?.data ?? []);
+    allShipments = all.filter(s => s.statut === 'PENDING');
+    applyFilters();
+  } catch (err) {
+    UI.toast(err.error ?? err.message ?? 'Erreur', 'danger');
+    UI.loading(btn, false);
+  }
 }
 
 // ─── Intérêt ───────────────────────────────────────────────────────────────────
@@ -365,7 +389,7 @@ function openDetail(id) {
     </table>
   `;
   document.getElementById('btn-interested').onclick = () => {
-    window.location.href = `transporteur-accepter-mission.html?id=${id}`;
+    window.location.href = `transporteur-accepter.html?missionId=${id}&mode=interest`;
   };
   document.getElementById('detail-overlay').style.display = 'flex';
   if (typeof feather !== 'undefined') feather.replace();
@@ -381,6 +405,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const user = Auth.getUser();
   role = user?.role ?? '';
+  currentUserId = user?.sub ?? user?.id ?? '';
   buildSidebar(role);
   fillCountrySelects(true);
 

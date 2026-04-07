@@ -32,6 +32,13 @@ export function jwtVerifyMiddleware(
     return next();
   }
 
+  // Appels internes service-à-service via secret partagé
+  const internalSecret = process.env["INTERNAL_SERVICE_SECRET"];
+  if (internalSecret && req.headers["x-internal-secret"] === internalSecret) {
+    req.headers["x-user-role"] = "ADMIN";
+    return next();
+  }
+
   const authHeader = req.headers["authorization"];
   if (!authHeader?.startsWith("Bearer ")) {
     res.status(401).json({ error: "Token manquant" });

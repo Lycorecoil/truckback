@@ -170,7 +170,7 @@
 
         <!-- Header -->
         <div class="d-flex align-items-center gap-3 mb-4">
-          <a href="expeditions-disponibles.html" class="btn btn-light">
+          <a href="transporteur-missions.html" class="btn btn-light">
             <i class="align-middle" data-feather="arrow-left" style="width:16px"></i>
           </a>
           <div>
@@ -251,7 +251,7 @@
             Aucun camion sélectionné
           </div>
           <div class="d-flex gap-3">
-            <a href="expeditions-disponibles.html" class="btn btn-light px-4">Annuler</a>
+            <a href="transporteur-missions.html" class="btn btn-light px-4">Annuler</a>
             <button class="cu-confirm-btn" id="btn-confirm" disabled onclick="confirmInterest()">
               <i data-feather="check-circle" style="width:18px;height:18px"></i>
               Confirmer mon intérêt
@@ -396,7 +396,7 @@ async function confirmInterest() {
     const msg = err.error ?? err.message ?? 'Erreur';
     if (msg.includes('déjà')) {
       UI.toast('Vous avez déjà manifesté votre intérêt pour cette expédition.', 'warning');
-      setTimeout(() => { window.location.href = 'expeditions-disponibles.html'; }, 1500);
+      setTimeout(() => { window.location.href = 'transporteur-missions.html'; }, 1500);
     } else {
       document.getElementById('alert-container').innerHTML =
         `<div class="alert alert-danger alert-dismissible fade show mb-3">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
@@ -407,7 +407,10 @@ async function confirmInterest() {
   }
 }
 
-// ─── Init ──────────────────────────────────────────────────────────────────────
+// ─── Cette page est dépréciée — redirection immédiate ──────────────────────────
+window.location.replace('transporteur-missions.html');
+
+// ─── Init (jamais atteint) ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
@@ -415,7 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   shipmentId = params.get('id');
   if (!shipmentId) {
-    window.location.href = 'expeditions-disponibles.html';
+    window.location.href = 'transporteur-missions.html';
     return;
   }
 

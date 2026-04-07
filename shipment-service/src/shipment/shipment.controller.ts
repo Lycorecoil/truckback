@@ -43,7 +43,24 @@ export function createShipmentRouter(service: ShipmentService): Router {
       }
       const transporterId       = getHeader(req, "x-user-id");
       const transporterTenantId = getHeader(req, "x-tenant-id");
-      const shipment = await service.expressInterest(req.params["id"] as string, { transporterId, transporterTenantId });
+      const { truckId } = req.body as { truckId?: string };
+      const shipment = await service.expressInterest(req.params["id"] as string, { transporterId, transporterTenantId, truckId });
+      res.json(shipment);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // DELETE /shipments/:id/interest — transporteur annule son intérêt
+  router.delete("/:id/interest", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "TRANSPORTER") {
+        res.status(403).json({ error: "Seul un transporteur peut annuler son intérêt" });
+        return;
+      }
+      const transporterId = getHeader(req, "x-user-id");
+      const shipment = await service.cancelInterest(req.params["id"] as string, transporterId);
       res.json(shipment);
     } catch (err) {
       next(err);
@@ -241,13 +258,13 @@ export function createShipmentRouter(service: ShipmentService): Router {
     }
   });
 
-  // GET /shipments/:id — TRANSPORTER (propre ou PENDING) + ADMIN uniquement
+  // GET /shipments/:id — TRANSPORTER (propre ou PENDING) + DRIVER (assigné) + ADMIN
   router.get("/:id", async (req, res, next) => {
     try {
       const role   = getHeader(req, "x-user-role") as Role;
       const userId = getHeader(req, "x-user-id");
 
-      if (role !== "TRANSPORTER" && role !== "ADMIN") {
+      if (role !== "TRANSPORTER" && role !== "ADMIN" && role !== "DRIVER") {
         res.status(403).json({ error: "Accès refusé à cette expédition" });
         return;
       }
@@ -255,11 +272,21 @@ export function createShipmentRouter(service: ShipmentService): Router {
       const result = await service.getById(req.params["id"] as string);
 
       if (role === "TRANSPORTER") {
-        const s = (result as { data?: { transporterId?: string; statut?: string } }).data ?? result as { transporterId?: string; statut?: string };
-        const isOwn    = s.transporterId === userId;
-        const isPending = s.statut === "PENDING";
-        if (!isOwn && !isPending) {
+        const tenantId = getHeader(req, "x-tenant-id");
+        const s = (result as { data?: { transporterId?: string; transporterTenantId?: string; statut?: string } }).data ?? result as { transporterId?: string; transporterTenantId?: string; statut?: string };
+        const isOwn        = s.transporterId === userId;
+        const isPending    = s.statut === "PENDING";
+        const isProposedTo = s.statut === "PROPOSED" && s.transporterTenantId === tenantId;
+        if (!isOwn && !isPending && !isProposedTo) {
           res.status(403).json({ error: "Accès refusé à cette expédition" });
+          return;
+        }
+      }
+
+      if (role === "DRIVER") {
+        const s = (result as { data?: { driverId?: string } }).data ?? result as { driverId?: string };
+        if (s.driverId !== userId) {
+          res.status(403).json({ error: "Vous n'êtes pas assigné à cette expédition" });
           return;
         }
       }

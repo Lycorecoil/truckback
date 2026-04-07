@@ -57,6 +57,43 @@ export function createDriverRouter(service: DriverService): Router {
     }
   });
 
+  // GET /fleet/drivers/me — DRIVER voit son propre profil
+  router.get("/me", async (req, res, next) => {
+    try {
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
+      if (role !== "DRIVER") {
+        res.status(403).json({ error: "Réservé aux chauffeurs" });
+        return;
+      }
+      const result = await service.getById(userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // PUT /fleet/drivers/me — DRIVER met à jour son propre téléphone
+  router.put("/me", async (req, res, next) => {
+    try {
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
+      if (role !== "DRIVER") {
+        res.status(403).json({ error: "Réservé aux chauffeurs" });
+        return;
+      }
+      const { telephone } = req.body as { telephone?: string };
+      if (!telephone) {
+        res.status(400).json({ error: "telephone est requis" });
+        return;
+      }
+      const result = await service.updateOne(userId, { telephone });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // GET /fleet/drivers/:id
   router.get("/:id", async (req, res, next) => {
     try {

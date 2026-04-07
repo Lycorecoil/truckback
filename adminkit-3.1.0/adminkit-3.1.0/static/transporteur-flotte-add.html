@@ -6,6 +6,7 @@
   <title>Ajouter un camion | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -138,6 +139,70 @@
                 </div>
               </div>
 
+              <!-- Photos du véhicule -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="align-middle me-2" data-feather="camera" style="width:16px"></i>
+                    Photos du véhicule <span class="text-muted fw-normal" style="font-size:.8rem">(optionnel)</span>
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <p class="text-muted small mb-3">Ajoutez jusqu'à 3 photos de votre camion. Chaque photo sera compressée automatiquement.</p>
+                  <div class="row g-3">
+
+                    <!-- Côté gauche -->
+                    <div class="col-md-4">
+                      <div class="photo-upload-zone" id="zone-gauche" onclick="document.getElementById('input-gauche').click()">
+                        <div class="photo-placeholder" id="placeholder-gauche">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                          <span class="photo-label">Côté gauche</span>
+                          <span class="photo-hint">Cliquer pour ajouter</span>
+                        </div>
+                        <img id="preview-gauche" class="photo-preview" style="display:none" alt="Côté gauche" />
+                        <input type="file" id="input-gauche" accept="image/*" style="display:none" onchange="loadPhoto(this,'gauche')" />
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-danger mt-2 w-100 d-none" id="clear-gauche" onclick="clearPhoto('gauche')">
+                        <i data-feather="trash-2" style="width:13px"></i> Supprimer
+                      </button>
+                    </div>
+
+                    <!-- Côté droit -->
+                    <div class="col-md-4">
+                      <div class="photo-upload-zone" id="zone-droite" onclick="document.getElementById('input-droite').click()">
+                        <div class="photo-placeholder" id="placeholder-droite">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                          <span class="photo-label">Côté droit</span>
+                          <span class="photo-hint">Cliquer pour ajouter</span>
+                        </div>
+                        <img id="preview-droite" class="photo-preview" style="display:none" alt="Côté droit" />
+                        <input type="file" id="input-droite" accept="image/*" style="display:none" onchange="loadPhoto(this,'droite')" />
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-danger mt-2 w-100 d-none" id="clear-droite" onclick="clearPhoto('droite')">
+                        <i data-feather="trash-2" style="width:13px"></i> Supprimer
+                      </button>
+                    </div>
+
+                    <!-- Face avant -->
+                    <div class="col-md-4">
+                      <div class="photo-upload-zone" id="zone-avant" onclick="document.getElementById('input-avant').click()">
+                        <div class="photo-placeholder" id="placeholder-avant">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                          <span class="photo-label">Face avant</span>
+                          <span class="photo-hint">Cliquer pour ajouter</span>
+                        </div>
+                        <img id="preview-avant" class="photo-preview" style="display:none" alt="Face avant" />
+                        <input type="file" id="input-avant" accept="image/*" style="display:none" onchange="loadPhoto(this,'avant')" />
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-danger mt-2 w-100 d-none" id="clear-avant" onclick="clearPhoto('avant')">
+                        <i data-feather="trash-2" style="width:13px"></i> Supprimer
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
               <!-- Base de départ -->
               <div class="card mb-4">
                 <div class="card-header">
@@ -220,9 +285,103 @@
   </div>
 </div>
 
+<style>
+.photo-upload-zone {
+  border: 2px dashed #E5E7EB;
+  border-radius: 10px;
+  height: 160px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color .2s, background .2s;
+  background: #FAFAFA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-upload-zone:hover { border-color: #F97316; background: #FFF7ED; }
+.photo-upload-zone:hover .photo-placeholder { color: #F97316; }
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #9CA3AF;
+  pointer-events: none;
+  text-align: center;
+  padding: 12px;
+}
+.photo-label { font-weight: 600; font-size: .875rem; color: inherit; }
+.photo-hint { font-size: .72rem; color: #D1D5DB; }
+.photo-preview {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  position: absolute; inset: 0;
+}
+</style>
+
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
+const _photos = {};
+
+function compressImage(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_W = 900, MAX_H = 600, Q = 0.82;
+        let w = img.width, h = img.height;
+        if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+        if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', Q));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadPhoto(input, side) {
+  const file = input.files[0];
+  if (!file) return;
+  const b64 = await compressImage(file);
+  _photos[side] = b64;
+  const preview = document.getElementById('preview-' + side);
+  const placeholder = document.getElementById('placeholder-' + side);
+  preview.src = b64;
+  preview.style.display = 'block';
+  placeholder.style.display = 'none';
+  document.getElementById('clear-' + side).classList.remove('d-none');
+  document.getElementById('zone-' + side).style.borderColor = '#10B981';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function dataURLtoBlob(dataURL) {
+  const [header, data] = dataURL.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const bytes = atob(data);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+function clearPhoto(side) {
+  delete _photos[side];
+  const preview = document.getElementById('preview-' + side);
+  const placeholder = document.getElementById('placeholder-' + side);
+  preview.src = '';
+  preview.style.display = 'none';
+  placeholder.style.display = 'flex';
+  document.getElementById('clear-' + side).classList.add('d-none');
+  document.getElementById('zone-' + side).style.borderColor = '';
+  document.getElementById('input-' + side).value = '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (!Auth.requireAuth()) return;
 
@@ -284,7 +443,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btn-save-truck');
     UI.loading(btn, true);
     try {
-      await api.post('/fleet/trucks', payload);
+      // Étape 1 : créer le camion (JSON)
+      const truck = await api.post('/fleet/trucks', payload);
+
+      // Étape 2 : uploader les photos si présentes
+      const photoSides = Object.keys(_photos);
+      if (photoSides.length > 0) {
+        const formData = new FormData();
+        for (const side of photoSides) {
+          const blob = dataURLtoBlob(_photos[side]);
+          formData.append(side, blob, side + '.jpg');
+        }
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        await fetch(`/v1/fleet/trucks/${truck.id}/photos`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData,
+        });
+      }
+
       UI.toast('Camion ajouté avec succès !', 'success');
       setTimeout(() => { window.location.href = 'transporteur-flotte.html'; }, 800);
     } catch (err) {

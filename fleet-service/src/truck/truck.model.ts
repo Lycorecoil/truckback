@@ -13,7 +13,11 @@ const truckSchema = new Schema<Truck>(
     carrosserie:    { type: String },
     gabarit:        { type: String },
     capaciteMax:    { type: Number, required: true },
-    photoUrl:       { type: String },
+    photos: {
+      gauche: { type: String },
+      droite: { type: String },
+      avant:  { type: String },
+    },
     statut: {
       type: String,
       enum: ["AVAILABLE", "BUSY", "MAINTENANCE"],

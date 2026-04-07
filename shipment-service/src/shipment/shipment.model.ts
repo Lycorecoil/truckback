@@ -5,6 +5,7 @@ const interestSchema = new Schema(
   {
     transporterId:       { type: String, required: true },
     transporterTenantId: { type: String },
+    truckId:             { type: String },
     createdAt:           { type: Date, default: Date.now },
   },
   { _id: false }

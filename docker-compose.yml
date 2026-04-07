@@ -226,6 +226,7 @@ services:
       - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./adminkit-3.1.0/adminkit-3.1.0/static:/var/www/app:ro
+      - truck_uploads:/var/www/uploads:ro
     depends_on:
       api-gateway-1:
         condition: service_healthy
@@ -329,6 +330,10 @@ services:
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       REDIS_URL: redis://redis:6379
       INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-elimmeka}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - truck_uploads:/app/uploads
     depends_on:
       mongodb:
         condition: service_healthy
@@ -363,6 +368,7 @@ services:
       NOTIFICATION_SERVICE_URL: http://notification-service:3005
       COMPANY_SERVICE_URL: http://company-service:3001
       FALLBACK_EMAIL: ${FALLBACK_EMAIL:-ilboudojeanbaptiste41@gmail.com}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-elimmeka}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       INTERNAL_RATE_LIMIT_MAX: ${INTERNAL_RATE_LIMIT_MAX:-300}
     depends_on:
@@ -437,11 +443,16 @@ services:
       WHATSAPP_SESSION_PATH: /app/.wwebjs_auth
       REDIS_URL: redis://redis:6379
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     depends_on:
       mongodb:
         condition: service_healthy
       mongodb-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3005/health || exit 1
       interval: 15s
@@ -546,4 +557,6 @@ volumes:
   loki_data:
     driver: local
   whatsapp_session:
+    driver: local
+  truck_uploads:
     driver: local

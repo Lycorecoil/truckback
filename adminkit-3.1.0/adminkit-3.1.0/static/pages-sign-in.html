@@ -6,50 +6,60 @@
   <title>Connexion | Elimmekatruck</title>
   <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
   <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-<main class="d-flex w-100">
-  <div class="container d-flex flex-column">
-    <div class="row vh-100">
-      <div class="col-sm-10 col-md-8 col-lg-5 mx-auto d-table h-100">
-        <div class="d-table-cell align-middle">
+<div id="alert-container" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;width:400px;max-width:90vw"></div>
+<div class="cu-auth-wrap">
 
-          <div class="text-center mt-4 mb-4">
-            <h1 class="h2">🚛 Elimmekatruck</h1>
-            <p class="lead text-muted">Connectez-vous à votre espace</p>
-          </div>
-
-          <div id="alert-container"></div>
-
-          <div class="card">
-            <div class="card-body">
-              <div class="m-sm-3">
-                <form id="form-login">
-                  <div class="mb-3">
-                    <label class="form-label" for="email">Adresse email</label>
-                    <input id="email" name="email" autocomplete="email" class="form-control form-control-lg" type="email" placeholder="votre@email.com" required />
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label" for="password">Mot de passe</label>
-                    <input id="password" name="password" autocomplete="current-password" class="form-control form-control-lg" type="password" placeholder="••••••••" required />
-                  </div>
-                  <div class="text-center mt-3">
-                    <button id="btn-submit" type="submit" class="btn btn-lg btn-primary w-100">Se connecter</button>
-                  </div>
-                </form>
-                <div class="text-center mt-3">
-                  <small>Pas encore de compte ? <a href="pages-sign-up.html">Créer un compte</a></small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
+  <!-- LEFT PANEL -->
+  <div class="cu-auth-left">
+    <div class="cu-auth-logo">
+      <span style="font-size:2rem">🚛</span>
+      <div>
+        <div style="font-size:1.1rem;font-weight:800">Camion Uber</div>
+        <div style="font-size:.65rem;opacity:.6;letter-spacing:.12em;text-transform:uppercase">Afrique de l'Ouest</div>
+      </div>
+    </div>
+    <div>
+      <div class="cu-auth-tagline">La logistique B2B,<br>simplifiée.</div>
+      <div class="cu-auth-pills">
+        <span class="cu-auth-pill">⚡ Matching instantané</span>
+        <span class="cu-auth-pill">📍 Tracking temps réel</span>
+        <span class="cu-auth-pill">🌍 Afrique de l'Ouest</span>
       </div>
     </div>
   </div>
-</main>
+
+  <!-- RIGHT PANEL -->
+  <div class="cu-auth-right">
+    <div class="cu-auth-form">
+      <div class="cu-auth-title">Bienvenue</div>
+      <div class="cu-auth-sub">Connectez-vous à votre portail</div>
+
+      <form id="form-login">
+        <div class="mb-4">
+          <label class="cu-auth-label" for="email">Email professionnel</label>
+          <input id="email" name="email" autocomplete="email" class="cu-auth-input" type="email" placeholder="contact@votreentreprise.com" required />
+        </div>
+        <div class="mb-2">
+          <label class="cu-auth-label" for="password">Mot de passe</label>
+          <input id="password" name="password" autocomplete="current-password" class="cu-auth-input" type="password" placeholder="••••••••" required />
+        </div>
+        <div class="d-flex justify-content-end mb-1">
+          <a href="#" class="cu-auth-link" style="font-size:.82rem">Mot de passe oublié ?</a>
+        </div>
+        <button id="btn-submit" type="submit" class="cu-auth-btn">Se connecter</button>
+      </form>
+
+      <div class="text-center mt-4" style="color:#6B7280;font-size:.875rem">
+        Pas encore de compte ? <a href="pages-sign-up.html" class="cu-auth-link">S'inscrire</a>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>

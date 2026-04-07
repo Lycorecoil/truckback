@@ -5,6 +5,7 @@ export type ShipmentStatus = "PENDING" | "PROPOSED" | "ACCEPTED" | "IN_PROGRESS"
 export interface ShipmentInterest {
   transporterId: string;
   transporterTenantId?: string;
+  truckId?: string;
   createdAt: Date;
 }
 

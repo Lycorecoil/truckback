@@ -3,6 +3,7 @@ import type { BaseEntity, ServiceResponse } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
 import { sendEmail } from "../clients/NotificationClient";
+import { setTruckStatus, setDriverStatus } from "../clients/FleetClient";
 import { fetchWithRetry } from "../utils/fetchWithTimeout";
 import { withCircuitBreaker } from "../utils/circuitBreaker";
 import { getOrganizationEmail } from "../clients/CompanyClient";
@@ -96,6 +97,8 @@ export class ShipmentService extends GenericService<Shipment> {
     if (!shipment) {
       throw new Error("Cette annonce n'est plus disponible (déjà acceptée ou annulée)");
     }
+    void setTruckStatus(data.truckId, "BUSY");
+    void setDriverStatus(data.driverId, "BUSY");
     const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
@@ -120,6 +123,8 @@ export class ShipmentService extends GenericService<Shipment> {
 
   async deliverMission(id: string): Promise<Shipment> {
     const shipment = await this.shipmentRepo.update(id, { statut: "DELIVERED" });
+    if (shipment.truckId)  void setTruckStatus(shipment.truckId, "AVAILABLE");
+    if (shipment.driverId) void setDriverStatus(shipment.driverId, "AVAILABLE");
     const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
@@ -130,9 +135,17 @@ export class ShipmentService extends GenericService<Shipment> {
     return shipment;
   }
 
+  async cancelInterest(id: string, transporterId: string): Promise<Shipment> {
+    const shipment = await this.shipmentRepo.removeInterest(id, transporterId);
+    if (!shipment) {
+      throw Object.assign(new Error("Expédition introuvable ou intérêt non trouvé"), { statusCode: 404 });
+    }
+    return shipment;
+  }
+
   async expressInterest(
     id: string,
-    data: { transporterId: string; transporterTenantId?: string }
+    data: { transporterId: string; transporterTenantId?: string; truckId?: string }
   ): Promise<Shipment> {
     const shipment = await this.shipmentRepo.addInterest(id, { ...data, createdAt: new Date() });
     if (!shipment) {
@@ -178,6 +191,8 @@ export class ShipmentService extends GenericService<Shipment> {
     if (!shipment) {
       throw new Error("Proposition introuvable ou déjà traitée");
     }
+    void setTruckStatus(data.truckId, "BUSY");
+    void setDriverStatus(data.driverId, "BUSY");
     const companyEmail = await resolveEmail(shipment.companyTenantId, "company");
     void sendEmail(
       shipment.companyId,
@@ -200,6 +215,8 @@ export class ShipmentService extends GenericService<Shipment> {
     const updateData: Partial<Shipment> = { statut: "CANCELLED" };
     if (commentaireAnnulation) updateData.commentaireAnnulation = commentaireAnnulation;
     const shipment = await this.shipmentRepo.update(id, updateData);
+    if (shipment.truckId)  void setTruckStatus(shipment.truckId, "AVAILABLE");
+    if (shipment.driverId) void setDriverStatus(shipment.driverId, "AVAILABLE");
     if (shipment.transporterId) {
       const transporterEmail = await resolveEmail(shipment.transporterTenantId, "transporter");
       void sendEmail(

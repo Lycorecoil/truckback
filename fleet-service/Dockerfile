@@ -17,6 +17,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
 
+RUN mkdir -p /app/uploads/trucks && chown -R appuser:appgroup /app/uploads
+
 USER appuser
 ENV NODE_ENV=production
 EXPOSE 3003

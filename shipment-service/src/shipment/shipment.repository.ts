@@ -93,6 +93,15 @@ export class ShipmentRepository implements IRepository<Shipment> {
     return docs.map((d) => d.toJSON() as Shipment);
   }
 
+  async removeInterest(id: string, transporterId: string): Promise<Shipment | null> {
+    const doc = await ShipmentModel.findOneAndUpdate(
+      { id, statut: "PENDING" },
+      { $pull: { interests: { transporterId } } },
+      { returnDocument: "after" }
+    );
+    return doc ? (doc.toJSON() as Shipment) : null;
+  }
+
   async addInterest(id: string, interest: ShipmentInterest): Promise<Shipment | null> {
     // Vérifie que ce transporteur n'a pas déjà manifesté son intérêt
     const doc = await ShipmentModel.findOneAndUpdate(

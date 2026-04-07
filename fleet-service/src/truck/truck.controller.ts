@@ -1,6 +1,31 @@
 import { Router } from "express";
 import { z } from "zod";
+import multer from "multer";
+import { join } from "path";
+import { mkdirSync } from "fs";
 import type { TruckService } from "./truck.service";
+
+const UPLOAD_DIR = process.env["UPLOAD_DIR"] ?? "/app/uploads/trucks";
+
+const storage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const truckId = req.params["id"] as string;
+    const dir = join(UPLOAD_DIR, truckId);
+    mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    cb(null, `${file.fieldname}.jpg`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, file.mimetype.startsWith("image/"));
+  },
+});
 
 type Role = "ADMIN" | "TRANSPORTER" | "EXPEDITEUR" | "DRIVER";
 
@@ -17,7 +42,11 @@ const TruckCreateSchema = z.object({
   carrosserie:     z.string().optional(),
   gabarit:         z.string().optional(),
   capaciteMax:     z.number({ required_error: "capaciteMax est requis", invalid_type_error: "capaciteMax doit être un nombre" }).positive("capaciteMax doit être un nombre positif"),
-  photoUrl:        z.string().url().optional(),
+  photos:          z.object({
+    gauche: z.string().optional(),
+    droite: z.string().optional(),
+    avant:  z.string().optional(),
+  }).optional(),
   statut:          z.enum(["AVAILABLE", "BUSY", "MAINTENANCE"]).optional(),
   driverId:        z.string().optional(),
   villeBase:       z.string({ required_error: "villeBase est requise" }).min(1, "villeBase est requise"),
@@ -204,6 +233,51 @@ export function createTruckRouter(service: TruckService): Router {
       next(err);
     }
   });
+
+  // POST /trucks/:id/photos — upload des photos (multer multipart)
+  router.post(
+    "/:id/photos",
+    upload.fields([
+      { name: "gauche", maxCount: 1 },
+      { name: "droite", maxCount: 1 },
+      { name: "avant",  maxCount: 1 },
+    ]),
+    async (req, res, next) => {
+      try {
+        const role = getHeader(req, "x-user-role") as Role;
+        if (role !== "TRANSPORTER" && role !== "ADMIN") {
+          res.status(403).json({ success: false, code: 403, error: "Accès refusé" });
+          return;
+        }
+        const truckId  = req.params["id"] as string;
+        const tenantId = getHeader(req, "x-tenant-id");
+
+        const truck = await service.getById(truckId) as unknown as import("./truck.entity").Truck | null;
+        if (!truck) {
+          res.status(404).json({ success: false, code: 404, error: "Camion introuvable" });
+          return;
+        }
+        if (role !== "ADMIN" && truck.tenantId !== tenantId) {
+          res.status(403).json({ success: false, code: 403, error: "Accès refusé" });
+          return;
+        }
+
+        const files = req.files as Record<string, Express.Multer.File[]>;
+        const photos: { gauche?: string; droite?: string; avant?: string } = { ...(truck.photos ?? {}) };
+
+        for (const side of ["gauche", "droite", "avant"] as const) {
+          if (files[side]?.[0]) {
+            photos[side] = `/uploads/trucks/${truckId}/${side}.jpg`;
+          }
+        }
+
+        const updated = await service.updateOne(truckId, { photos });
+        res.json(updated);
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
 
   // DELETE /trucks/:id — soft delete (MAINTENANCE) — uniquement TRANSPORTER (ou ADMIN)
   router.delete("/:id", async (req, res, next) => {
