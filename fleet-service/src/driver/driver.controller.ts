@@ -94,6 +94,27 @@ export function createDriverRouter(service: DriverService): Router {
     }
   });
 
+  // PUT /fleet/drivers/me/device-token — DRIVER enregistre son OneSignal player ID
+  router.put("/me/device-token", async (req, res, next) => {
+    try {
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
+      if (role !== "DRIVER") {
+        res.status(403).json({ error: "Réservé aux chauffeurs" });
+        return;
+      }
+      const { oneSignalPlayerId } = req.body as { oneSignalPlayerId?: string };
+      if (!oneSignalPlayerId) {
+        res.status(400).json({ error: "oneSignalPlayerId est requis" });
+        return;
+      }
+      const result = await service.updateOne(userId, { oneSignalPlayerId });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // GET /fleet/drivers/:id
   router.get("/:id", async (req, res, next) => {
     try {

@@ -3,10 +3,11 @@ import type { BaseEntity, ServiceResponse } from "@jb226/generic-service";
 import type { Shipment, ShipmentStatus } from "./shipment.entity";
 import type { ShipmentRepository } from "./shipment.repository";
 import { sendEmail } from "../clients/NotificationClient";
-import { setTruckStatus, setDriverStatus } from "../clients/FleetClient";
+import { setTruckStatus, setDriverStatus, getDriverPlayerId } from "../clients/FleetClient";
 import { fetchWithRetry } from "../utils/fetchWithTimeout";
 import { withCircuitBreaker } from "../utils/circuitBreaker";
 import { getOrganizationEmail } from "../clients/CompanyClient";
+import { sendPush } from "../clients/NotificationClient";
 
 const FLEET_SERVICE_URL = process.env["FLEET_SERVICE_URL"] ?? "http://localhost:3003";
 const FALLBACK_EMAIL = process.env["FALLBACK_EMAIL"] ?? "ilboudojeanbaptiste41@gmail.com";
@@ -106,6 +107,14 @@ export class ShipmentService extends GenericService<Shipment> {
       "Votre annonce a été acceptée",
       `Bonne nouvelle ! Un transporteur a accepté votre annonce pour ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
     );
+    // Push notification au chauffeur
+    const playerId = await getDriverPlayerId(data.driverId);
+    void sendPush(
+      data.driverId,
+      playerId ?? "",
+      "Nouvelle mission assignée 🚛",
+      `${shipment.marchandise} — ${shipment.villeDepart} → ${shipment.villeArrivee}`,
+    );
     return shipment;
   }
 
@@ -199,6 +208,14 @@ export class ShipmentService extends GenericService<Shipment> {
       companyEmail,
       "Votre annonce a été acceptée",
       `Un transporteur a accepté votre annonce pour ${shipment.marchandise} de ${shipment.villeDepart} vers ${shipment.villeArrivee}.`,
+    );
+    // Push notification au chauffeur
+    const playerId = await getDriverPlayerId(data.driverId);
+    void sendPush(
+      data.driverId,
+      playerId ?? "",
+      "Nouvelle mission assignée 🚛",
+      `${shipment.marchandise} — ${shipment.villeDepart} → ${shipment.villeArrivee}`,
     );
     return shipment;
   }

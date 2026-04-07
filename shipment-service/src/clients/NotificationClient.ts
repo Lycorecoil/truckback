@@ -22,3 +22,24 @@ export async function sendEmail(
     logger.error({ err, recipientId }, "[shipment-service][NotificationClient] Erreur envoi email après retries");
   }
 }
+
+export async function sendPush(
+  recipientId: string,
+  deviceToken: string,
+  title: string,
+  body: string,
+): Promise<void> {
+  if (!deviceToken) return;
+  try {
+    await fetchWithRetry(
+      `${NOTIFICATION_SERVICE_URL}/notification/push`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId, deviceToken, title, body }),
+      },
+    );
+  } catch (err) {
+    logger.error({ err, recipientId }, "[shipment-service][NotificationClient] Erreur envoi push après retries");
+  }
+}

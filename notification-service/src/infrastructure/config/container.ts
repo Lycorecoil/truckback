@@ -2,7 +2,7 @@ import { MongoNotificationRepository } from '../repositories/MongoNotificationRe
 import { MongoTemplateRepository } from '../repositories/MongoTemplateRepository';
 import { NodemailerEmailProvider } from '../providers/NodemailerEmailProvider';
 import { getWhatsAppProvider } from '../providers/WhatsAppProvider';
-import { StubPushProvider } from '../providers/StubPushProvider';
+import { OneSignalPushProvider } from '../providers/OneSignalPushProvider';
 import { SendEmailUseCase } from '../../application/use-cases/SendEmailUseCase';
 import { SendSmsUseCase } from '../../application/use-cases/SendSmsUseCase';
 import { SendPushUseCase } from '../../application/use-cases/SendPushUseCase';
@@ -14,7 +14,7 @@ const templateRepository = new MongoTemplateRepository();
 
 const emailProvider = new NodemailerEmailProvider();
 const smsProvider = getWhatsAppProvider();
-const pushProvider = new StubPushProvider();
+const pushProvider = new OneSignalPushProvider();
 
 export const container = {
   sendEmailUseCase: new SendEmailUseCase(notificationRepository, emailProvider),

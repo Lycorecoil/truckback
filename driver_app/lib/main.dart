@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/notifications/push_notification_service.dart';
 import 'features/auth/data/auth_notifier.dart';
 
 void main() {
@@ -19,7 +20,12 @@ class _ElimmekatruckAppState extends ConsumerState<ElimmekatruckApp> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(authNotifierProvider.notifier).restoreSession());
+    Future.microtask(() async {
+      // Init OneSignal
+      await ref.read(pushNotificationServiceProvider).initialize();
+      // Restaure la session JWT
+      await ref.read(authNotifierProvider.notifier).restoreSession();
+    });
   }
 
   @override

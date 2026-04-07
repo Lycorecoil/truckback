@@ -10,6 +10,7 @@ export interface Driver extends BaseEntity {
   telephone: string;
   numeroPermis: string;
   statut: DriverStatus;
+  oneSignalPlayerId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

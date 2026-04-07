@@ -35,3 +35,18 @@ export async function setDriverStatus(driverId: string, statut: "AVAILABLE" | "B
     logger.error({ err, driverId, statut }, "[shipment-service][FleetClient] Erreur mise à jour statut chauffeur");
   }
 }
+
+export async function getDriverPlayerId(driverId: string): Promise<string | null> {
+  try {
+    const res = await fetchWithRetry(`${FLEET_SERVICE_URL}/drivers/${driverId}`, {
+      headers: { "x-internal-secret": INTERNAL_SERVICE_SECRET },
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { data?: { oneSignalPlayerId?: string }; oneSignalPlayerId?: string };
+    const driver = data.data ?? data;
+    return driver.oneSignalPlayerId ?? null;
+  } catch (err) {
+    logger.error({ err, driverId }, "[shipment-service][FleetClient] Erreur récupération playerId chauffeur");
+    return null;
+  }
+}

@@ -15,6 +15,7 @@ const driverSchema = new Schema<Driver>(
       enum: ["AVAILABLE", "BUSY", "SUSPENDED"],
       default: "AVAILABLE",
     },
+    oneSignalPlayerId: { type: String },
   },
   {
     timestamps: true,

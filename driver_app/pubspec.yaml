@@ -30,6 +30,9 @@ dependencies:
   # WebSocket
   web_socket_channel: ^3.0.1
 
+  # Push notifications
+  onesignal_flutter: ^5.2.5
+
   # Models immutables
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
