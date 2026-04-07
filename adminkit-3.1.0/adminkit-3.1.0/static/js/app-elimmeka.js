@@ -5,27 +5,167 @@
 
 const API = '/v1';
 
-// ─── 17 pays Afrique de l'Ouest ───────────────────────────────────────────────
-const PAYS_AO = [
-  'Bénin','Burkina Faso','Cap-Vert','Côte d\'Ivoire','Gambie','Ghana',
-  'Guinée','Guinée-Bissau','Libéria','Mali','Mauritanie','Niger','Nigéria',
-  'Sénégal','Sierra Leone','Togo','Cameroun'
-];
+// ─── Géographie (pays + villes) ───────────────────────────────────────────────
+
+let geoData = null;
+
+/**
+ * Charge les données pays/villes depuis le fichier JSON.
+ * À appeler une seule fois au démarrage de l'app.
+ */
+async function loadGeo() {
+  if (geoData) return geoData;
+  try {
+    const r = await fetch('data/geo.json');
+    if (!r.ok) throw new Error(`geo.json: ${r.status}`);
+    geoData = await r.json();
+    return geoData;
+  } catch (err) {
+    console.error('Erreur chargement géographie:', err);
+    return { countries: [] };
+  }
+}
+
+/** Retourne le tableau de villes pour un pays donné */
+function getCities(countryName) {
+  if (!geoData) return [];
+  const country = geoData.countries.find(c => c.name === countryName);
+  return country ? country.cities : [];
+}
+
+/** Retourne la liste de tous les noms de pays */
+function getCountryNames() {
+  if (!geoData) return [];
+  return geoData.countries.map(c => c.name);
+}
 
 /**
  * Remplit tous les <select class="country-select"> de la page.
  * @param {boolean} withAll - si true, ajoute une option "Tous" en tête (pour les filtres)
  */
 function fillCountrySelects(withAll = false) {
+  const countries = getCountryNames();
+  if (countries.length === 0) return;
+
   document.querySelectorAll('select.country-select').forEach(sel => {
     const current = sel.value;
     const first = withAll
       ? '<option value="">Tous</option>'
       : '<option value="">-- Choisir --</option>';
-    sel.innerHTML = first + PAYS_AO.map(p =>
+    sel.innerHTML = first + countries.map(p =>
       `<option${current === p ? ' selected' : ''}>${p}</option>`
     ).join('');
   });
+}
+
+/**
+ * Remplit un <select class="city-select"> en fonction du pays sélectionné.
+ * @param {HTMLSelectElement|string} countrySelect - Le select pays ou son ID
+ * @param {HTMLSelectElement|string} citySelect - Le select villes ou son ID
+ * @param {boolean} withAll - si true, ajoute "Toutes" en tête (pour les filtres)
+ */
+function fillCitySelect(countrySelect, citySelect, withAll = false) {
+  const countryEl = typeof countrySelect === 'string'
+    ? document.getElementById(countrySelect) : countrySelect;
+  const cityEl = typeof citySelect === 'string'
+    ? document.getElementById(citySelect) : citySelect;
+  if (!countryEl || !cityEl) return;
+
+  const cities = getCities(countryEl.value);
+  const first = withAll
+    ? '<option value="">Toutes</option>'
+    : '<option value="">-- Choisir une ville --</option>';
+
+  if (cities.length === 0) {
+    cityEl.innerHTML = first + '<option value="__custom__">✏️ Autre ville (saisie libre)</option>';
+  } else {
+    cityEl.innerHTML = first +
+      cities.map(c => `<option>${c}</option>`).join('') +
+      '<option value="__custom__">✏️ Autre ville (saisie libre)</option>';
+  }
+
+  // Cacher l'input custom s'il existe
+  const customInput = cityEl.parentElement.querySelector('.custom-city-input');
+  if (customInput) customInput.style.display = 'none';
+}
+
+/**
+ * Bind les événements change sur tous les country-select pour mettre à jour
+ * les city-select associés. Stratégie de pairing :
+ *   1. Cherche un city-select dont l'ID correspond (pays→ville, Pays→Ville)
+ *   2. Sinon cherche le .city-select le plus proche dans le même conteneur
+ */
+function bindCitySelects() {
+  document.querySelectorAll('select.country-select').forEach(countrySel => {
+    // Stratégie 1 : correspondance par ID
+    let cityId = countrySel.id
+      .replace(/pays/i, 'ville')
+      .replace(/Pays/, 'Ville')
+      .replace(/Depart/, 'Depart')
+      .replace(/depart/, 'depart')
+      .replace(/Arrivee/, 'Arrivee')
+      .replace(/arrivee/, 'arrivee')
+      .replace(/Base/, 'Base')
+      .replace(/base/, 'base');
+
+    let citySel = document.getElementById(cityId);
+
+    // Stratégie 2 : chercher dans le même conteneur
+    if (!citySel) {
+      const container = countrySel.closest('.row, .card-body, .mb-3, form, .d-flex, .tracking-panel');
+      if (container) {
+        citySel = container.querySelector('.city-select');
+      }
+    }
+
+    if (citySel) {
+      // Remplir les villes au chargement si un pays est déjà sélectionné
+      if (countrySel.value) {
+        fillCitySelect(countrySel, citySel);
+      }
+      // Binder le changement
+      countrySel.addEventListener('change', () => {
+        fillCitySelect(countrySel, citySel);
+      });
+    }
+  });
+
+  // Gérer l'option "Autre ville (saisie libre)"
+  document.addEventListener('change', (e) => {
+    if (!e.target.classList.contains('city-select')) return;
+    const sel = e.target;
+    let customInput = sel.parentElement.querySelector('.custom-city-input');
+
+    if (sel.value === '__custom__') {
+      if (!customInput) {
+        customInput = document.createElement('input');
+        customInput.type = 'text';
+        customInput.className = 'form-control custom-city-input mt-1';
+        customInput.placeholder = 'Nom de la ville…';
+        sel.parentElement.appendChild(customInput);
+        customInput.focus();
+      } else {
+        customInput.style.display = '';
+        customInput.focus();
+      }
+    } else if (customInput) {
+      customInput.style.display = 'none';
+      customInput.value = '';
+    }
+  });
+}
+
+/**
+ * Récupère la valeur réelle d'un city-select.
+ * Si "__custom__" est sélectionné, retourne la valeur de l'input custom.
+ */
+function getCityValue(citySelect) {
+  const el = typeof citySelect === 'string'
+    ? document.getElementById(citySelect) : citySelect;
+  if (!el) return '';
+  if (el.value !== '__custom__') return el.value;
+  const customInput = el.parentElement.querySelector('.custom-city-input');
+  return customInput ? customInput.value.trim() : '';
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -100,7 +240,10 @@ const api = {
   async get(path) {
     const r = await fetch(`${API}${path}`, { headers: Auth.headers() });
     if (r.status === 401) { Auth.logout(); return null; }
-    if (!r.ok) return null;
+    if (!r.ok) {
+      console.error(`API GET ${path} failed: ${r.status} ${r.statusText}`);
+      return null;
+    }
     return r.json();
   },
   async post(path, body) {
@@ -280,9 +423,18 @@ function showProfileGate() {
   document.body.appendChild(overlay);
 }
 
-// Init navbar sur toutes les pages avec sidebar
-document.addEventListener('DOMContentLoaded', () => {
+// Init sur toutes les pages avec sidebar
+document.addEventListener('DOMContentLoaded', async () => {
+  // Charger les données géographiques une seule fois
+  await loadGeo();
+
   UI.fillNavbar();
+
+  // Remplir les selects de pays
+  fillCountrySelects();
+
+  // Binder les selects de villes aux selects de pays
+  bindCitySelects();
 
   // Afficher la gate si profil incomplet (hors pages publiques)
   if (!isPublicPage() && Auth.isLoggedIn() && !Auth.hasProfile()) {

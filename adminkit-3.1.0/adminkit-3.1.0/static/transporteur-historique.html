@@ -306,7 +306,7 @@ function populateSelects() {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  fillCountrySelects(true);
+  await loadGeo(); fillCountrySelects(true);
 
   try {
     const [shipmentsRes, trucksRes, driversRes] = await Promise.all([

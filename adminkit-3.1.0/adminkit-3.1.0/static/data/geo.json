@@ -1,0 +1,143 @@
+{
+  "countries": [
+    {
+      "name": "Bénin",
+      "cities": [
+        "Cotonou", "Porto-Novo", "Parakou", "Djougou", "Bohicon", "Kandi",
+        "Abomey", "Natitingou", "Ouidah", "Lokossa", "Malanville", "Savalou",
+        "Pobè", "Kétou", "Nikki", "Ségbana", "Banikoara", "Tanguiéta"
+      ]
+    },
+    {
+      "name": "Burkina Faso",
+      "cities": [
+        "Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Ouahigouya", "Banfora",
+        "Dédougou", "Kaya", "Tenkodogo", "Fada N'gourma", "Dori", "Gaoua",
+        "Kongoussi", "Manga", "Réo", "Ziniaré", "Gorom-Gorom", "Diapaga",
+        "Léo", "Nouna", "Tougan", "Houndé", "Boulsa", "Zorgho", "Po"
+      ]
+    },
+    {
+      "name": "Cameroun",
+      "cities": [
+        "Douala", "Yaoundé", "Bamenda", "Bafoussam", "Garoua", "Maroua",
+        "Ngaoundéré", "Kumba", "Nkongsamba", "Bertoua", "Loum", "Kribi",
+        "Edéa", "Mbouda", "Foumban", "Ebolowa", "Limbé", "Tiko"
+      ]
+    },
+    {
+      "name": "Côte d'Ivoire",
+      "cities": [
+        "Abidjan", "Yamoussoukro", "Bouaké", "Daloa", "Korhogo", "Man",
+        "San-Pédro", "Gagnoa", "Divo", "Abengourou", "Bondoukou", "Séguéla",
+        "Odienné", "Ferkessédougou", "Soubré", "Agboville", "Grand-Bassam",
+        "Danané", "Issia", "Sinfra", "Boundiali", "Touba", "Mankono"
+      ]
+    },
+    {
+      "name": "Gambie",
+      "cities": [
+        "Banjul", "Serekunda", "Brikama", "Bakau", "Farafenni", "Lamin",
+        "Sukuta", "Basse Santa Su", "Gunjur", "Kerewan", "Mansa Konko", "Essau"
+      ]
+    },
+    {
+      "name": "Ghana",
+      "cities": [
+        "Accra", "Kumasi", "Tamale", "Takoradi", "Cape Coast", "Tema",
+        "Sunyani", "Ho", "Koforidua", "Wa", "Bolgatanga", "Techiman",
+        "Obuasi", "Ejisu", "Tarkwa", "Nkawkaw", "Winneba", "Bawku",
+        "Yendi", "Goaso", "Sefwi Wiawso", "Hohoe"
+      ]
+    },
+    {
+      "name": "Guinée",
+      "cities": [
+        "Conakry", "Nzérékoré", "Kankan", "Kindia", "Labé", "Siguiri",
+        "Kissidougou", "Guéckédou", "Macenta", "Mamou", "Boké", "Fria",
+        "Kamsar", "Pita", "Dabola", "Kouroussa", "Télimélé", "Coyah"
+      ]
+    },
+    {
+      "name": "Guinée-Bissau",
+      "cities": [
+        "Bissau", "Bafatá", "Gabú", "Bissorã", "Bolama", "Cacheu",
+        "Bubaque", "Catió", "Mansôa", "Farim", "Quinara", "Pirada"
+      ]
+    },
+    {
+      "name": "Liberia",
+      "cities": [
+        "Monrovia", "Gbarnga", "Kakata", "Bensonville", "Harper", "Voinjama",
+        "Buchanan", "Zwedru", "New Yekepa", "Ganta", "Pleebo", "Robertsport"
+      ]
+    },
+    {
+      "name": "Mali",
+      "cities": [
+        "Bamako", "Sikasso", "Mopti", "Ségou", "Kayes", "Gao",
+        "Koutiala", "Tombouctou", "Kati", "San", "Nioro du Sahel", "Markala",
+        "Djenné", "Bougouni", "Kolokani", "Kangaba", "Yanfolila", "Nara",
+        "Banamba", "Bafoulabé", "Kita", "Diré"
+      ]
+    },
+    {
+      "name": "Mauritanie",
+      "cities": [
+        "Nouakchott", "Nouadhibou", "Rosso", "Kaédi", "Zouérat", "Kiffa",
+        "Atar", "Néma", "Sélibaby", "Akjoujt", "Aleg", "Tidjikja",
+        "Aïoun", "Bogué", "Maghama", "Guerou"
+      ]
+    },
+    {
+      "name": "Niger",
+      "cities": [
+        "Niamey", "Zinder", "Maradi", "Agadez", "Tahoua", "Dosso",
+        "Diffa", "Arlit", "Tillabéri", "Birni N'Konni", "Tessaoua", "Gaya",
+        "Dogondoutchi", "Mayahi", "Matameye", "Madaoua", "Téra", "Say"
+      ]
+    },
+    {
+      "name": "Nigeria",
+      "cities": [
+        "Lagos", "Abuja", "Kano", "Ibadan", "Port Harcourt", "Benin City",
+        "Kaduna", "Jos", "Ilorin", "Maiduguri", "Zaria", "Aba", "Onitsha",
+        "Warri", "Calabar", "Enugu", "Sokoto", "Owerri", "Abeokuta",
+        "Akure", "Bauchi", "Minna", "Uyo", "Yola", "Gombe", "Lokoja"
+      ]
+    },
+    {
+      "name": "Sénégal",
+      "cities": [
+        "Dakar", "Touba", "Thiès", "Kaolack", "Saint-Louis", "Ziguinchor",
+        "Mbour", "Diourbel", "Louga", "Tambacounda", "Kolda", "Rufisque",
+        "Kédougou", "Sédhiou", "Matam", "Kaffrine", "Fatick", "Richard Toll",
+        "Tivaouane", "Mbacké", "Joal-Fadiouth", "Khombole"
+      ]
+    },
+    {
+      "name": "Sierra Leone",
+      "cities": [
+        "Freetown", "Bo", "Kenema", "Makeni", "Koidu", "Lunsar",
+        "Port Loko", "Waterloo", "Kabala", "Bonthe", "Magburaka", "Pujehun",
+        "Kailahun", "Kambia"
+      ]
+    },
+    {
+      "name": "Tchad",
+      "cities": [
+        "N'Djaména", "Moundou", "Sarh", "Abéché", "Kelo", "Koumra",
+        "Pala", "Am Timan", "Bongor", "Mongo", "Doba", "Ati",
+        "Laï", "Mao", "Bol", "Faya-Largeau", "Massakory", "Biltine"
+      ]
+    },
+    {
+      "name": "Togo",
+      "cities": [
+        "Lomé", "Sokodé", "Kara", "Atakpamé", "Kpalimé", "Bassar",
+        "Tsévié", "Aného", "Sansanné-Mango", "Dapaong", "Notsé", "Vogan",
+        "Tabligbo", "Bafilo", "Niamtougou", "Badou", "Kandé"
+      ]
+    }
+  ]
+}

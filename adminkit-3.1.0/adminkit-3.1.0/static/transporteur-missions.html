@@ -941,7 +941,7 @@ function openAcceptModalForTruck(truckId) {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  fillCountrySelects(true);
+  await loadGeo(); fillCountrySelects(true);
 
   // Tabs
   document.querySelectorAll('[data-tab]').forEach(btn => {

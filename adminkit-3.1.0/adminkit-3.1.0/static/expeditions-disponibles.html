@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   role = user?.role ?? '';
   currentUserId = user?.sub ?? user?.id ?? '';
   buildSidebar(role);
-  fillCountrySelects(true);
+  await loadGeo(); fillCountrySelects(true);
 
   document.getElementById('page-subtitle').textContent =
     role === 'TRANSPORTER'

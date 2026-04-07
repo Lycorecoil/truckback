@@ -195,10 +195,10 @@ function handleEmballageChange(val) {
   if (typeof feather !== 'undefined') feather.replace();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  fillCountrySelects();
+  await loadGeo(); fillCountrySelects();
 
   document.getElementById('form-expedition').addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -320,7 +320,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCancelO
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  fillCountrySelects(true);
+  await loadGeo(); fillCountrySelects(true);
 
   const res = await api.get('/shipments');
   const raw = Array.isArray(res) ? res : (res?.data ?? []);

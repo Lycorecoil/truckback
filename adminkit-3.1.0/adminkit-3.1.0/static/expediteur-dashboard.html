@@ -685,7 +685,7 @@
             month: "long",
             year: "numeric",
           });
-        try { fillCountrySelects(true); } catch(_) {}
+        await loadGeo(); try { fillCountrySelects(true); } catch(_) {}
 
         try {
           const res = await api.get("/shipments");

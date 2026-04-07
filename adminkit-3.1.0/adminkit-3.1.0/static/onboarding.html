@@ -361,10 +361,10 @@ function goStep(n) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Onboarding : on vérifie juste la connexion, PAS le profil (sinon boucle infinie)
   if (!Auth.isLoggedIn()) { window.location.href = 'pages-sign-in.html'; return; }
-  fillCountrySelects();
+  await loadGeo(); fillCountrySelects();
 
   const user = Auth.getUser();
   if (user?.orgId) { Auth.redirectByRole(); return; }
