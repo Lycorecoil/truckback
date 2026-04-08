@@ -16,14 +16,6 @@
     .role-EXPEDITEUR { background:#DBEAFE; color:#1E40AF; }
     .role-TRANSPORTER { background:#D1FAE5; color:#065F46; }
     .role-DRIVER { background:#EDE9FE; color:#5B21B6; }
-    .col-filter-wrap { position:relative; display:inline-block; }
-    .col-filter-btn { background:none; border:none; padding:2px 4px; cursor:pointer; color:#6c757d; font-size:.75rem; border-radius:3px; }
-    .col-filter-btn:hover { background:#e9ecef; color:#333; }
-    .col-filter-btn.active { color:var(--cu-orange,#F97316); background:rgba(249,115,22,.1); }
-    .col-filter-dropdown { position:absolute; top:100%; left:0; z-index:9999; background:#fff; border:1px solid #dee2e6; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.15); padding:10px; min-width:200px; display:none; }
-    .col-filter-dropdown.show { display:block; }
-    .col-filter-dropdown input, .col-filter-dropdown select { width:100%; margin-bottom:6px; }
-    .col-filter-dropdown .filter-actions { display:flex; gap:4px; justify-content:flex-end; }
     .global-filter-bar { background:#f8f9fa; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
     .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
     .toggle-group .btn { border-radius:0; border:none; font-size:.78rem; padding:5px 14px; background:transparent; color:#6c757d; font-weight:500; transition: all .15s; position:relative; }
@@ -80,7 +72,7 @@
 
         <div id="alert-container"></div>
 
-        <!-- Filtres globaux -->
+        <!-- Filtres rapides -->
         <div class="global-filter-bar">
           <div class="d-flex gap-2 flex-wrap align-items-center">
             <div class="toggle-group">
@@ -88,16 +80,69 @@
               <button class="btn" data-quick="ADMIN" onclick="setQuickFilter(this)"><span class="check-dot"></span>Admins</button>
               <button class="btn" data-quick="EXPEDITEUR" onclick="setQuickFilter(this)"><span class="check-dot"></span>Expéditeurs</button>
               <button class="btn" data-quick="TRANSPORTER" onclick="setQuickFilter(this)"><span class="check-dot"></span>Transporteurs</button>
+              <button class="btn" data-quick="DRIVER" onclick="setQuickFilter(this)"><span class="check-dot"></span>Chauffeurs</button>
             </div>
-            <input id="search-global" type="text" class="form-control form-control-sm" placeholder="Rechercher par email…" style="width:260px" oninput="applyFilters()">
-            <div class="ms-auto d-flex gap-2 align-items-center">
-              <select id="f-sort" class="form-select form-select-sm" style="width:140px" onchange="applyFilters()">
-                <option value="newest">Plus récent</option>
-                <option value="oldest">Plus ancien</option>
-                <option value="email">Email A-Z</option>
-              </select>
+            <div class="ms-auto">
               <button class="btn btn-sm btn-outline-secondary" onclick="resetAllFilters()" title="Réinitialiser">
                 <i data-feather="x" style="width:13px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtres avancés -->
+        <div class="card mb-3">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="toggleFilters()">
+            <span class="fw-semibold">
+              <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
+              Filtres avancés
+              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
+            </span>
+            <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
+          </div>
+          <div id="filter-panel" class="card-body" style="display:none">
+            <div class="row g-2">
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Recherche</label>
+                <input id="f-search" class="form-control form-control-sm" placeholder="Email, organisation…" autocomplete="off" oninput="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Rôle</label>
+                <select id="f-role" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Tous</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="EXPEDITEUR">Expéditeur</option>
+                  <option value="TRANSPORTER">Transporteur</option>
+                  <option value="DRIVER">Chauffeur</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Organisation</label>
+                <select id="f-tenant" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="">Toutes</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Tri</label>
+                <select id="f-sort" class="form-select form-select-sm" onchange="applyFilters()">
+                  <option value="newest">Plus récent</option>
+                  <option value="oldest">Plus ancien</option>
+                  <option value="email">Email A-Z</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Créé depuis</label>
+                <input id="f-date-from" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Créé jusqu'au</label>
+                <input id="f-date-to" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="filter-result-count" class="text-muted small"></span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i data-feather="x" class="align-middle me-1" style="width:13px"></i> Réinitialiser
               </button>
             </div>
           </div>
@@ -109,39 +154,9 @@
             <table class="table table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>
-                    Email
-                    <div class="col-filter-wrap">
-                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
-                      <div class="col-filter-dropdown">
-                        <input type="text" class="form-control form-control-sm" id="cf-email" placeholder="Rechercher…" oninput="applyFilters()">
-                        <div class="filter-actions"><button class="btn btn-xs btn-outline-secondary" onclick="clearColFilter('cf-email')">Effacer</button></div>
-                      </div>
-                    </div>
-                  </th>
-                  <th>
-                    Rôle
-                    <div class="col-filter-wrap">
-                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
-                      <div class="col-filter-dropdown" style="min-width:160px">
-                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="ADMIN" id="cr-admin" onchange="applyFilters()"><label class="form-check-label small" for="cr-admin">Admin</label></div>
-                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="EXPEDITEUR" id="cr-exp" onchange="applyFilters()"><label class="form-check-label small" for="cr-exp">Expéditeur</label></div>
-                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="TRANSPORTER" id="cr-trans" onchange="applyFilters()"><label class="form-check-label small" for="cr-trans">Transporteur</label></div>
-                        <div class="form-check"><input class="form-check-input cf-role" type="checkbox" value="DRIVER" id="cr-driver" onchange="applyFilters()"><label class="form-check-label small" for="cr-driver">Chauffeur</label></div>
-                        <div class="filter-actions mt-1"><button class="btn btn-xs btn-outline-secondary" onclick="clearColStatut('.cf-role')">Tout décocher</button></div>
-                      </div>
-                    </div>
-                  </th>
-                  <th class="d-none d-md-table-cell">
-                    Organisation
-                    <div class="col-filter-wrap">
-                      <button class="col-filter-btn" onclick="toggleColFilter(this)" title="Filtrer"><i data-feather="filter" style="width:11px"></i></button>
-                      <div class="col-filter-dropdown">
-                        <select class="form-select form-select-sm" id="cf-tenant" onchange="applyFilters()"><option value="">Toutes</option></select>
-                        <div class="filter-actions"><button class="btn btn-xs btn-outline-secondary" onclick="clearColFilter('cf-tenant')">Effacer</button></div>
-                      </div>
-                    </div>
-                  </th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th class="d-none d-md-table-cell">Organisation</th>
                   <th class="d-none d-lg-table-cell">ID</th>
                   <th class="d-none d-md-table-cell">Créé le</th>
                   <th class="text-end">Actions</th>
@@ -239,22 +254,15 @@ function orgName(tenantId) {
   return org ? (org.raisonSociale ?? '—') : (tenantId === 'admin' ? '—' : '—');
 }
 
-// ── Column filter dropdowns ───────────────────────────────────────────────
-function toggleColFilter(btn) {
-  const dd = btn.nextElementSibling;
-  const wasOpen = dd.classList.contains('show');
-  document.querySelectorAll('.col-filter-dropdown').forEach(d => d.classList.remove('show'));
-  document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
-  if (!wasOpen) { dd.classList.add('show'); btn.classList.add('active'); }
+// ── Filtres avancés toggle ────────────────────────────────────────────────
+let filterPanelOpen = false;
+function toggleFilters() {
+  filterPanelOpen = !filterPanelOpen;
+  document.getElementById('filter-panel').style.display = filterPanelOpen ? '' : 'none';
+  document.getElementById('filter-chevron').style.transform = filterPanelOpen ? '' : 'rotate(-90deg)';
+  if (typeof feather !== 'undefined') feather.replace();
 }
-function clearColFilter(...ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); applyFilters(); }
-function clearColStatut(selector) { const checkboxes = document.querySelectorAll(selector); const allChecked = [...checkboxes].every(c => c.checked); checkboxes.forEach(c => c.checked = !allChecked); applyFilters(); }
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.col-filter-wrap')) {
-    document.querySelectorAll('.col-filter-dropdown').forEach(d => d.classList.remove('show'));
-    document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
-  }
-});
+function resetFilters() { resetAllFilters(); }
 
 // ── Quick filter ──────────────────────────────────────────────────────────
 function setQuickFilter(el) {
@@ -265,34 +273,43 @@ function setQuickFilter(el) {
 
 function resetAllFilters() {
   document.querySelectorAll('.toggle-group .btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.getElementById('search-global').value = '';
+  ['f-search','f-role','f-tenant','f-date-from','f-date-to'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   document.getElementById('f-sort').value = 'newest';
-  ['cf-email','cf-tenant'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.querySelectorAll('.cf-role').forEach(c => c.checked = true);
   applyFilters();
 }
 
 // ── Filtrage ──────────────────────────────────────────────────────────────
 function applyFilters() {
   const quickFilter = document.querySelector('.toggle-group .btn.active')?.dataset?.quick ?? '';
-  const q = document.getElementById('search-global')?.value?.toLowerCase().trim() ?? '';
-  const sort = document.getElementById('f-sort')?.value ?? 'newest';
-  const cfEmail = document.getElementById('cf-email')?.value?.toLowerCase().trim() ?? '';
-  const cfTenant = document.getElementById('cf-tenant')?.value ?? '';
-  const cfRoles = [...document.querySelectorAll('.cf-role:checked')].map(c => c.value);
+  const q         = document.getElementById('f-search')?.value?.toLowerCase().trim() ?? '';
+  const fRole     = document.getElementById('f-role')?.value ?? '';
+  const fTenant   = document.getElementById('f-tenant')?.value ?? '';
+  const fDateFrom = document.getElementById('f-date-from')?.value ?? '';
+  const fDateTo   = document.getElementById('f-date-to')?.value ?? '';
+  const sort      = document.getElementById('f-sort')?.value ?? 'newest';
 
   filteredUsers = allUsers.filter(u => {
     if (quickFilter && u.role !== quickFilter) return false;
-    if (q && !u.email.toLowerCase().includes(q)) return false;
-    if (cfEmail && !u.email.toLowerCase().includes(cfEmail)) return false;
-    if (cfTenant && u.tenantId !== cfTenant) return false;
-    if (cfRoles.length > 0 && cfRoles.length < 4 && !cfRoles.includes(u.role)) return false;
+    if (q && !u.email.toLowerCase().includes(q) && !orgName(u.tenantId).toLowerCase().includes(q)) return false;
+    if (fRole && u.role !== fRole) return false;
+    if (fTenant && u.tenantId !== fTenant) return false;
+    if (fDateFrom && (u.createdAt ?? '') < fDateFrom) return false;
+    if (fDateTo && (u.createdAt ?? '') > fDateTo + 'T23:59:59') return false;
     return true;
   });
 
   if (sort === 'newest') filteredUsers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   else if (sort === 'oldest') filteredUsers.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   else if (sort === 'email') filteredUsers.sort((a, b) => a.email.localeCompare(b.email));
+
+  const activeCount = [q, fRole, fTenant, fDateFrom, fDateTo].filter(Boolean).length;
+  const filterBadge = document.getElementById('filter-badge');
+  if (activeCount > 0) { filterBadge.textContent = activeCount; filterBadge.classList.remove('d-none'); }
+  else { filterBadge.classList.add('d-none'); }
+  const rc = document.getElementById('filter-result-count');
+  if (rc) rc.textContent = `${filteredUsers.length} résultat${filteredUsers.length !== 1 ? 's' : ''} sur ${allUsers.length}`;
 
   const badge = document.getElementById('badge-total');
   if (filteredUsers.length > 0) {
@@ -466,15 +483,10 @@ async function loadUsers() {
     allOrgs = [...unpack(expedRes), ...unpack(transRes)];
 
     // Populate tenant filter
-    const tenants = [...new Set(allUsers.map(u => u.tenantId))].filter(t => t !== 'admin').sort();
-    const tenantSelect = document.getElementById('cf-tenant');
+    const tenants = [...new Set(allUsers.map(u => u.tenantId))].filter(t => t && t !== 'admin').sort();
+    const tenantSelect = document.getElementById('f-tenant');
     tenantSelect.innerHTML = '<option value="">Toutes</option>' +
       tenants.map(t => `<option value="${t}">${orgName(t)}</option>`).join('');
-
-    // Check all role checkboxes by default
-    document.querySelectorAll('.cf-role').forEach(c => c.checked = true);
-
-    console.log(`Utilisateurs chargés : ${allUsers.length}`);
     applyFilters();
   } catch (err) {
     console.error('Erreur chargement utilisateurs:', err);
