@@ -5,6 +5,7 @@ import express from "express";
 import mongoose from "mongoose";
 import { createOrganizationRouter } from "./organization/organization.controller";
 import { cguRouter } from "./cgu/cgu.controller";
+import { CguService } from "./cgu/cgu.service";
 import { errorMiddleware } from "./middlewares/error.middlewares";
 import { jwtVerifyMiddleware } from "./middlewares/jwtVerify.middleware";
 import { requestIdMiddleware } from "./utils/requestId.middleware";
@@ -51,7 +52,8 @@ mongoose
     maxPoolSize: 10,
     minPoolSize: 2,
   })
-  .then(() => {
+  .then(async () => {
+    await new CguService().seedInitialVersion();
     server.listen(PORT, () => {
       logger.info(`Company Service démarré sur le port ${PORT}`);
     });

@@ -224,7 +224,7 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let allTrucks = [], allTransporters = [], allDrivers = [];
+let allTrucks = [], allTransporters = [], allDrivers = [], missionStats = {};
 let filteredTrucks = [];
 let currentPage = 1;
 
@@ -332,7 +332,7 @@ function renderTable() {
         <td class="d-none d-lg-table-cell text-muted small">${t.villeBase ?? '—'}, ${t.paysBase ?? ''}</td>
         <td>${driver ? `<div class="d-flex align-items-center gap-1"><div class="driver-avatar">${driverInitials}</div><a href="#" onclick="event.stopPropagation();openDriverProfile('${driver.id}')" class="text-decoration-none small fw-semibold">${driverName}</a></div>` : '<span class="text-muted small">—</span>'}</td>
         <td>${truckBadge(t.statut)}</td>
-        <td class="d-none d-md-table-cell text-muted small">—</td>
+        <td class="d-none d-md-table-cell text-center">${missionStats[t.id] > 0 ? `<span class="badge bg-light text-dark border">${missionStats[t.id]}</span>` : '<span class="text-muted small">—</span>'}</td>
       </tr>`;
     }).join('');
   }
@@ -405,10 +405,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
 
-  const [trucksRes, transRes, driversRes] = await Promise.all([
+  const [trucksRes, transRes, driversRes, statsRes] = await Promise.all([
     api.get('/fleet/trucks'),
     api.get('/company/transporter?page=1&limit=500').catch(() => []),
     api.get('/fleet/drivers').catch(() => []),
+    api.get('/shipments/stats/trucks').catch(() => null),
   ]);
 
   function unpack(res) {
@@ -421,6 +422,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   allTrucks = unpack(trucksRes);
   allTransporters = unpack(transRes);
   allDrivers = unpack(driversRes);
+  missionStats = statsRes?.data ?? {};
 
   // Populate filtres avancés
   const transSelect = document.getElementById('f-transporter');
