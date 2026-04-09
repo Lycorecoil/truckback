@@ -12,6 +12,8 @@ let CURRENT_TERMS_VERSION = '1.0';
 // ─── Géographie (pays + villes) ───────────────────────────────────────────────
 
 let geoData = null;
+let categoriesData = null;
+let emballagesData = null;
 
 /**
  * Charge les données pays/villes depuis le fichier JSON.
@@ -27,6 +29,38 @@ async function loadGeo() {
   } catch (err) {
     console.error('Erreur chargement géographie:', err);
     return { countries: [] };
+  }
+}
+
+/**
+ * Charge les catégories de marchandise depuis le fichier JSON.
+ */
+async function loadCategories() {
+  if (categoriesData) return categoriesData;
+  try {
+    const r = await fetch('data/categories.json');
+    if (!r.ok) throw new Error(`categories.json: ${r.status}`);
+    categoriesData = await r.json();
+    return categoriesData;
+  } catch (err) {
+    console.error('Erreur chargement catégories:', err);
+    return { categories: [] };
+  }
+}
+
+/**
+ * Charge les types d'emballages depuis le fichier JSON.
+ */
+async function loadEmballages() {
+  if (emballagesData) return emballagesData;
+  try {
+    const r = await fetch('data/emballages.json');
+    if (!r.ok) throw new Error(`emballages.json: ${r.status}`);
+    emballagesData = await r.json();
+    return emballagesData;
+  } catch (err) {
+    console.error('Erreur chargement emballages:', err);
+    return { emballages: [] };
   }
 }
 
