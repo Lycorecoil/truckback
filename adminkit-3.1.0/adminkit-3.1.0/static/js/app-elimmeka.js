@@ -5,9 +5,15 @@
 
 const API = '/v1';
 
+// Version courante des Conditions Générales d'Utilisation — chargée dynamiquement depuis le backend au login.
+// Fallback '1.0' utilisé uniquement si le backend est injoignable.
+let CURRENT_TERMS_VERSION = '1.0';
+
 // ─── Géographie (pays + villes) ───────────────────────────────────────────────
 
 let geoData = null;
+let categoriesData = null;
+let emballagesData = null;
 
 /**
  * Charge les données pays/villes depuis le fichier JSON.
@@ -23,6 +29,38 @@ async function loadGeo() {
   } catch (err) {
     console.error('Erreur chargement géographie:', err);
     return { countries: [] };
+  }
+}
+
+/**
+ * Charge les catégories de marchandise depuis le fichier JSON.
+ */
+async function loadCategories() {
+  if (categoriesData) return categoriesData;
+  try {
+    const r = await fetch('data/categories.json');
+    if (!r.ok) throw new Error(`categories.json: ${r.status}`);
+    categoriesData = await r.json();
+    return categoriesData;
+  } catch (err) {
+    console.error('Erreur chargement catégories:', err);
+    return { categories: [] };
+  }
+}
+
+/**
+ * Charge les types d'emballages depuis le fichier JSON.
+ */
+async function loadEmballages() {
+  if (emballagesData) return emballagesData;
+  try {
+    const r = await fetch('data/emballages.json');
+    if (!r.ok) throw new Error(`emballages.json: ${r.status}`);
+    emballagesData = await r.json();
+    return emballagesData;
+  } catch (err) {
+    console.error('Erreur chargement emballages:', err);
+    return { emballages: [] };
   }
 }
 
@@ -210,10 +248,15 @@ const Auth = {
     Auth.redirectByRole();
   },
 
-  /** Redirige vers login si pas connecté */
+  /** Redirige vers login si pas connecté, ou vers les Conditions Générales d'Utilisation si pas encore acceptées */
   requireAuth() {
     if (!Auth.isLoggedIn()) {
       window.location.href = 'pages-sign-in.html';
+      return false;
+    }
+    // Profil existant mais Conditions Générales d'Utilisation non acceptées (ou version obsolète) → page de re-acceptation
+    if (Auth.hasProfile() && !Auth.hasAcceptedTerms()) {
+      window.location.href = 'cgu-update.html';
       return false;
     }
     return true;
@@ -223,6 +266,14 @@ const Auth = {
   hasProfile() {
     const user = Auth.getUser();
     return user?.role === 'ADMIN' || !!user?.orgId;
+  },
+
+  /** Retourne true si la version des Conditions Générales d'Utilisation en session correspond à la version courante */
+  hasAcceptedTerms() {
+    const user = Auth.getUser();
+    // ADMIN n'a pas d'org → pas soumis aux Conditions Générales d'Utilisation
+    if (user?.role === 'ADMIN') return true;
+    return user?.termsAcceptedVersion === CURRENT_TERMS_VERSION;
   },
 
   redirectByRole() {
@@ -447,7 +498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Injecter "Mon profil" dans le dropdown si pas déjà présent
   const dropdownMenu = document.querySelector('.dropdown-menu.dropdown-menu-end');
-  if (dropdownMenu && !dropdownMenu.querySelector('.profil-link')) {
+  if (dropdownMenu && !dropdownMenu.querySelector('[href="profil.html"]')) {
     const profilLink = document.createElement('a');
     profilLink.className = 'dropdown-item profil-link';
     profilLink.href = 'profil.html';

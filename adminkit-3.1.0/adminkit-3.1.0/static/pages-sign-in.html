@@ -86,8 +86,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const u = data.user ?? data;
       const token = data.token ?? data.accessToken;
 
-      // Récupérer le profil organisation pour avoir raisonSociale + logo
-      let raisonSociale = null, logo = null, orgId = null;
+      // Récupérer le profil organisation + la version courante des Conditions Générales d'Utilisation
+      let raisonSociale = null, logo = null, orgId = null, termsAcceptedVersion = null;
+
+      // Version des Conditions Générales active sur le backend
+      try {
+        const cguRes = await fetch(`${API}/company/cgu/current`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (cguRes.ok) {
+          const cguBody = await cguRes.json();
+          const cguActive = cguBody.data;
+          if (cguActive?.version) CURRENT_TERMS_VERSION = cguActive.version;
+        }
+      } catch (_) {}
+
       if (u.role === 'EXPEDITEUR' || u.role === 'TRANSPORTER') {
         const route = u.role === 'EXPEDITEUR' ? 'company' : 'transporter';
         try {
@@ -97,9 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (orgRes.ok) {
             const body = await orgRes.json();
             const org  = body.data ?? body;
-            raisonSociale = org.raisonSociale ?? null;
-            logo          = org.logo ?? null;
-            orgId         = org.id ?? null;
+            raisonSociale        = org.raisonSociale ?? null;
+            logo                 = org.logo ?? null;
+            orgId                = org.id ?? null;
+            termsAcceptedVersion = org.termsAcceptedVersion ?? null;
           }
         } catch (_) {}
       }
@@ -112,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         raisonSociale,
         logo,
         orgId,
+        termsAcceptedVersion,
       });
 
       Auth.redirectByRole();

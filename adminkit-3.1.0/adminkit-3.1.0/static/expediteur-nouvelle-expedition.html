@@ -8,6 +8,51 @@
   <link href="css/app.css" rel="stylesheet">
   <link href="css/cu-theme.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .geo-field { position: relative; margin-top: 6px; }
+    .geo-suggestions {
+      position: absolute; z-index: 1000; width: 100%;
+      background: #fff; border: 1px solid #dee2e6; border-top: none;
+      border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+    .geo-suggestions .geo-item {
+      padding: 8px 12px; cursor: pointer; font-size: 13px;
+      border-bottom: 1px solid #f0f0f0; line-height: 1.4;
+    }
+    .geo-suggestions .geo-item:hover { background: #fff8f3; }
+    .geo-suggestions .geo-item .gi-main { font-weight: 600; color: #1a1a2e; }
+    .geo-suggestions .geo-item .gi-sub  { font-size: 11px; color: #6c757d; }
+    .geo-pinned {
+      display: none; align-items: center; gap: 8px; margin-top: 5px;
+      background: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 6px;
+      padding: 5px 10px; font-size: 12px;
+    }
+    .geo-pinned.visible { display: flex; }
+    .geo-pinned .gp-coords { color: #059669; font-family: monospace; font-size: 11px; }
+    .geo-pinned .gp-clear {
+      margin-left: auto; background: none; border: none;
+      color: #6c757d; cursor: pointer; font-size: 13px; padding: 0 2px;
+    }
+    .geo-search-wrap { position: relative; }
+    .geo-search-wrap .geo-pin-icon {
+      position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      color: #f97316; font-size: 14px; pointer-events: none; line-height: 1;
+    }
+    .geo-search-wrap input { padding-left: 30px !important; }
+    #route-map {
+      height: 200px; border-radius: 8px; border: 1px solid #a7f3d0;
+      margin-top: 12px; display: none;
+    }
+    .route-map-placeholder {
+      height: 200px; border-radius: 8px; border: 1px dashed #dee2e6;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; color: #adb5bd; font-size: 13px;
+      margin-top: 12px; gap: 5px;
+    }
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -60,8 +105,6 @@
                     <label class="form-label" for="categorie">Catégorie</label>
                     <select id="categorie" class="form-select" onchange="handleCategorieChange(this.value)">
                       <option value="">-- Choisir --</option>
-                      <option>Agricole</option><option>BTP</option><option>Biens de consommation</option>
-                      <option>Hydrocarbure</option><option>Réfrigéré</option><option>Textile</option><option>Autre</option>
                     </select>
                   </div>
                   <div class="mb-3" id="categorie-autre-wrap" style="display:none">
@@ -79,8 +122,6 @@
                     <label class="form-label" for="emballage">Emballage</label>
                     <select id="emballage" class="form-select" onchange="handleEmballageChange(this.value)">
                       <option value="">-- Choisir --</option>
-                      <option>Vrac</option><option>Palettes</option><option>Sacs</option>
-                      <option>Caisses</option><option>Fûts</option><option>Conteneur</option>
                     </select>
                   </div>
 
@@ -122,21 +163,76 @@
 
                   <div class="mb-3">
                     <label class="form-label" for="paysDepart">Pays de départ *</label>
-                    <select id="paysDepart" class="form-select country-select" required></select>
+                    <select id="paysDepart" class="form-select country-select" onchange="onPaysDepartChange()" required></select>
                   </div>
                   <div class="mb-3">
                     <label class="form-label" for="villeDepart">Ville de départ *</label>
-                    <input id="villeDepart" class="form-control" placeholder="Ouagadougou" required />
+                    <select id="villeDepart" class="form-select city-select" required>
+                      <option value="">-- Choisir un pays d'abord --</option>
+                    </select>
+                  </div>
+                  <!-- Géolocalisation départ -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted" for="geo-search-depart" style="font-size:12px">
+                      📍 Localisation précise du point de départ <span class="text-muted">(optionnel — utile pour le tracking)</span>
+                    </label>
+                    <div class="geo-field">
+                      <div class="geo-search-wrap">
+                        <span class="geo-pin-icon">📍</span>
+                        <input id="geo-search-depart" class="form-control form-control-sm"
+                          placeholder="Recherchez l'adresse exacte…" autocomplete="off" />
+                      </div>
+                      <div id="geo-suggestions-depart" class="geo-suggestions" style="display:none"></div>
+                    </div>
+                    <div id="geo-pinned-depart" class="geo-pinned">
+                      <span>✅</span>
+                      <span id="geo-pinned-depart-name" style="font-weight:600"></span>
+                      <span id="geo-pinned-depart-coords" class="gp-coords"></span>
+                      <button type="button" class="gp-clear" onclick="clearGeo('depart')" title="Effacer">✕</button>
+                    </div>
+                    <input type="hidden" id="geolocDepartLat" />
+                    <input type="hidden" id="geolocDepartLng" />
                   </div>
 
                   <div class="mb-3">
                     <label class="form-label" for="paysArrivee">Pays d'arrivée *</label>
-                    <select id="paysArrivee" class="form-select country-select" required></select>
+                    <select id="paysArrivee" class="form-select country-select" onchange="onPaysArriveeChange()" required></select>
                   </div>
                   <div class="mb-3">
                     <label class="form-label" for="villeArrivee">Ville d'arrivée *</label>
-                    <input id="villeArrivee" class="form-control" placeholder="Abidjan" required />
+                    <select id="villeArrivee" class="form-select city-select" required>
+                      <option value="">-- Choisir un pays d'abord --</option>
+                    </select>
                   </div>
+                  <!-- Géolocalisation arrivée -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted" for="geo-search-arrivee" style="font-size:12px">
+                      📍 Localisation précise du point d'arrivée <span class="text-muted">(optionnel — utile pour le tracking)</span>
+                    </label>
+                    <div class="geo-field">
+                      <div class="geo-search-wrap">
+                        <span class="geo-pin-icon" style="color:#1a4b6e">📍</span>
+                        <input id="geo-search-arrivee" class="form-control form-control-sm"
+                          placeholder="Recherchez l'adresse exacte…" autocomplete="off" />
+                      </div>
+                      <div id="geo-suggestions-arrivee" class="geo-suggestions" style="display:none"></div>
+                    </div>
+                    <div id="geo-pinned-arrivee" class="geo-pinned">
+                      <span>✅</span>
+                      <span id="geo-pinned-arrivee-name" style="font-weight:600"></span>
+                      <span id="geo-pinned-arrivee-coords" class="gp-coords"></span>
+                      <button type="button" class="gp-clear" onclick="clearGeo('arrivee')" title="Effacer">✕</button>
+                    </div>
+                    <input type="hidden" id="geolocArriveeLat" />
+                    <input type="hidden" id="geolocArriveeLng" />
+                  </div>
+
+                  <!-- Mini-carte (apparaît si les deux points sont épinglés) -->
+                  <div id="route-map-placeholder" class="route-map-placeholder">
+                    <span style="font-size:24px">🗺️</span>
+                    <span>Épinglez les deux points pour voir le trajet</span>
+                  </div>
+                  <div id="route-map"></div>
 
                   <div class="mb-3">
                     <label class="form-label" for="commentaireGeneral">Commentaire</label>
@@ -166,7 +262,117 @@
 
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ─── Géolocalisation Nominatim + Leaflet ────────────────────────────────────
+const geoState = {
+  depart:  { lat: null, lng: null, label: '' },
+  arrivee: { lat: null, lng: null, label: '' },
+};
+let leafletMap = null, markerDep = null, markerArr = null, routeLine = null;
+const geoTimers = {};
+
+function searchGeo(side) {
+  const q = document.getElementById(`geo-search-${side}`).value.trim();
+  const box = document.getElementById(`geo-suggestions-${side}`);
+  if (q.length < 3) { box.style.display = 'none'; return; }
+  clearTimeout(geoTimers[side]);
+  geoTimers[side] = setTimeout(async () => {
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      renderGeoSuggestions(side, await r.json());
+    } catch { /* offline */ }
+  }, 350);
+}
+
+function renderGeoSuggestions(side, results) {
+  const box = document.getElementById(`geo-suggestions-${side}`);
+  if (!results.length) { box.style.display = 'none'; return; }
+  box.innerHTML = '';
+  results.forEach(r => {
+    const addr = r.address || {};
+    const main = addr.city || addr.town || addr.village || addr.county || r.name || '';
+    const div = document.createElement('div');
+    div.className = 'geo-item';
+    div.innerHTML = `<div class="gi-main">${main || r.display_name.split(',')[0]}</div><div class="gi-sub">${r.display_name}</div>`;
+    div.addEventListener('click', () => pinGeo(side, {
+      lat: parseFloat(r.lat), lng: parseFloat(r.lon),
+      label: main || r.display_name.split(',')[0],
+    }));
+    box.appendChild(div);
+  });
+  box.style.display = 'block';
+}
+
+function pinGeo(side, data) {
+  geoState[side] = data;
+  document.getElementById(`geo-search-${side}`).value = data.label;
+  document.getElementById(`geo-suggestions-${side}`).style.display = 'none';
+  document.getElementById(`geolocDepartLat`.replace('Depart', side === 'depart' ? 'Depart' : 'Arrivee')).value = data.lat;
+  document.getElementById(`geolocDepartLng`.replace('Depart', side === 'depart' ? 'Depart' : 'Arrivee')).value = data.lng;
+  // afficher badge
+  document.getElementById(`geo-pinned-${side}-name`).textContent = data.label;
+  document.getElementById(`geo-pinned-${side}-coords`).textContent = `${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}`;
+  document.getElementById(`geo-pinned-${side}`).classList.add('visible');
+  updateGeoMap();
+}
+
+function clearGeo(side) {
+  geoState[side] = { lat: null, lng: null, label: '' };
+  document.getElementById(`geo-search-${side}`).value = '';
+  document.getElementById(`geo-pinned-${side}`).classList.remove('visible');
+  const latField = side === 'depart' ? 'geolocDepartLat' : 'geolocArriveeLat';
+  const lngField = side === 'depart' ? 'geolocDepartLng' : 'geolocArriveeLng';
+  document.getElementById(latField).value = '';
+  document.getElementById(lngField).value = '';
+  updateGeoMap();
+}
+
+function updateGeoMap() {
+  const d = geoState.depart, a = geoState.arrivee;
+  const hasD = d.lat !== null, hasA = a.lat !== null;
+  const placeholder = document.getElementById('route-map-placeholder');
+  const mapEl = document.getElementById('route-map');
+
+  if (!hasD && !hasA) {
+    placeholder.style.display = 'flex';
+    mapEl.style.display = 'none';
+    return;
+  }
+  placeholder.style.display = 'none';
+  mapEl.style.display = 'block';
+
+  if (!leafletMap) {
+    leafletMap = L.map('route-map', { zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
+  }
+  if (markerDep)  leafletMap.removeLayer(markerDep);
+  if (markerArr)  leafletMap.removeLayer(markerArr);
+  if (routeLine)  leafletMap.removeLayer(routeLine);
+
+  const orangeIcon = L.divIcon({ html: '<div style="width:13px;height:13px;background:#f97316;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>', className: '', iconAnchor: [6,6] });
+  const navyIcon  = L.divIcon({ html: '<div style="width:13px;height:13px;background:#1a4b6e;border-radius:3px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>', className: '', iconAnchor: [6,6] });
+  const pts = [];
+
+  if (hasD) { markerDep = L.marker([d.lat, d.lng], { icon: orangeIcon }).bindPopup(`<b>Départ</b><br>${d.label}`).addTo(leafletMap); pts.push([d.lat, d.lng]); }
+  if (hasA) { markerArr = L.marker([a.lat, a.lng], { icon: navyIcon  }).bindPopup(`<b>Arrivée</b><br>${a.label}`).addTo(leafletMap); pts.push([a.lat, a.lng]); }
+  if (hasD && hasA) { routeLine = L.polyline([[d.lat, d.lng],[a.lat, a.lng]], { color: '#f97316', weight: 2.5, dashArray: '7,5', opacity: 0.7 }).addTo(leafletMap); }
+
+  pts.length === 1 ? leafletMap.setView(pts[0], 11) : leafletMap.fitBounds(L.latLngBounds(pts), { padding: [28, 28] });
+}
+
+// Fermer suggestions au clic ailleurs
+document.addEventListener('click', e => {
+  ['depart','arrivee'].forEach(s => {
+    const inp = document.getElementById(`geo-search-${s}`);
+    const box = document.getElementById(`geo-suggestions-${s}`);
+    if (inp && !inp.contains(e.target) && !box.contains(e.target)) box.style.display = 'none';
+  });
+});
+
 function handleCategorieChange(val) {
   const wrap = document.getElementById('categorie-autre-wrap');
   const input = document.getElementById('categorie-autre');
@@ -195,10 +401,40 @@ function handleEmballageChange(val) {
   if (typeof feather !== 'undefined') feather.replace();
 }
 
+function onPaysDepartChange() {
+  fillCitySelect('paysDepart', 'villeDepart');
+}
+
+function onPaysArriveeChange() {
+  fillCitySelect('paysArrivee', 'villeArrivee');
+}
+
+function fillCategorySelect() {
+  const select = document.getElementById('categorie');
+  if (!categoriesData || !categoriesData.categories) return;
+  select.innerHTML = '<option value="">-- Choisir --</option>' +
+    categoriesData.categories.map(c => `<option>${c}</option>`).join('');
+}
+
+function fillEmballageSelect() {
+  const select = document.getElementById('emballage');
+  if (!emballagesData || !emballagesData.emballages) return;
+  select.innerHTML = '<option value="">-- Choisir --</option>' +
+    emballagesData.emballages.map(e => `<option>${e}</option>`).join('');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  await loadGeo(); fillCountrySelects();
+  await Promise.all([loadGeo(), loadCategories(), loadEmballages()]);
+  fillCountrySelects();
+  fillCitySelect('paysDepart', 'villeDepart');
+  fillCitySelect('paysArrivee', 'villeArrivee');
+  fillCategorySelect();
+  fillEmballageSelect();
+
+  document.getElementById('geo-search-depart').addEventListener('input',  () => searchGeo('depart'));
+  document.getElementById('geo-search-arrivee').addEventListener('input', () => searchGeo('arrivee'));
 
   document.getElementById('form-expedition').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -223,13 +459,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       quantite:    Number(document.getElementById('quantite').value),
       poids:       poidsEnTonnes,
       paysDepart:  document.getElementById('paysDepart').value,
-      villeDepart: document.getElementById('villeDepart').value.trim(),
+      villeDepart: document.getElementById('villeDepart').value,
       paysArrivee: document.getElementById('paysArrivee').value,
-      villeArrivee: document.getElementById('villeArrivee').value.trim(),
+      villeArrivee: document.getElementById('villeArrivee').value,
       dateAnnonce:  now.toISOString().split('T')[0],
       heureAnnonce: now.toTimeString().slice(0, 5),
       prixTransport: document.getElementById('prixTransport').value ? Number(document.getElementById('prixTransport').value) : undefined,
       commentaireGeneral: document.getElementById('commentaireGeneral').value || undefined,
+      geolocDepart: document.getElementById('geolocDepartLat').value ? {
+        latitude:  Number(document.getElementById('geolocDepartLat').value),
+        longitude: Number(document.getElementById('geolocDepartLng').value),
+      } : undefined,
+      geolocArrivee: document.getElementById('geolocArriveeLat').value ? {
+        latitude:  Number(document.getElementById('geolocArriveeLat').value),
+        longitude: Number(document.getElementById('geolocArriveeLng').value),
+      } : undefined,
     };
 
     try {

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Conditions Générales d'Utilisation | Admin | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Quill.js — éditeur riche -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+    .toggle-group { display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid #dee2e6; background:#fff; }
+    .toggle-group .btn { border-radius:0; border:none; font-size:.78rem; padding:5px 14px; background:transparent; color:#6c757d; font-weight:500; transition:all .15s; }
+    .toggle-group .btn:hover { background:#f8f9fa; color:#333; }
+    .toggle-group .btn.active { background:var(--cu-orange,#F97316); color:#fff; }
+    .badge-brouillon { background:rgba(108,117,125,.12); color:#6c757d; }
+    .badge-active    { background:rgba(40,167,69,.12);  color:#198754; }
+    .badge-archivee  { background:rgba(108,117,125,.08); color:#adb5bd; }
+    .version-card {
+      border:1.5px solid #e9ecef; border-radius:12px; padding:20px 24px;
+      margin-bottom:12px; background:#fff; transition:border-color .2s;
+      cursor:pointer;
+    }
+    .version-card:hover { border-color:var(--cu-orange,#F97316); }
+    .version-card.active-version { border-color:#198754; background:rgba(40,167,69,.03); }
+    .version-num { font-size:1.1rem; font-weight:700; color:#1a1a2e; }
+    .stat-box { background:#fff; border:1.5px solid #e9ecef; border-radius:12px; padding:20px; text-align:center; }
+    .stat-box .stat-val { font-size:2rem; font-weight:800; color:#1a1a2e; }
+    .stat-box .stat-label { font-size:.8rem; color:#6c757d; margin-top:4px; }
+    .stat-box.conforme .stat-val { color:#198754; }
+    .stat-box.non-conforme .stat-val { color:#dc3545; }
+    /* Quill editor styling */
+    #quill-editor { min-height:320px; font-size:.875rem; font-family:'Inter',sans-serif; }
+    .ql-toolbar.ql-snow { border-radius:8px 8px 0 0; border-color:#dee2e6; background:#f8f9fa; }
+    .ql-container.ql-snow { border-radius:0 0 8px 8px; border-color:#dee2e6; }
+    .ql-editor { min-height:320px; line-height:1.8; }
+    .ql-editor.ql-blank::before { color:#adb5bd; font-style:normal; }
+    /* Vue lecture HTML */
+    .view-html-content { font-size:.875rem; line-height:1.8; max-height:480px; overflow-y:auto; }
+    .view-html-content h1,.view-html-content h2,.view-html-content h3 { font-weight:700; color:#1a1a2e; margin:1.2em 0 .4em; }
+    .view-html-content p { margin-bottom:.6em; color:#495057; }
+    .view-html-content ul,.view-html-content ol { padding-left:1.4em; margin-bottom:.6em; }
+    .view-html-content blockquote { border-left:4px solid var(--cu-orange,#F97316); padding-left:12px; color:#6c757d; margin:8px 0; }
+    .overlay-backdrop {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:9999; align-items:flex-start; justify-content:center;
+      overflow-y:auto; padding:40px 16px;
+    }
+    .overlay-box {
+      background:#fff; border-radius:14px;
+      max-width:800px; width:100%;
+      box-shadow:0 12px 40px rgba(0,0,0,.2); margin:auto;
+    }
+    .overlay-header {
+      display:flex; align-items:center; gap:14px;
+      padding:24px; border-bottom:1px solid #e9ecef;
+    }
+    .overlay-icon {
+      width:56px; height:56px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; background:rgba(249,115,22,.1);
+      color:var(--cu-orange,#F97316); flex-shrink:0;
+    }
+    .overlay-body { padding:24px; }
+    .overlay-footer {
+      padding:16px 24px; border-top:1px solid #e9ecef;
+      background:#f8f9fa; border-radius:0 0 14px 14px;
+      display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="admin-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Administration</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-dashboard.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Dashboard Global</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-expeditions.html"><i class="align-middle" data-feather="package"></i> <span class="align-middle">Toutes les expéditions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-utilisateurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Organisations</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="admin-cgu.html"><i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Conditions Générales</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i>
+              <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h1 class="h3 mb-0"><strong>Conditions Générales d'Utilisation</strong></h1>
+          <button class="btn btn-primary" onclick="openCreate()">
+            <i data-feather="plus" class="align-middle me-1" style="width:15px;height:15px"></i>
+            Nouvelle version
+          </button>
+        </div>
+
+        <div id="alert-container" class="mb-3"></div>
+
+        <!-- Bannière version active -->
+        <div id="active-banner" class="alert border-0 mb-4 d-none" style="background:rgba(40,167,69,.08);border-left:4px solid #198754 !important;border-radius:10px">
+          <div class="d-flex align-items-center gap-3">
+            <i data-feather="check-circle" style="width:20px;color:#198754"></i>
+            <div>
+              <span class="fw-semibold text-success" id="banner-version">—</span>
+              <span class="text-muted ms-2 small" id="banner-date">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onglets -->
+        <ul class="nav nav-tabs mb-4" id="cguTabs">
+          <li class="nav-item">
+            <button class="nav-link active" data-tab="versions">
+              <i data-feather="layers" class="align-middle me-1" style="width:14px"></i>
+              Versions
+              <span class="badge bg-secondary ms-1" id="badge-versions">0</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-tab="conformite">
+              <i data-feather="shield" class="align-middle me-1" style="width:14px"></i>
+              Conformité des organisations
+              <span class="badge bg-danger ms-1 d-none" id="badge-nonconf">0</span>
+            </button>
+          </li>
+        </ul>
+
+        <!-- ── Onglet Versions ───────────────────────────────────────────── -->
+        <div id="tab-versions">
+
+          <!-- Filtres statut -->
+          <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" onclick="filterVersions('all',this)">Toutes</button>
+              <button class="btn" onclick="filterVersions('ACTIVE',this)">Active</button>
+              <button class="btn" onclick="filterVersions('BROUILLON',this)">Brouillons</button>
+              <button class="btn" onclick="filterVersions('ARCHIVEE',this)">Archivées</button>
+            </div>
+          </div>
+
+          <div id="versions-list">
+            <div class="text-center py-5 text-muted">
+              <div class="spinner-border spinner-border-sm me-2"></div>Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Onglet Conformité ─────────────────────────────────────────── -->
+        <div id="tab-conformite" class="d-none">
+
+          <!-- Avertissement : aucune version active -->
+          <div id="compliance-no-active-warning" class="alert border-0 d-none mb-4" style="background:rgba(255,193,7,.1);border-left:4px solid #ffc107 !important;border-radius:10px">
+            <div class="d-flex align-items-center gap-2">
+              <i data-feather="alert-triangle" style="width:18px;color:#e6a817"></i>
+              <div>
+                <span class="fw-semibold" style="color:#856404">Aucune version active</span>
+                <span class="text-muted ms-2 small">— Activez une version dans l'onglet Versions pour que la conformité soit calculée correctement.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statistiques -->
+          <div class="row g-3 mb-4" id="compliance-stats">
+            <div class="col-6 col-md-3">
+              <div class="stat-box conforme">
+                <div class="stat-val" id="stat-conforme">—</div>
+                <div class="stat-label">Conformes</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box non-conforme">
+                <div class="stat-val" id="stat-nonconf">—</div>
+                <div class="stat-label">Non conformes</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="stat-val" id="stat-total">—</div>
+                <div class="stat-label">Organisations actives</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="stat-val" id="stat-version">—</div>
+                <div class="stat-label">Version courante</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtres conformité -->
+          <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+            <div class="toggle-group">
+              <button class="btn active" onclick="filterCompliance('all',this)">Toutes</button>
+              <button class="btn" onclick="filterCompliance('conformes',this)">Conformes</button>
+              <button class="btn" onclick="filterCompliance('non-conformes',this)">Non conformes</button>
+              <button class="btn" onclick="filterCompliance('EXPEDITEUR',this)">Expéditeurs</button>
+              <button class="btn" onclick="filterCompliance('TRANSPORTER',this)">Transporteurs</button>
+            </div>
+            <input id="search-compliance" class="form-control form-control-sm" style="width:220px" placeholder="Rechercher une organisation…" oninput="renderCompliance()">
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Organisation</th>
+                    <th>Type</th>
+                    <th>Version acceptée</th>
+                    <th>Date d'acceptation</th>
+                    <th class="text-center">Statut</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-compliance">
+                  <tr><td colspan="5" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>Chargement…
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ══ OVERLAY : Créer / Modifier une version ═══════════════════════════════ -->
+<div class="overlay-backdrop" id="overlay-form" onclick="if(event.target===this)closeForm()">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <div class="overlay-icon"><i data-feather="file-text"></i></div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold" id="form-title">Nouvelle version</h5>
+        <div class="text-muted small">Brouillon — non publié</div>
+      </div>
+      <button class="btn btn-sm btn-light" onclick="closeForm()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="overlay-body">
+      <div class="row g-3">
+        <div class="col-sm-4">
+          <label class="form-label fw-semibold small">Numéro de version *</label>
+          <input id="f-version" class="form-control" placeholder="ex : 2.0" />
+          <div class="form-text">Unique — ex : 1.0, 1.1, 2.0</div>
+        </div>
+        <div class="col-sm-8">
+          <label class="form-label fw-semibold small">Titre *</label>
+          <input id="f-titre" class="form-control" placeholder="Conditions Générales d'Utilisation v2.0" />
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Résumé des modifications *</label>
+          <textarea id="f-resume" class="form-control" rows="2" placeholder="Décrivez brièvement les changements par rapport à la version précédente…"></textarea>
+          <div class="form-text">Affiché aux organisations lors de la re-acceptation.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Texte intégral des conditions *</label>
+          <div id="quill-editor"></div>
+        </div>
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <span class="text-muted small">Brouillon — non publié</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-secondary" onclick="closeForm()">Annuler</button>
+        <button class="btn btn-sm btn-primary" id="btn-save-form" onclick="saveForm()">
+          <i data-feather="save" class="align-middle me-1" style="width:14px"></i>Enregistrer le brouillon
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY : Lire le texte d'une version ════════════════════════════════ -->
+<div class="overlay-backdrop" id="overlay-view" onclick="if(event.target===this)closeView()">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <div class="overlay-icon" style="background:rgba(59,125,221,.1);color:#3b7ddd"><i data-feather="eye"></i></div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold" id="view-title">—</h5>
+        <div class="text-muted small" id="view-sub">—</div>
+      </div>
+      <button class="btn btn-sm btn-light" onclick="closeView()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="overlay-body">
+      <div class="mb-3">
+        <span class="fw-semibold small text-muted">Résumé des modifications</span>
+        <div id="view-resume" class="mt-1 small text-muted border-start border-3 ps-3" style="border-color:var(--cu-orange,#F97316) !important"></div>
+      </div>
+      <hr>
+      <div id="view-contenu" class="view-html-content"></div>
+    </div>
+    <div class="overlay-footer">
+      <span class="text-muted small" id="view-footer-sub">—</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-secondary" onclick="closeView()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY : Confirmation d'activation ══════════════════════════════════ -->
+<div class="overlay-backdrop" id="overlay-activate" onclick="if(event.target===this)closeActivate()">
+  <div class="overlay-box" style="max-width:520px">
+    <div class="overlay-header">
+      <div class="overlay-icon" style="background:rgba(40,167,69,.1);color:#198754"><i data-feather="check-circle"></i></div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold">Activer cette version ?</h5>
+        <div class="text-muted small">Cette action est irréversible</div>
+      </div>
+      <button class="btn btn-sm btn-light" onclick="closeActivate()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <div class="overlay-body">
+      <div class="alert alert-warning border-0 mb-3" style="border-radius:10px">
+        <strong><i data-feather="alert-triangle" class="align-middle me-1" style="width:14px"></i>Attention</strong> — Activer la version <strong id="activate-version-num">—</strong> va :
+        <ul class="mb-0 mt-2 small">
+          <li>Archiver la version actuellement active</li>
+          <li>Forcer toutes les organisations à re-accepter les conditions lors de leur prochaine connexion</li>
+        </ul>
+      </div>
+      <div class="p-3 bg-light rounded-3 small">
+        <span class="text-muted">Version à activer :</span>
+        <span class="fw-semibold ms-2" id="activate-version-label">—</span>
+      </div>
+    </div>
+    <div class="overlay-footer">
+      <span class="text-muted small">Cette action est irréversible</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-secondary" onclick="closeActivate()">Annuler</button>
+        <button class="btn btn-sm btn-success" id="btn-confirm-activate" onclick="confirmActivate()">
+          <i data-feather="check" class="align-middle me-1" style="width:14px"></i>Confirmer l'activation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let allVersions   = [];
+let allCompliance = [];
+let currentFilter = 'all';
+let complianceFilter = 'all';
+let editingId     = null;
+let activatingId  = null;
+let quill         = null;  // instance Quill initialisée à DOMContentLoaded
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['versions','conformite'].forEach(t => document.getElementById('tab-'+t).classList.add('d-none'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.remove('d-none');
+  });
+});
+
+// ─── Chargement données ───────────────────────────────────────────────────────
+
+async function loadAll() {
+  const [versionsRes, complianceRes] = await Promise.all([
+    api.get('/company/cgu/versions'),
+    api.get('/company/cgu/compliance'),
+  ]);
+
+  allVersions   = versionsRes?.data ?? [];
+  allCompliance = complianceRes?.data ?? [];
+
+  document.getElementById('badge-versions').textContent = allVersions.length;
+
+  const active = allVersions.find(v => v.statut === 'ACTIVE');
+  if (active) {
+    document.getElementById('active-banner').classList.remove('d-none');
+    document.getElementById('banner-version').textContent = `Version active : ${active.titre}`;
+    document.getElementById('banner-date').textContent = active.activatedAt
+      ? `activée le ${new Date(active.activatedAt).toLocaleDateString('fr-FR')}`
+      : '';
+  }
+
+  renderVersions();
+  renderCompliance();
+  renderComplianceStats();
+}
+
+// ─── Versions ────────────────────────────────────────────────────────────────
+
+function filterVersions(statut, btn) {
+  currentFilter = statut;
+  document.querySelectorAll('#tab-versions .toggle-group .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVersions();
+}
+
+function renderVersions() {
+  const list = document.getElementById('versions-list');
+  let filtered = currentFilter === 'all'
+    ? allVersions
+    : allVersions.filter(v => v.statut === currentFilter);
+
+  if (filtered.length === 0) {
+    const isAllFilter = currentFilter === 'all';
+    list.innerHTML = isAllFilter
+      ? `<div class="text-center py-5">
+          <div style="font-size:3rem;margin-bottom:12px">📋</div>
+          <p class="fw-semibold mb-1">Aucune version des Conditions Générales d'Utilisation</p>
+          <p class="text-muted small mb-4">Créez votre première version pour permettre aux organisations d'accepter les conditions.</p>
+          <button class="btn btn-primary" onclick="openCreate()">
+            <i data-feather="plus" class="align-middle me-1" style="width:14px"></i>Créer la première version
+          </button>
+        </div>`
+      : `<div class="text-center py-5 text-muted"><i data-feather="inbox" style="width:40px;height:40px;opacity:.3"></i><p class="mt-3">Aucune version ${currentFilter.toLowerCase()}</p></div>`;
+    feather.replace();
+    return;
+  }
+
+  list.innerHTML = filtered.map(v => {
+    const badgeClass = v.statut === 'ACTIVE' ? 'badge-active' : v.statut === 'BROUILLON' ? 'badge-brouillon' : 'badge-archivee';
+    const badgeLabel = v.statut === 'ACTIVE' ? 'Active' : v.statut === 'BROUILLON' ? 'Brouillon' : 'Archivée';
+    const isActive   = v.statut === 'ACTIVE';
+    return `
+    <div class="version-card ${isActive ? 'active-version' : ''}" onclick="openView('${v.id}')">
+      <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="version-num">v${v.version}</span>
+            <span class="badge ${badgeClass} rounded-pill px-2">${badgeLabel}</span>
+          </div>
+          <div class="fw-semibold mb-1">${v.titre}</div>
+          <div class="text-muted small">${v.resume}</div>
+          <div class="text-muted small mt-2">
+            Créée le ${new Date(v.createdAt).toLocaleDateString('fr-FR')}
+            ${isActive && v.activatedAt ? ` · Activée le ${new Date(v.activatedAt).toLocaleDateString('fr-FR')}` : ''}
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-shrink-0" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-outline-secondary" onclick="openView('${v.id}')" title="Lire le texte">
+            <i data-feather="eye" style="width:13px"></i>
+          </button>
+          ${v.statut === 'BROUILLON' ? `
+          <button class="btn btn-sm btn-outline-primary" onclick="openEdit('${v.id}')" title="Modifier">
+            <i data-feather="edit-2" style="width:13px"></i>
+          </button>
+          <button class="btn btn-sm btn-success" onclick="openActivate('${v.id}')" title="Activer">
+            <i data-feather="check-circle" style="width:13px"></i> Activer
+          </button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  feather.replace();
+}
+
+// ─── Conformité ───────────────────────────────────────────────────────────────
+
+function filterCompliance(filter, btn) {
+  complianceFilter = filter;
+  document.querySelectorAll('#tab-conformite .toggle-group .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompliance();
+}
+
+function renderComplianceStats() {
+  const total   = allCompliance.length;
+  const conf    = allCompliance.filter(o => o.conforme).length;
+  const nonConf = total - conf;
+  const active  = allVersions.find(v => v.statut === 'ACTIVE');
+
+  document.getElementById('stat-total').textContent    = total;
+  document.getElementById('stat-conforme').textContent = conf;
+  document.getElementById('stat-nonconf').textContent  = nonConf;
+  document.getElementById('stat-version').textContent  = active ? `v${active.version}` : '—';
+
+  const badge = document.getElementById('badge-nonconf');
+  if (nonConf > 0) { badge.textContent = nonConf; badge.classList.remove('d-none'); }
+
+  // Avertissement si aucune version active — les données de conformité ne font pas référence
+  const warningEl = document.getElementById('compliance-no-active-warning');
+  if (!active && warningEl) warningEl.classList.remove('d-none');
+}
+
+function renderCompliance() {
+  const search = document.getElementById('search-compliance')?.value?.toLowerCase() ?? '';
+  let list = allCompliance.filter(o => {
+    if (search && !o.raisonSociale.toLowerCase().includes(search)) return false;
+    if (complianceFilter === 'conformes')    return o.conforme;
+    if (complianceFilter === 'non-conformes') return !o.conforme;
+    if (complianceFilter === 'EXPEDITEUR' || complianceFilter === 'TRANSPORTER') return o.type === complianceFilter;
+    return true;
+  });
+
+  const tbody = document.getElementById('tbody-compliance');
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Aucune organisation trouvée</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(o => {
+    const typeLabel = o.type === 'EXPEDITEUR' ? 'Expéditeur' : 'Transporteur';
+    const typeBadge = o.type === 'EXPEDITEUR'
+      ? 'background:rgba(59,125,221,.1);color:#3b7ddd'
+      : 'background:rgba(249,115,22,.1);color:#F97316';
+    const statutHtml = o.conforme
+      ? `<span class="badge badge-active rounded-pill px-2">Conforme</span>`
+      : `<span class="badge" style="background:rgba(220,53,69,.1);color:#dc3545;border-radius:999px;padding:3px 10px">Non conforme</span>`;
+    const acceptedAt = o.termsAcceptedAt
+      ? new Date(o.termsAcceptedAt).toLocaleDateString('fr-FR')
+      : '<span class="text-muted">—</span>';
+    const version = o.termsAcceptedVersion
+      ? `<span class="badge bg-light text-dark border">v${o.termsAcceptedVersion}</span>`
+      : '<span class="text-muted small">Non acceptées</span>';
+    return `<tr>
+      <td class="fw-semibold">${o.raisonSociale}</td>
+      <td><span class="badge rounded-pill px-2" style="${typeBadge}">${typeLabel}</span></td>
+      <td>${version}</td>
+      <td class="small">${acceptedAt}</td>
+      <td class="text-center">${statutHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Overlay : Créer ──────────────────────────────────────────────────────────
+
+function openCreate() {
+  editingId = null;
+  document.getElementById('form-title').textContent = 'Nouvelle version';
+  document.getElementById('f-version').value  = '';
+  document.getElementById('f-titre').value    = '';
+  document.getElementById('f-resume').value   = '';
+  document.getElementById('f-version').disabled = false;
+  if (quill) quill.setContents([]);
+  document.getElementById('overlay-form').style.display = 'flex';
+  feather.replace();
+  if (quill) setTimeout(() => quill.focus(), 100);
+}
+
+function openEdit(id) {
+  const v = allVersions.find(v => v.id === id);
+  if (!v) return;
+  editingId = id;
+  document.getElementById('form-title').textContent = `Modifier le brouillon v${v.version}`;
+  document.getElementById('f-version').value   = v.version;
+  document.getElementById('f-titre').value     = v.titre;
+  document.getElementById('f-resume').value    = v.resume;
+  document.getElementById('f-version').disabled = true; // version figée
+  if (quill) {
+    // Si le contenu est du HTML (nouveau format), on le charge tel quel
+    // Si c'est du texte brut (ancienne donnée), Quill l'affiche correctement
+    if (v.contenu && (v.contenu.trim().startsWith('<') )) {
+      quill.clipboard.dangerouslyPasteHTML(v.contenu);
+    } else {
+      quill.setText(v.contenu ?? '');
+    }
+  }
+  document.getElementById('overlay-form').style.display = 'flex';
+  feather.replace();
+}
+
+function closeForm() {
+  document.getElementById('overlay-form').style.display = 'none';
+}
+
+async function saveForm() {
+  const btn = document.getElementById('btn-save-form');
+  const version = document.getElementById('f-version').value.trim();
+  const titre   = document.getElementById('f-titre').value.trim();
+  const resume  = document.getElementById('f-resume').value.trim();
+  // Récupère le HTML généré par Quill ; trim pour détecter un éditeur vide
+  const contenu = quill ? quill.root.innerHTML.trim() : '';
+  const isEmptyQuill = !quill || quill.getText().trim().length === 0;
+
+  if (!titre || !resume || isEmptyQuill || (!editingId && !version)) {
+    UI.alert('Tous les champs sont requis.'); return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  try {
+    if (editingId) {
+      await api.put(`/company/cgu/versions/${editingId}`, { titre, resume, contenu });
+    } else {
+      await api.post('/company/cgu/versions', { version, titre, resume, contenu });
+    }
+    closeForm();
+    await loadAll();
+    UI.alert(editingId ? 'Brouillon mis à jour.' : 'Brouillon créé.', 'success');
+  } catch (err) {
+    UI.alert(err.error ?? err.message ?? 'Erreur lors de l\'enregistrement.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enregistrer le brouillon';
+    feather.replace();
+  }
+}
+
+// ─── Overlay : Lire ───────────────────────────────────────────────────────────
+
+function openView(id) {
+  const v = allVersions.find(v => v.id === id);
+  if (!v) return;
+  const badgeLabel = v.statut === 'ACTIVE' ? 'Active' : v.statut === 'BROUILLON' ? 'Brouillon' : 'Archivée';
+  document.getElementById('view-title').textContent  = v.titre;
+  document.getElementById('view-sub').textContent    = `v${v.version} · ${badgeLabel}${v.activatedAt ? ' · Activée le ' + new Date(v.activatedAt).toLocaleDateString('fr-FR') : ''}`;
+  document.getElementById('view-footer-sub').textContent = `Créée le ${new Date(v.createdAt).toLocaleDateString('fr-FR')}`;
+  document.getElementById('view-resume').textContent = v.resume;
+  // Le contenu est du HTML produit par Quill — on l'injecte directement
+  const viewContenu = document.getElementById('view-contenu');
+  if (v.contenu && v.contenu.trim().startsWith('<')) {
+    viewContenu.innerHTML = v.contenu;
+  } else {
+    // Contenu texte brut (données legacy) — on affiche en préservant les sauts de ligne
+    viewContenu.textContent = v.contenu ?? '';
+    viewContenu.style.whiteSpace = 'pre-wrap';
+  }
+  document.getElementById('overlay-view').style.display = 'flex';
+  feather.replace();
+}
+
+function closeView() {
+  document.getElementById('overlay-view').style.display = 'none';
+}
+
+// ─── Overlay : Activer ────────────────────────────────────────────────────────
+
+function openActivate(id) {
+  const v = allVersions.find(v => v.id === id);
+  if (!v) return;
+  activatingId = id;
+  document.getElementById('activate-version-num').textContent    = v.version;
+  document.getElementById('activate-version-label').textContent  = v.titre;
+  document.getElementById('overlay-activate').style.display = 'flex';
+  feather.replace();
+}
+
+function closeActivate() {
+  document.getElementById('overlay-activate').style.display = 'none';
+}
+
+async function confirmActivate() {
+  if (!activatingId) return;
+  const btn = document.getElementById('btn-confirm-activate');
+  btn.disabled = true; btn.textContent = 'Activation…';
+  try {
+    await api.post(`/company/cgu/versions/${activatingId}/activate`, {});
+    closeActivate();
+    await loadAll();
+    UI.alert('Version activée. Les organisations devront re-accepter lors de leur prochaine connexion.', 'success');
+  } catch (err) {
+    UI.alert(err.error ?? err.message ?? 'Erreur lors de l\'activation.');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i data-feather="check" class="align-middle me-1" style="width:14px"></i>Confirmer l\'activation';
+    feather.replace();
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  if (Auth.getRole() !== 'ADMIN') { window.location.href = 'pages-sign-in.html'; return; }
+  UI.fillNavbar();
+  feather.replace();
+
+  // Initialisation de l'éditeur Quill
+  quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    placeholder: 'Rédigez ici le texte complet des Conditions Générales d\'Utilisation…',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['blockquote'],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        ['link'],
+        ['clean']
+      ]
+    }
+  });
+
+  await loadAll();
+});
+</script>
+</body>
+</html>

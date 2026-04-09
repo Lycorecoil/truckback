@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Mise à jour des Conditions Générales d'Utilisation | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f5f7fb; }
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+      padding: 40px 44px;
+      width: 100%; max-width: 580px;
+      text-align: center;
+    }
+    @media (max-width: 600px) { .card { padding: 28px 20px; } }
+    .icon { font-size: 3rem; margin-bottom: 16px; }
+    h3 { font-weight: 800; font-size: 1.3rem; color: #1a1a2e; margin-bottom: 8px; }
+    .sub { color: #6c757d; font-size: 0.9rem; line-height: 1.7; margin-bottom: 28px; }
+    .cgu-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 16px 18px;
+      max-height: 240px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #495057;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .cgu-box h6 { font-weight: 700; font-size: 0.82rem; color: #1a1a2e; margin: 12px 0 3px; }
+    .cgu-box h6:first-child { margin-top: 0; }
+    .accept-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(59,125,221,0.06);
+      border: 1.5px solid rgba(59,125,221,0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .accept-row input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+    .accept-row label { font-size: 0.85rem; font-weight: 500; color: #343a40; cursor: pointer; }
+    .btn-accept {
+      background: #3b7ddd; color: #fff;
+      border: none; border-radius: 10px;
+      padding: 12px 32px; font-weight: 600;
+      font-size: 0.95rem; width: 100%;
+      transition: background .2s;
+      opacity: .45; cursor: not-allowed;
+    }
+    .btn-accept.enabled { opacity: 1; cursor: pointer; }
+    .btn-accept.enabled:hover { background: #2f6abf; }
+    .btn-logout {
+      background: none; border: none;
+      color: #adb5bd; font-size: 0.8rem;
+      margin-top: 14px; cursor: pointer;
+      text-decoration: underline;
+    }
+    .btn-logout:hover { color: #6c757d; }
+    #alert-container { margin-bottom: 12px; }
+    .alert { border-radius: 10px; font-size: 0.875rem; text-align: left; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="icon">📜</div>
+    <h3>Nos Conditions Générales d'Utilisation ont été mises à jour</h3>
+    <p class="sub">
+      Pour continuer à utiliser Elimmekatruck, votre organisation doit accepter la nouvelle version de nos Conditions Générales d'Utilisation.
+    </p>
+
+    <div id="alert-container"></div>
+
+    <div class="cgu-box">
+      <h6>1. Objet</h6>
+      <p>Les présentes Conditions Générales d'Utilisation régissent l'accès et l'utilisation de la plateforme Elimmekatruck, service de mise en relation entre expéditeurs et transporteurs pour le transport de marchandises en Afrique de l'Ouest.</p>
+      <h6>2. Acceptation</h6>
+      <p>En acceptant, l'organisation représentée certifie avoir lu et compris les Conditions Générales d'Utilisation dans leur intégralité et s'engage à les respecter.</p>
+      <h6>3. Obligations</h6>
+      <p>L'utilisateur s'engage à fournir des informations exactes, respecter les lois applicables et ne pas utiliser la plateforme à des fins illicites.</p>
+      <h6>4. Responsabilités</h6>
+      <p>Elimmekatruck met en relation les parties sans être responsable des contrats conclus entre expéditeurs et transporteurs.</p>
+      <h6>5. Données personnelles</h6>
+      <p>Les données sont utilisées exclusivement pour le fonctionnement de la plateforme et ne sont pas cédées à des tiers.</p>
+      <h6>6. Droit applicable</h6>
+      <p>Les Conditions Générales d'Utilisation sont soumises au droit de la République du Bénin. Tout litige sera soumis aux juridictions de Cotonou.</p>
+    </div>
+
+    <div class="accept-row" onclick="document.getElementById('cb-cgu-update').click()">
+      <input type="checkbox" id="cb-cgu-update" onclick="event.stopPropagation()" onchange="onCheck(this.checked)" />
+      <label for="cb-cgu-update">
+        J'ai lu et j'accepte les Conditions Générales d'Utilisation mises à jour (version <span id="version-label"></span>), au nom de mon organisation.
+      </label>
+    </div>
+
+    <button class="btn-accept" id="btn-accept" disabled onclick="doAccept()">
+      Accepter et continuer →
+    </button>
+    <div>
+      <button class="btn-logout" onclick="Auth.logout()">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+function onCheck(checked) {
+  const btn = document.getElementById('btn-accept');
+  btn.disabled = !checked;
+  btn.classList.toggle('enabled', checked);
+}
+
+async function doAccept() {
+  const btn = document.getElementById('btn-accept');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+
+  const user = Auth.getUser();
+  const role = user?.role;
+  const orgId = user?.orgId;
+  const route = role === 'EXPEDITEUR' ? 'company' : 'transporter';
+
+  try {
+    await api.post(`/company/${route}/${orgId}/accept-terms`, { version: CURRENT_TERMS_VERSION });
+    // Mettre à jour la session
+    user.termsAcceptedVersion = CURRENT_TERMS_VERSION;
+    localStorage.setItem('cu_user', JSON.stringify(user));
+    Auth.redirectByRole();
+  } catch (err) {
+    document.getElementById('alert-container').innerHTML =
+      `<div class="alert alert-danger">${err.error ?? err.message ?? 'Erreur lors de l\'enregistrement'}</div>`;
+    btn.disabled = false;
+    btn.classList.add('enabled');
+    btn.textContent = 'Accepter et continuer →';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Cette page ne doit pas appeler requireAuth() (ça créerait une boucle)
+  if (!Auth.isLoggedIn()) {
+    window.location.href = 'pages-sign-in.html';
+    return;
+  }
+  // ADMIN : pas concerné par les Conditions Générales d'Utilisation
+  if (Auth.getRole() === 'ADMIN') {
+    Auth.redirectByRole();
+    return;
+  }
+  // Déjà accepté la version courante → dashboard
+  if (Auth.hasAcceptedTerms()) {
+    Auth.redirectByRole();
+    return;
+  }
+  document.getElementById('version-label').textContent = CURRENT_TERMS_VERSION;
+});
+</script>
+</body>
+</html>

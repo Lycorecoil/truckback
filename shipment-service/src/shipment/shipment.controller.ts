@@ -3,6 +3,7 @@ import { validateBody } from "../utils/validate";
 import { CreateShipmentSchema } from "./schemas";
 import type { ShipmentService } from "./shipment.service";
 import type { ShipmentStatus } from "./shipment.entity";
+import { ShipmentModel } from "./shipment.model";
 
 type Role = "ADMIN" | "EXPEDITEUR" | "TRANSPORTER" | "DRIVER";
 
@@ -12,6 +13,27 @@ function getHeader(req: import("express").Request, name: string): string {
 
 export function createShipmentRouter(service: ShipmentService): Router {
   const router = Router();
+
+  // GET /shipments/stats/trucks — nombre de missions par camion (ADMIN uniquement)
+  // Retourne { data: { "truck-uuid": count, ... } }
+  router.get("/stats/trucks", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "ADMIN") {
+        res.status(403).json({ error: "Accès réservé aux administrateurs" });
+        return;
+      }
+      const counts = await ShipmentModel.aggregate([
+        { $match: { truckId: { $exists: true, $ne: null } } },
+        { $group: { _id: "$truckId", count: { $sum: 1 } } },
+      ]);
+      const data: Record<string, number> = {};
+      for (const c of counts) data[c._id as string] = c.count as number;
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   // GET /shipments/search — AVANT /:id pour éviter le conflit Express
   router.get("/search", async (req, res, next) => {

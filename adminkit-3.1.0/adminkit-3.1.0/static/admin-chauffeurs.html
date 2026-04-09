@@ -36,6 +36,7 @@
         <li class="sidebar-item"><a class="sidebar-link" href="admin-users.html"><i class="align-middle" data-feather="user"></i> <span class="align-middle">Utilisateurs</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="admin-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Flotte globale</span></a></li>
         <li class="sidebar-item active"><a class="sidebar-link" href="admin-chauffeurs.html"><i class="align-middle" data-feather="user-check"></i> <span class="align-middle">Chauffeurs globaux</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="admin-cgu.html"><i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Conditions Générales</span></a></li>
       </ul>
     </div>
   </nav>
@@ -146,14 +147,13 @@
                   <th>Transporteur</th>
                   <th>Téléphone</th>
                   <th class="d-none d-md-table-cell">N° Permis</th>
-                  <th class="d-none d-md-table-cell">Type Permis</th>
                   <th>Véhicule assigné</th>
                   <th>Statut</th>
                   <th class="d-none d-md-table-cell">Ajouté le</th>
                 </tr>
               </thead>
               <tbody id="tbody-all">
-                <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+                <tr><td colspan="7" class="text-center py-4 text-muted">Chargement...</td></tr>
               </tbody>
             </table>
           </div>
@@ -198,7 +198,6 @@
       <div class="row g-3">
         <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Téléphone</div><div class="fw-semibold" id="detail-telephone">—</div></div>
         <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">N° Permis</div><div class="fw-semibold" id="detail-permis">—</div></div>
-        <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Type de permis</div><div class="fw-semibold" id="detail-type-permis">—</div></div>
         <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Véhicule assigné</div><div class="fw-semibold" id="detail-truck">—</div></div>
         <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Transporteur</div><div class="fw-semibold" id="detail-transporter">—</div></div>
         <div class="col-6"><div style="font-size:.72rem;color:#6c757d;text-transform:uppercase;font-weight:600;letter-spacing:.04em">Ajouté le</div><div class="fw-semibold" id="detail-created">—</div></div>
@@ -295,11 +294,12 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody-all');
   if (filteredDrivers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">👤</div>Aucun chauffeur trouvé.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted"><div style="font-size:2rem;margin-bottom:8px">👤</div>Aucun chauffeur trouvé.</td></tr>';
   } else {
     tbody.innerHTML = sliced.map(d => {
       const transporter = allTransporters.find(t => t.tenantId === d.tenantId);
-      const truck = allTrucks.find(t => t.id === d.truckId);
+      // La relation est sur Truck.driverId, pas sur Driver.truckId
+      const truck = allTrucks.find(t => t.driverId === d.id);
       const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
       const truckName = truck ? `${truck.immatriculation ?? ''} (${truck.marque ?? ''} ${truck.modele ?? ''})`.trim() : '—';
       const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase();
@@ -318,7 +318,6 @@ function renderTable() {
         <td class="small">${transporter ? `<a href="#" onclick="event.stopPropagation();openTransporterProfile('${transporter.id}')" class="text-decoration-none fw-semibold">${transName}</a>` : '—'}</td>
         <td class="small">${d.telephone ?? '—'}</td>
         <td class="d-none d-md-table-cell text-muted small">${d.numeroPermis ?? '—'}</td>
-        <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark">${d.typePermis ?? '—'}</span></td>
         <td class="small">${truck ? `<a href="#" onclick="event.stopPropagation();openTruckDetail('${truck.id}')" class="text-decoration-none fw-semibold">${truckName}</a>` : '<span class="text-muted small">—</span>'}</td>
         <td>${driverBadge(d.statut)}</td>
         <td class="d-none d-md-table-cell text-muted small">${UI.formatDate(d.createdAt)}</td>
@@ -356,7 +355,8 @@ function openDetail(id) {
   const d = allDrivers.find(x => x.id === id);
   if (!d) return;
   const transporter = allTransporters.find(t => t.tenantId === d.tenantId);
-  const truck = allTrucks.find(t => t.id === d.truckId);
+  // La relation est sur Truck.driverId, pas sur Driver.truckId
+  const truck = allTrucks.find(t => t.driverId === d.id);
   const transName = transporter ? (transporter.raisonSociale ?? transporter.nom ?? '—') : '—';
   const truckName = truck ? `${truck.immatriculation ?? ''} — ${truck.marque ?? ''} ${truck.modele ?? ''}`.trim() : 'Aucun';
   const initials = `${d.prenom?.[0] ?? ''}${d.nom?.[0] ?? ''}`.toUpperCase() || '?';
@@ -367,7 +367,6 @@ function openDetail(id) {
   document.getElementById('detail-badge').innerHTML = driverBadge(d.statut);
   document.getElementById('detail-telephone').textContent = d.telephone ?? '—';
   document.getElementById('detail-permis').textContent = d.numeroPermis ?? '—';
-  document.getElementById('detail-type-permis').textContent = d.typePermis ?? '—';
   document.getElementById('detail-truck').innerHTML = truckName !== 'Aucun'
     ? `<a href="#" onclick="openTruckDetail('${truck.id}')" class="text-decoration-none fw-semibold">${truckName}</a>`
     : 'Aucun';

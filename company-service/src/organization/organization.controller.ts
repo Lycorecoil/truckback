@@ -100,6 +100,34 @@ export const createOrganizationRouter = (type: OrganizationType): Router => {
   });
 
   /**
+   * POST /company/:id/accept-terms  ou  POST /transporter/:id/accept-terms
+   * Enregistre l'acceptation des CGU pour l'organisation.
+   * Body : { version: string }  — ex: { "version": "1.0" }
+   * Header x-user-id injecté par l'API Gateway (userId du représentant connecté).
+   */
+  router.post("/:id/accept-terms", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.params["id"] as string;
+      const userId = req.headers["x-user-id"] as string;
+      const { version } = req.body as { version: string };
+
+      if (!version) {
+        res.status(400).json({ error: "Le champ 'version' est requis" });
+        return;
+      }
+      if (!userId) {
+        res.status(400).json({ error: "Utilisateur non identifié (token invalide)" });
+        return;
+      }
+
+      const result = await service.acceptTerms(orgId, userId, version);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
    * DELETE /company/:id  ou  DELETE /transporter/:id
    * Soft delete : passe le statut à SUSPENDED sans supprimer le document.
    * Les données sont conservées pour l'historique et la traçabilité.

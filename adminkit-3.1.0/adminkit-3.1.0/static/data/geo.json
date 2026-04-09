@@ -18,6 +18,14 @@
       ]
     },
     {
+      "name": "Cabo Verde",
+      "cities": [
+        "Praia", "Mindelo", "São Domingos", "Santa Cruz", "Assomada",
+        "Cova do Fogo", "Ribeira Grande", "Porto Novo", "São Filipe",
+        "Nova Sintra", "Tarrafal", "Sal", "Boa Vista", "Maio"
+      ]
+    },
+    {
       "name": "Cameroun",
       "cities": [
         "Douala", "Yaoundé", "Bamenda", "Bafoussam", "Garoua", "Maroua",

@@ -44,6 +44,23 @@ export class OrganizationService extends GenericService<Organization> {
 
   /**
    * Méthode métier custom :
+   * Enregistre l'acceptation des CGU pour une organisation.
+   * Stocke la version acceptée, la date et l'userId du représentant.
+   */
+  async acceptTerms(
+    orgId: string,
+    userId: string,
+    version: string
+  ): Promise<ServiceResponse<Organization>> {
+    return this.updateOne(orgId, {
+      termsAcceptedVersion: version,
+      termsAcceptedAt: new Date(),
+      termsAcceptedBy: userId,
+    });
+  }
+
+  /**
+   * Méthode métier custom :
    * Récupère toutes les organisations filtrées par type (EXPEDITEUR ou TRANSPORTER).
    */
   async getByType(
