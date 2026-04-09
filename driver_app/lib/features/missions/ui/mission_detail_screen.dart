@@ -34,8 +34,8 @@ class MissionDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: missionAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error:   (e, _) => Center(child: Text('Erreur : $e', style: const TextStyle(color: AppColors.error))),
+        loading: () => const _DetailSkeleton(),
+        error:   (e, _) => _DetailError(onBack: () => context.pop()),
         data:    (s) => _MissionDetail(shipment: s),
       ),
     );
@@ -311,6 +311,134 @@ class _MissionDetail extends ConsumerWidget {
     } catch (_) { return d; }
   }
 }
+
+// ── Skeleton détail ───────────────────────────────────────────────────────────
+
+class _DetailSkeleton extends StatefulWidget {
+  const _DetailSkeleton();
+  @override
+  State<_DetailSkeleton> createState() => _DetailSkeletonState();
+}
+
+class _DetailSkeletonState extends State<_DetailSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _opacity = Tween<double>(begin: .35, end: .75).animate(_ctrl);
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  Widget _box(double w, double h, {double r = 8, Color? color}) => Container(
+    width: w, height: h,
+    decoration: BoxDecoration(
+      color: color ?? AppColors.surfaceAlt,
+      borderRadius: BorderRadius.circular(r),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _opacity,
+    child: Column(children: [
+      // Carte placeholder
+      _box(double.infinity, 240, r: 0, color: AppColors.surfaceAlt),
+      Expanded(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _box(80, 11), const SizedBox(height: 8),
+            _box(200, 22),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+              child: Column(children: [
+                Row(children: [_box(20, 20, r: 10), const SizedBox(width: 12), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_box(40, 10), const SizedBox(height: 5), _box(100, 14), const SizedBox(height: 3), _box(70, 11)])]),
+                const SizedBox(height: 12),
+                Row(children: [_box(20, 20, r: 10), const SizedBox(width: 12), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_box(40, 10), const SizedBox(height: 5), _box(100, 14), const SizedBox(height: 3), _box(70, 11)])]),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _box(double.infinity, 70, r: 14)),
+              const SizedBox(width: 10),
+              Expanded(child: _box(double.infinity, 70, r: 14)),
+            ]),
+          ]),
+        ),
+      ),
+    ]),
+  );
+}
+
+// ── Erreur détail ─────────────────────────────────────────────────────────────
+
+class _DetailError extends StatelessWidget {
+  const _DetailError({required this.onBack});
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    body: SafeArea(
+      child: Column(children: [
+        // Bouton retour
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: GestureDetector(
+              onTap: onBack,
+              child: Container(
+                width: 38, height: 38,
+                decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
+                child: const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(color: AppColors.textSecondary.withValues(alpha: .08), shape: BoxShape.circle),
+                  child: const Icon(Icons.cloud_off_rounded, size: 34, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                const Text('Détail indisponible',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                const SizedBox(height: 6),
+                const Text('Cette mission n\'est pas disponible hors connexion.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
+                  textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                  label: const Text('Retour'),
+                  style: OutlinedButton.styleFrom(minimumSize: const Size(140, 44)),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ]),
+    ),
+  );
+}
+
+// ── Route row ─────────────────────────────────────────────────────────────────
 
 class _RouteRow extends StatelessWidget {
   const _RouteRow({required this.icon, required this.color, required this.label, required this.city, required this.country});

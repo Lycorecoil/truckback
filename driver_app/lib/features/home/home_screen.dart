@@ -71,15 +71,6 @@ class HomeScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              // Avatar
-                              Container(
-                                width: 44, height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: .2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.person_rounded, color: Colors.white, size: 24),
-                              ),
                             ],
                           ),
                         ],

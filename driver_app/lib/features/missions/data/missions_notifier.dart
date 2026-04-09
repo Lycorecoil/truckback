@@ -26,7 +26,25 @@ Future<List<Shipment>> missions(Ref ref) async {
 
 @riverpod
 Future<Shipment> missionDetail(Ref ref, String id) async {
-  return ref.watch(missionsRepositoryProvider).getMission(id);
+  try {
+    return await ref.read(missionsRepositoryProvider).getMission(id);
+  } catch (_) {
+    // Fallback 1 : missions déjà en mémoire (keepAlive)
+    final inMemory = ref.read(missionsProvider).valueOrNull
+        ?.where((s) => s.id == id)
+        .firstOrNull;
+    if (inMemory != null) return inMemory;
+
+    // Fallback 2 : cache SharedPreferences
+    final cached = await ref.read(offlineCacheProvider).getMissions();
+    final found = cached
+        ?.map(Shipment.fromJson)
+        .where((s) => s.id == id)
+        .firstOrNull;
+    if (found != null) return found;
+
+    rethrow;
+  }
 }
 
 @riverpod
