@@ -29,7 +29,8 @@ export class JwtService implements IJwtService {
   }
 
   signRefresh(payload: JwtPayload): string {
-    return jwt.sign(payload, this.refreshSecret, { expiresIn: '30d' } as jwt.SignOptions);
+    const expiresIn = payload.role === 'DRIVER' ? '1y' : '30d';
+    return jwt.sign(payload, this.refreshSecret, { expiresIn } as jwt.SignOptions);
   }
 
   verify(token: string): JwtPayload {

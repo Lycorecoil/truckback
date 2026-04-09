@@ -57,6 +57,26 @@ const TruckCreateSchema = z.object({
 export function createTruckRouter(service: TruckService): Router {
   const router = Router();
 
+  // GET /trucks/my — DRIVER voit le camion qui lui est assigné
+  router.get("/my", async (req, res, next) => {
+    try {
+      const role = getHeader(req, "x-user-role") as Role;
+      if (role !== "DRIVER") {
+        res.status(403).json({ error: "Réservé aux chauffeurs" });
+        return;
+      }
+      const driverId = getHeader(req, "x-user-id");
+      const truck = await service.findByDriverId(driverId);
+      if (!truck) {
+        res.status(404).json({ error: "Aucun camion assigné" });
+        return;
+      }
+      res.json(truck);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // POST /trucks/assign-driver — AVANT /:id pour éviter le conflit Express
   router.post("/assign-driver", async (req, res, next) => {
     try {

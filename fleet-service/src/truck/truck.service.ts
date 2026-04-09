@@ -35,6 +35,10 @@ export class TruckService extends GenericService<Truck> {
     return this.truckRepo.update(truckId, { driverId });
   }
 
+  async findByDriverId(driverId: string): Promise<Truck | null> {
+    return this.truckRepo.findByDriverId(driverId);
+  }
+
   async unassignDriver(truckId: string): Promise<Truck> {
     const truck = await this.truckRepo.findById(truckId);
     if (truck?.statut === "BUSY") {

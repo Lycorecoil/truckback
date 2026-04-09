@@ -18,7 +18,8 @@ class AuthRepository {
       data: {'email': email, 'password': password},
     );
     final data = res.data!;
-    final token = data['token'] as String;
+    final token        = data['token'] as String;
+    final refreshToken = data['refreshToken'] as String? ?? '';
     final user = data['user'] as Map<String, dynamic>;
 
     // Vérification rôle
@@ -26,7 +27,7 @@ class AuthRepository {
       throw Exception('Ce compte n\'est pas un compte chauffeur');
     }
 
-    await _storage.saveSession(token, user);
+    await _storage.saveSession(token, refreshToken, user);
     return AuthUser(
       id: user['id'] as String,
       email: user['email'] as String,

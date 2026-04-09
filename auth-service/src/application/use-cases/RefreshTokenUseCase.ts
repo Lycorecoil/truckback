@@ -29,9 +29,12 @@ export class RefreshTokenUseCase {
     if (!user) throw new UnauthorizedError('Utilisateur introuvable.');
 
     // 4. Rotation : révoque l'ancien refresh token
+    const fallbackMs = payload.role === 'DRIVER'
+      ? 365 * 24 * 60 * 60 * 1000
+      : 30 * 24 * 60 * 60 * 1000;
     const expiresAt = payload.exp
       ? new Date(payload.exp * 1000)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      : new Date(Date.now() + fallbackMs);
     await this.revokedTokenRepository.revoke(dto.refreshToken, expiresAt);
 
     // 5. Émet un nouveau pair de tokens

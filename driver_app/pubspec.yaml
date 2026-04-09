@@ -27,11 +27,24 @@ dependencies:
   # GPS
   geolocator: ^13.0.2
 
+  # Permissions
+  permission_handler: ^11.3.1
+
+  # Foreground service GPS (process keepalive + notification bandeau Android)
+  flutter_foreground_task: ^8.15.0
+
+  # Carte (OpenStreetMap — gratuit, pas de clé API)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
   # WebSocket
   web_socket_channel: ^3.0.1
 
   # Push notifications
   onesignal_flutter: ^5.2.5
+
+  # Cache local offline
+  shared_preferences: ^2.3.3
 
   # Models immutables
   freezed_annotation: ^2.4.4

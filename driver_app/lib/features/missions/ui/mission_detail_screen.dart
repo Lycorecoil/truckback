@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/missions_notifier.dart';
-import '../data/missions_repository.dart';
 import '../domain/shipment.dart';
+
+// Coordonnées approximatives par ville (pour la mini-carte)
+const _cityCoords = <String, LatLng>{
+  'Ouaga':        LatLng(12.3569, -1.5352),
+  'Ouagadougou':  LatLng(12.3569, -1.5352),
+  'Abidjan':      LatLng(5.3600, -4.0083),
+  'Dakar':        LatLng(14.7167, -17.4677),
+  'Bamako':       LatLng(12.6392, -8.0029),
+  'Lomé':         LatLng(6.1375,   1.2123),
+  'Cotonou':      LatLng(6.3703,   2.3912),
+  'Niamey':       LatLng(13.5137,   2.1098),
+  'Accra':        LatLng(5.6037,  -0.1870),
+};
+
+LatLng _coordsFor(String city) =>
+    _cityCoords[city] ?? const LatLng(12.3569, -1.5352);
 
 class MissionDetailScreen extends ConsumerWidget {
   const MissionDetailScreen({super.key, required this.missionId});
@@ -12,22 +29,14 @@ class MissionDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final missionAsync = ref.watch(
-      FutureProvider((ref) => ref.watch(missionsRepositoryProvider).getMission(missionId)),
-    );
+    final missionAsync = ref.watch(missionDetailProvider(missionId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Détail Mission'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      backgroundColor: AppColors.background,
       body: missionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(child: Text('Erreur : $e', style: const TextStyle(color: AppColors.error))),
-        data: (s) => _MissionDetail(shipment: s),
+        error:   (e, _) => Center(child: Text('Erreur : $e', style: const TextStyle(color: AppColors.error))),
+        data:    (s) => _MissionDetail(shipment: s),
       ),
     );
   }
@@ -39,152 +48,238 @@ class _MissionDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final actionState = ref.watch(missionActionNotifierProvider);
-    final isLoading = actionState.isLoading;
+    final actionState  = ref.watch(missionActionNotifierProvider);
     final isInProgress = shipment.statut == 'IN_PROGRESS';
-    final canAct = shipment.statut == 'ACCEPTED' || shipment.statut == 'IN_PROGRESS';
+    final canAct       = shipment.statut == 'ACCEPTED' || shipment.statut == 'IN_PROGRESS';
+
+    final departCoords  = _coordsFor(shipment.villeDepart);
+    final arriveeCoords = _coordsFor(shipment.villeArrivee);
+    final centerLat     = (departCoords.latitude  + arriveeCoords.latitude)  / 2;
+    final centerLng     = (departCoords.longitude + arriveeCoords.longitude) / 2;
 
     return Column(
       children: [
+        // ── Carte mini (250px) ──────────────────────────────────────────
+        SizedBox(
+          height: 240,
+          child: Stack(
+            children: [
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(centerLat, centerLng),
+                  initialZoom: 5,
+                  interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                    subdomains: const ['a', 'b', 'c', 'd'],
+                    userAgentPackageName: 'com.elimmekatruck.driver_app',
+                    retinaMode: RetinaMode.isHighDensity(context),
+                  ),
+                  PolylineLayer(polylines: [
+                    Polyline<Object>(
+                      points: [departCoords, arriveeCoords],
+                      color: AppColors.primary,
+                      strokeWidth: 3,
+                      pattern: StrokePattern.dashed(segments: [12, 6]),
+                    ),
+                  ]),
+                  MarkerLayer(markers: [
+                    Marker(
+                      point: departCoords,
+                      width: 32, height: 32,
+                      child: Container(
+                        decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                        child: const Icon(Icons.trip_origin_rounded, color: Colors.white, size: 18),
+                      ) as Widget,
+                    ),
+                    Marker(
+                      point: arriveeCoords,
+                      width: 32, height: 32,
+                      child: Container(
+                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                        child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 18),
+                      ) as Widget,
+                    ),
+                  ]),
+                ],
+              ),
+              // Bouton retour
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 12,
+                child: GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Container(
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .12), blurRadius: 8)],
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.textPrimary),
+                  ),
+                ),
+              ),
+              // Badge statut
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .1), blurRadius: 8)],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7, height: 7,
+                        margin: const EdgeInsets.only(right: 6),
+                        decoration: BoxDecoration(color: statusColor(shipment.statut), shape: BoxShape.circle),
+                      ),
+                      Text(statusLabel(shipment.statut),
+                        style: TextStyle(color: statusColor(shipment.statut), fontWeight: FontWeight.bold, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ── Infos scrollables ────────────────────────────────────────────
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Mission en cours
-                if (isInProgress)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.local_shipping, color: AppColors.primary, size: 16),
-                        const SizedBox(width: 8),
-                        Text('Mission en cours', style: TextStyle(
-                          color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-                      ],
-                    ),
-                  ),
+                // ID mission
+                Text(
+                  'Mission #${shipment.id.substring(0, 8).toUpperCase()}',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: .5),
+                ),
+                const SizedBox(height: 6),
+                Text(shipment.marchandise,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                const SizedBox(height: 16),
 
-                // Route card
+                // Carte route
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('ORIGINE', style: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 10,
-                                  fontWeight: FontWeight.w700, letterSpacing: 1)),
-                                const SizedBox(height: 4),
-                                Text(shipment.villeDepart,
-                                  style: Theme.of(context).textTheme.headlineMedium),
-                                Text(shipment.paysDepart,
-                                  style: Theme.of(context).textTheme.bodyMedium),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              const Icon(Icons.arrow_forward, color: AppColors.textSecondary),
-                              Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                width: 32, height: 1,
-                                color: AppColors.border,
-                              ),
-                            ],
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('DESTINATION', style: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 10,
-                                  fontWeight: FontWeight.w700, letterSpacing: 1)),
-                                const SizedBox(height: 4),
-                                Text(shipment.villeArrivee,
-                                  style: Theme.of(context).textTheme.headlineMedium,
-                                  textAlign: TextAlign.end),
-                                Text(shipment.paysArrivee,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  textAlign: TextAlign.end),
-                              ],
-                            ),
-                          ),
-                        ],
+                      _RouteRow(
+                        icon: Icons.trip_origin_rounded,
+                        color: AppColors.success,
+                        label: 'Départ',
+                        city: shipment.villeDepart,
+                        country: shipment.paysDepart,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        child: Row(children: [
+                          Container(width: 2, height: 24, margin: const EdgeInsets.only(left: 9), color: AppColors.border),
+                        ]),
+                      ),
+                      _RouteRow(
+                        icon: Icons.location_on_rounded,
+                        color: AppColors.primary,
+                        label: 'Arrivée',
+                        city: shipment.villeArrivee,
+                        country: shipment.paysArrivee,
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 12),
 
-                // Infos cargo
-                Row(
-                  children: [
-                    Expanded(child: _InfoCard(label: 'POIDS', value: '${shipment.poids} T', icon: Icons.scale_outlined)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _InfoCard(label: 'TYPE', value: shipment.marchandise, icon: Icons.inventory_2_outlined)),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                if (shipment.prixTransport != null)
-                  _InfoCard(
-                    label: 'PRIX TRANSPORT',
-                    value: '${shipment.prixTransport!.toStringAsFixed(0)} FCFA',
-                    icon: Icons.payments_outlined,
-                    fullWidth: true,
-                  ),
-
+                // Grille infos
+                Row(children: [
+                  Expanded(child: _InfoTile(icon: Icons.scale_outlined, label: 'Poids', value: '${shipment.poids} T')),
+                  const SizedBox(width: 10),
+                  Expanded(child: _InfoTile(icon: Icons.inventory_2_outlined, label: 'Emballage', value: shipment.emballage ?? '—')),
+                ]),
+                const SizedBox(height: 10),
+                if (shipment.quantite != null)
+                  Row(children: [
+                    Expanded(child: _InfoTile(icon: Icons.numbers_outlined, label: 'Quantité', value: '${shipment.quantite}')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _InfoTile(icon: Icons.calendar_today_outlined, label: 'Date', value: _fmtDate(shipment.dateAnnonce))),
+                  ]),
                 if (shipment.commentaireGeneral != null) ...[
-                  const SizedBox(height: 12),
-                  _InfoCard(
-                    label: 'COMMENTAIRE',
-                    value: shipment.commentaireGeneral!,
-                    icon: Icons.notes_outlined,
-                    fullWidth: true,
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('NOTE', style: TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .8)),
+                        const SizedBox(height: 6),
+                        Text(shipment.commentaireGeneral!, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.4)),
+                      ],
+                    ),
                   ),
                 ],
+
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ),
 
-        // Bouton action
+        // ── Bouton action ────────────────────────────────────────────────
         if (canAct)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              border: Border(top: BorderSide(color: AppColors.border)),
+              border: const Border(top: BorderSide(color: AppColors.border)),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .06), blurRadius: 12, offset: const Offset(0, -4))],
             ),
             child: SafeArea(
               top: false,
-              child: ElevatedButton.icon(
-                onPressed: isLoading ? null : () => _handleAction(ref, context),
-                icon: isLoading
-                    ? const SizedBox(width: 20, height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Icon(isInProgress ? Icons.check_circle : Icons.play_arrow),
-                label: Text(isInProgress ? 'CONFIRMER LA LIVRAISON' : 'DÉMARRER LA MISSION'),
+              child: Row(
+                children: [
+                  if (isInProgress) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () { context.pop(); context.go('/tracking'); },
+                        icon: const Icon(Icons.location_on_rounded, size: 18),
+                        label: const Text('Tracking'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    flex: isInProgress ? 2 : 1,
+                    child: ElevatedButton.icon(
+                      onPressed: actionState.isLoading ? null : () => _handleAction(ref, context),
+                      icon: actionState.isLoading
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Icon(isInProgress ? Icons.check_circle_rounded : Icons.play_arrow_rounded, size: 20),
+                      label: Text(isInProgress ? 'Confirmer la livraison' : 'Démarrer la mission'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isInProgress ? AppColors.success : AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -199,46 +294,79 @@ class _MissionDetail extends ConsumerWidget {
     } else {
       await notifier.start(shipment.id);
     }
-    final state = ref.read(missionActionNotifierProvider);
-    if (state.hasError && context.mounted) {
+    final s = ref.read(missionActionNotifierProvider);
+    if (s.hasError && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : ${state.error}'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('Erreur : ${s.error}'), backgroundColor: AppColors.error),
       );
-    } else if (!state.hasError && context.mounted) {
+    } else if (!s.hasError && context.mounted) {
       context.pop();
     }
   }
+
+  String _fmtDate(String d) {
+    try {
+      final dt = DateTime.parse(d);
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (_) { return d; }
+  }
 }
 
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.label, required this.value, required this.icon, this.fullWidth = false});
+class _RouteRow extends StatelessWidget {
+  const _RouteRow({required this.icon, required this.color, required this.label, required this.city, required this.country});
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String city;
+  final String country;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(width: 20, height: 20, decoration: BoxDecoration(color: color.withValues(alpha: .15), shape: BoxShape.circle),
+          child: Icon(icon, color: color, size: 12)),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .6)),
+            Text(city, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+            Text(country, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({required this.icon, required this.label, required this.value});
+  final IconData icon;
   final String label;
   final String value;
-  final IconData icon;
-  final bool fullWidth;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.textSecondary, size: 18),
+          Container(width: 34, height: 34, decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .08), borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, color: AppColors.primary, size: 18)),
           const SizedBox(width: 10),
-          Column(
+          Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .8)),
-              const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15)),
+              Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w600)),
+              Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis),
             ],
-          ),
+          )),
         ],
       ),
     );

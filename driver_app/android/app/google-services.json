@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "278822614049",
+    "project_id": "elimmekatruck",
+    "storage_bucket": "elimmekatruck.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278822614049:android:fdd61e12b4bd5de4921f60",
+        "android_client_info": {
+          "package_name": "com.elimmekatruck.driver_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKEV2QSLAWsuYLajRETm5qjyyYTUfzzu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

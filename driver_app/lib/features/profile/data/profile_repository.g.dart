@@ -24,11 +24,11 @@ final profileRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProfileRepositoryRef = AutoDisposeProviderRef<ProfileRepository>;
-String _$myProfileHash() => r'673bd108673bd578fba7975024d309cb31aa0287';
+String _$myProfileHash() => r'2cfcadf3ff4eaf1d14a5972216da04e383c3cf21';
 
 /// See also [myProfile].
 @ProviderFor(myProfile)
-final myProfileProvider = AutoDisposeFutureProvider<Driver>.internal(
+final myProfileProvider = FutureProvider<Driver>.internal(
   myProfile,
   name: r'myProfileProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -40,6 +40,23 @@ final myProfileProvider = AutoDisposeFutureProvider<Driver>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef MyProfileRef = AutoDisposeFutureProviderRef<Driver>;
+typedef MyProfileRef = FutureProviderRef<Driver>;
+String _$myTruckHash() => r'893d4d9a48acdb467d44ba8ba295e74874f67186';
+
+/// See also [myTruck].
+@ProviderFor(myTruck)
+final myTruckProvider = AutoDisposeFutureProvider<Truck?>.internal(
+  myTruck,
+  name: r'myTruckProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$myTruckHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MyTruckRef = AutoDisposeFutureProviderRef<Truck?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
