@@ -31,6 +31,14 @@ const mockService = {
   deliverMission:       jest.fn(),
   cancelShipment:       jest.fn(),
   searchMatchingTrucks: jest.fn(),
+  expressInterest:      jest.fn(),
+  cancelInterest:       jest.fn(),
+  proposeToTransporter: jest.fn(),
+  acceptProposal:       jest.fn(),
+  refuseProposal:       jest.fn(),
+  shipmentRepo: {
+    findProposedForTransporter: jest.fn(),
+  },
 } as unknown as ShipmentService;
 
 const app = express();
@@ -204,6 +212,7 @@ describe("ShipmentController - RBAC et isolation tenant", () => {
     it("TRANSPORTER voit ses missions + les PENDING (findByTransporterId + findByStatut)", async () => {
       (mockService.findByTransporterId as jest.Mock).mockResolvedValue([]);
       (mockService.findByStatut as jest.Mock).mockResolvedValue([mockShipment]);
+      (mockService.shipmentRepo.findProposedForTransporter as jest.Mock).mockResolvedValue([]);
       const res = await request(app)
         .get("/shipments")
         .set("x-user-role", "TRANSPORTER")
