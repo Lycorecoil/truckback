@@ -349,15 +349,28 @@ export function createShipmentRouter(service: ShipmentService): Router {
   // PUT /shipments/:id — uniquement ADMIN
   router.put("/:id", async (req, res, next) => {
     try {
-      const role = getHeader(req, "x-user-role") as Role;
-      if (role !== "ADMIN") {
-        res.status(403).json({ error: "Modification directe réservée à l'administrateur" });
+      const role   = getHeader(req, "x-user-role") as Role;
+      const userId = getHeader(req, "x-user-id");
+      if (role !== "ADMIN" && role !== "EXPEDITEUR") {
+        res.status(403).json({ error: "Modification réservée à l'expéditeur propriétaire ou à l'administrateur" });
         return;
       }
       const body = req.body as Record<string, unknown>;
       if (Object.keys(body).length === 0) {
         res.status(400).json({ error: "Le corps de la requête ne peut pas être vide" });
         return;
+      }
+      if (role === "EXPEDITEUR") {
+        const existing = await service.getById(req.params["id"] as string) as { data?: { companyId?: string; statut?: string }; companyId?: string; statut?: string };
+        const data = existing.data ?? existing as { companyId?: string; statut?: string };
+        if (data.companyId !== userId) {
+          res.status(403).json({ error: "Vous ne pouvez modifier que vos propres expéditions" });
+          return;
+        }
+        if (data.statut !== "PENDING") {
+          res.status(400).json({ error: "Seules les expéditions en attente peuvent être modifiées" });
+          return;
+        }
       }
       const result = await service.updateOne(req.params["id"] as string, body);
       res.json(result);
