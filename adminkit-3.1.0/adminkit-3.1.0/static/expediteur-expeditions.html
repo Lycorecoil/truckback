@@ -160,7 +160,7 @@
               <tr><td colspan="7" class="text-center py-4 text-muted">Chargement...</td></tr>
             </tbody>
           </table>
-          <div class="card-footer d-flex justify-content-between align-items-center py-2" id="pagination-bar" style="display:none!important">
+          <div class="card-footer d-flex justify-content-between align-items-center py-2" id="pagination-bar" style="display:none">
             <span id="pagination-info" class="text-muted small"></span>
             <nav><ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul></nav>
           </div>
@@ -299,17 +299,19 @@ function renderPage() {
       <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
       <td class="d-none d-md-table-cell">${s.prixTransport ? s.prixTransport.toLocaleString('fr-FR') + ' FCFA' : '—'}</td>
       <td>${UI.shipmentBadge(s.statut)}</td>
-      <td class="d-flex gap-1 flex-wrap">
-        ${s.statut === 'PENDING' ? `
-          <button class="btn btn-sm btn-outline-secondary" onclick="openEdit('${s.id}')"><i data-feather="edit-2" class="align-middle" style="width:13px"></i> Modifier</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="openCancelModal('${s.id}')"><i data-feather="x-circle" class="align-middle" style="width:13px"></i> Annuler</button>
-        ` : ''}
-        ${s.statut === 'ACCEPTED' ? `
-          <button class="btn btn-sm btn-outline-danger" onclick="openCancelModal('${s.id}')"><i data-feather="x-circle" class="align-middle" style="width:13px"></i> Annuler</button>
-        ` : ''}
-        ${s.statut === 'IN_PROGRESS' ? `
-          <a href="expediteur-tracking.html?id=${s.id}" class="btn btn-sm btn-outline-primary"><i data-feather="map-pin" class="align-middle" style="width:13px"></i> Tracker</a>
-        ` : ''}
+      <td>
+        <div class="d-flex gap-1 align-items-center">
+          ${s.statut === 'PENDING' ? `
+            <button class="btn btn-sm btn-outline-secondary p-1" title="Modifier" onclick="openEdit('${s.id}')"><i data-feather="edit-2" style="width:14px;height:14px"></i></button>
+            <button class="btn btn-sm btn-outline-danger p-1" title="Annuler" onclick="openCancelModal('${s.id}')"><i data-feather="x-circle" style="width:14px;height:14px"></i></button>
+          ` : ''}
+          ${s.statut === 'ACCEPTED' ? `
+            <button class="btn btn-sm btn-outline-danger p-1" title="Annuler" onclick="openCancelModal('${s.id}')"><i data-feather="x-circle" style="width:14px;height:14px"></i></button>
+          ` : ''}
+          ${s.statut === 'IN_PROGRESS' ? `
+            <a href="expediteur-tracking.html?id=${s.id}" class="btn btn-sm btn-outline-primary p-1" title="Tracker"><i data-feather="map-pin" style="width:14px;height:14px"></i></a>
+          ` : ''}
+        </div>
       </td>
     </tr>
   `).join('');
