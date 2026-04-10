@@ -325,6 +325,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const res = await api.get('/shipments');
   const raw = Array.isArray(res) ? res : (res?.data ?? []);
   allShipments = raw;
+
+  const urlStatut = new URLSearchParams(window.location.search).get('statut');
+  if (urlStatut) {
+    document.getElementById('f-statut').value = urlStatut;
+  }
   applyFilters();
 });
 </script>
