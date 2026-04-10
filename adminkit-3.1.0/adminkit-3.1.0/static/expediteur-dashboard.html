@@ -601,9 +601,12 @@
           });
         await loadGeo(); try { fillCountrySelects(true); } catch(_) {}
 
+        const currentUserId = _usr?.sub ?? _usr?.id ?? '';
         try {
           const res = await api.get("/shipments");
-          allShipments = Array.isArray(res) ? res : (res?.data ?? []);
+          const all = Array.isArray(res) ? res : (res?.data ?? []);
+          // Ne garder que ses propres expéditions pour les KPIs et graphiques
+          allShipments = all.filter((s) => s.companyId === currentUserId);
         } catch(err) {
           console.error("[dashboard] Erreur chargement expéditions:", err);
           allShipments = [];
