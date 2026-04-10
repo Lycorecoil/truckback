@@ -254,14 +254,9 @@ export function createShipmentRouter(service: ShipmentService): Router {
         return;
       }
       if (role === "DRIVER") {
-        // Un chauffeur ne voit que les expéditions où il est assigné + PENDING
-        const [mine, pending] = await Promise.all([
-          service.findByDriverId(userId),
-          service.findByStatut("PENDING"),
-        ]);
-        const ids = new Set((mine as Array<{ id: string }>).map((s) => s.id));
-        const all = [...mine, ...(pending as Array<{ id: string }>).filter((s) => !ids.has(s.id))];
-        res.json(all);
+        // Un chauffeur ne voit que les expéditions où il est assigné
+        const mine = await service.findByDriverId(userId);
+        res.json(mine);
         return;
       }
 
