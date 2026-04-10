@@ -88,7 +88,7 @@ class GpsQueueService {
     for (var i = 0; i < list.length; i++) {
       try {
         final p = list[i];
-        await _api.post('/tracking/positions', data: {
+        await _api.post('/tracking', data: {
           'truckId':    p.truckId,
           'shipmentId': p.shipmentId,
           'latitude':   p.latitude,
