@@ -89,6 +89,16 @@
               </div>
 
               <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville de départ</label>
+                <input id="f-ville-depart" class="form-control form-control-sm" placeholder="Douala, Ouaga..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville d'arrivée</label>
+                <input id="f-ville-arrivee" class="form-control form-control-sm" placeholder="Yaoundé, Abidjan..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
                 <label class="form-label small mb-1">Marchandise</label>
                 <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="applyFilters()" />
               </div>
@@ -222,7 +232,9 @@ function applyFilters() {
   const statut     = document.getElementById('f-statut').value;
   const paysDepart = document.getElementById('f-pays-depart').value;
   const paysArrivee= document.getElementById('f-pays-arrivee').value;
-  const marchandise= document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const villeDepart = document.getElementById('f-ville-depart').value.trim().toLowerCase();
+  const villeArrivee= document.getElementById('f-ville-arrivee').value.trim().toLowerCase();
+  const marchandise = document.getElementById('f-marchandise').value.trim().toLowerCase();
   const dateDebut  = document.getElementById('f-date-debut').value;
   const dateFin    = document.getElementById('f-date-fin').value;
   const prixMin    = document.getElementById('f-prix-min').value ? Number(document.getElementById('f-prix-min').value) : null;
@@ -232,7 +244,9 @@ function applyFilters() {
     if (statut      && s.statut !== statut) return false;
     if (paysDepart  && s.paysDepart !== paysDepart) return false;
     if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
-    if (marchandise && !s.marchandise.toLowerCase().includes(marchandise)) return false;
+    if (villeDepart  && !s.villeDepart?.toLowerCase().includes(villeDepart)) return false;
+    if (villeArrivee && !s.villeArrivee?.toLowerCase().includes(villeArrivee)) return false;
+    if (marchandise  && !s.marchandise?.toLowerCase().includes(marchandise)) return false;
     if (dateDebut   && s.dateAnnonce < dateDebut) return false;
     if (dateFin     && s.dateAnnonce > dateFin) return false;
     if (prixMin !== null && (s.prixTransport ?? 0) < prixMin) return false;
@@ -243,7 +257,7 @@ function applyFilters() {
   renderTable(filtered);
 
   // Badge count
-  const activeCount = [statut, paysDepart, paysArrivee, marchandise, dateDebut, dateFin,
+  const activeCount = [statut, paysDepart, paysArrivee, villeDepart, villeArrivee, marchandise, dateDebut, dateFin,
     prixMin !== null ? '1' : '', prixMax !== null ? '1' : ''].filter(Boolean).length;
   const badge = document.getElementById('filter-badge');
   if (activeCount > 0) {
@@ -258,7 +272,7 @@ function applyFilters() {
 
 function resetFilters() {
   ['f-statut','f-pays-depart','f-pays-arrivee'].forEach(id => document.getElementById(id).value = '');
-  ['f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
+  ['f-ville-depart','f-ville-arrivee','f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
