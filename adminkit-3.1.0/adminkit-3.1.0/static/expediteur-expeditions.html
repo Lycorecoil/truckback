@@ -114,6 +114,16 @@
               </div>
 
               <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids min (T)</label>
+                <input id="f-poids-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" step="0.01" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids max (T)</label>
+                <input id="f-poids-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" step="0.01" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
                 <label class="form-label small mb-1">Prix min (FCFA)</label>
                 <input id="f-prix-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" oninput="applyFilters()" />
               </div>
@@ -237,6 +247,8 @@ function applyFilters() {
   const marchandise = document.getElementById('f-marchandise').value.trim().toLowerCase();
   const dateDebut  = document.getElementById('f-date-debut').value;
   const dateFin    = document.getElementById('f-date-fin').value;
+  const poidsMin   = document.getElementById('f-poids-min').value ? Number(document.getElementById('f-poids-min').value) : null;
+  const poidsMax   = document.getElementById('f-poids-max').value ? Number(document.getElementById('f-poids-max').value) : null;
   const prixMin    = document.getElementById('f-prix-min').value ? Number(document.getElementById('f-prix-min').value) : null;
   const prixMax    = document.getElementById('f-prix-max').value ? Number(document.getElementById('f-prix-max').value) : null;
 
@@ -249,8 +261,10 @@ function applyFilters() {
     if (marchandise  && !s.marchandise?.toLowerCase().includes(marchandise)) return false;
     if (dateDebut   && s.dateAnnonce < dateDebut) return false;
     if (dateFin     && s.dateAnnonce > dateFin) return false;
-    if (prixMin !== null && (s.prixTransport ?? 0) < prixMin) return false;
-    if (prixMax !== null && (s.prixTransport ?? 0) > prixMax) return false;
+    if (poidsMin !== null && (s.poids ?? 0) < poidsMin) return false;
+    if (poidsMax !== null && (s.poids ?? 0) > poidsMax) return false;
+    if (prixMin  !== null && (s.prixTransport ?? 0) < prixMin) return false;
+    if (prixMax  !== null && (s.prixTransport ?? 0) > prixMax) return false;
     return true;
   });
 
@@ -258,7 +272,8 @@ function applyFilters() {
 
   // Badge count
   const activeCount = [statut, paysDepart, paysArrivee, villeDepart, villeArrivee, marchandise, dateDebut, dateFin,
-    prixMin !== null ? '1' : '', prixMax !== null ? '1' : ''].filter(Boolean).length;
+    poidsMin !== null ? '1' : '', poidsMax !== null ? '1' : '',
+    prixMin  !== null ? '1' : '', prixMax  !== null ? '1' : ''].filter(Boolean).length;
   const badge = document.getElementById('filter-badge');
   if (activeCount > 0) {
     badge.textContent = activeCount;
@@ -272,7 +287,7 @@ function applyFilters() {
 
 function resetFilters() {
   ['f-statut','f-pays-depart','f-pays-arrivee'].forEach(id => document.getElementById(id).value = '');
-  ['f-ville-depart','f-ville-arrivee','f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
+  ['f-ville-depart','f-ville-arrivee','f-marchandise','f-date-debut','f-date-fin','f-poids-min','f-poids-max','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
