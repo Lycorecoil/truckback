@@ -372,7 +372,7 @@ const UI = {
     const map = {
       PENDING:     { cls: 'bg-warning text-dark',  label: 'En attente' },
       PROPOSED:    { cls: 'text-white',            label: 'Proposée', style: 'background:#6f42c1' },
-      ACCEPTED:    { cls: 'bg-info text-dark',    label: 'Acceptée' },
+      ACCEPTED:    { cls: 'bg-info text-dark',    label: 'En validation' },
       IN_PROGRESS: { cls: 'bg-primary',           label: 'En cours' },
       DELIVERED:   { cls: 'bg-success',           label: 'Livrée' },
       CANCELLED:   { cls: 'bg-danger',            label: 'Annulée' },

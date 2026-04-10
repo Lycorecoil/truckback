@@ -21,7 +21,6 @@
         <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions <span class="badge bg-danger ms-1 d-none" id="sidebar-badge-proposed"></span></span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
         <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
-        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
 
       </ul>
     </div>
@@ -70,12 +69,6 @@
             <button type="button" class="nav-link" data-tab="proposed">
               <i class="align-middle me-1" data-feather="star" style="width:14px"></i>
               Recommandées <span class="badge bg-danger ms-1" id="tab-badge-proposed">0</span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="nav-link" data-tab="trucks">
-              <i class="align-middle me-1" data-feather="truck" style="width:14px"></i>
-              Mes camions <span class="badge bg-secondary ms-1" id="tab-badge-trucks">0</span>
             </button>
           </li>
         </ul>
@@ -147,10 +140,54 @@
           </div>
         </div>
 
-        <!-- Tab: Mes missions -->
-        <div id="tab-mine">
+          <!-- Tab: Mes missions -->
+          <div id="tab-mine">
 
-          <!-- Filtres Mes missions -->
+            <!-- KPIs résumé -->
+            <div class="row g-3 mb-3">
+              <div class="col-6 col-xl-3">
+                <div class="cu-kpi-card">
+                  <div class="cu-kpi-icon" style="background:#EFF6FF">
+                    <i data-feather="list" style="width:22px;height:22px;color:#3B82F6"></i>
+                  </div>
+                  <div class="cu-kpi-value" id="mine-total">—</div>
+                  <div class="cu-kpi-label">Total missions</div>
+                  <div class="cu-kpi-sub">Sur la sélection</div>
+                </div>
+              </div>
+              <div class="col-6 col-xl-3">
+                <div class="cu-kpi-card">
+                  <div class="cu-kpi-icon" style="background:#F0FDF4">
+                    <i data-feather="check-circle" style="width:22px;height:22px;color:#28A745"></i>
+                  </div>
+                  <div class="cu-kpi-value" id="mine-delivered">—</div>
+                  <div class="cu-kpi-label">Livrées</div>
+                  <div class="cu-kpi-sub">Taux : <span id="mine-rate">—</span></div>
+                </div>
+              </div>
+              <div class="col-6 col-xl-3">
+                <div class="cu-kpi-card">
+                  <div class="cu-kpi-icon" style="background:#FFF0F0">
+                    <i data-feather="x-circle" style="width:22px;height:22px;color:#DC3545"></i>
+                  </div>
+                  <div class="cu-kpi-value" id="mine-cancelled">—</div>
+                  <div class="cu-kpi-label">Annulées</div>
+                  <div class="cu-kpi-sub">Sur la sélection</div>
+                </div>
+              </div>
+              <div class="col-6 col-xl-3">
+                <div class="cu-kpi-card">
+                  <div class="cu-kpi-icon" style="background:#FFFBEB">
+                    <i data-feather="trending-up" style="width:22px;height:22px;color:#F59E0B"></i>
+                  </div>
+                  <div class="cu-kpi-value" id="mine-revenue">—</div>
+                  <div class="cu-kpi-label">Revenus (FCFA)</div>
+                  <div class="cu-kpi-sub">Missions livrées</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filtres Mes missions -->
           <div class="card mb-3">
             <div class="card-body py-3">
               <div class="row g-3 align-items-end">
@@ -158,25 +195,39 @@
                   <label class="form-label mb-1 small text-muted fw-semibold">Statut</label>
                   <select id="mine-f-statut" class="form-select form-select-sm" onchange="filterMine()">
                     <option value="">Tous</option>
-                    <option value="ACCEPTED">En attente</option>
+                    <option value="ACCEPTED">En validation</option>
                     <option value="IN_PROGRESS">En cours</option>
                     <option value="DELIVERED">Livrée</option>
                     <option value="CANCELLED">Annulée</option>
                   </select>
                 </div>
-                <div class="col-sm-3">
-                  <label class="form-label mb-1 small text-muted fw-semibold">Pays de départ</label>
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays départ</label>
                   <select id="mine-f-pays-depart" class="form-select form-select-sm country-select" onchange="filterMine()"></select>
                 </div>
-                <div class="col-sm-3">
-                  <label class="form-label mb-1 small text-muted fw-semibold">Pays d'arrivée</label>
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Ville départ</label>
+                  <select id="mine-f-ville-depart" class="form-select form-select-sm city-select" onchange="filterMine()"></select>
+                </div>
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Pays arrivée</label>
                   <select id="mine-f-pays-arrivee" class="form-select form-select-sm country-select" onchange="filterMine()"></select>
                 </div>
-                <div class="col-sm-4">
-                  <label class="form-label mb-1 small text-muted fw-semibold">Marchandise</label>
-                  <input id="mine-f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="filterMine()" />
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Ville arrivée</label>
+                  <select id="mine-f-ville-arrivee" class="form-select form-select-sm city-select" onchange="filterMine()"></select>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Marchandise</label>
+                  <input id="mine-f-marchandise" class="form-control form-control-sm" placeholder="Type marchandise..." oninput="filterMine()" />
+                </div>
+                <div class="col-sm-2">
+                  <label class="form-label mb-1 small text-muted fw-semibold">Type</label>
+                  <select id="mine-f-categorie" class="form-select form-select-sm" onchange="filterMine()">
+                    <option value="">Tous types</option>
+                  </select>
+                </div>
+                <div class="col-sm-3">
                   <label class="form-label mb-1 small text-muted fw-semibold">Date</label>
                   <div class="d-flex gap-2 align-items-center">
                     <input id="mine-f-date-from" type="date" class="form-control form-control-sm" onchange="filterMine()" />
@@ -184,7 +235,7 @@
                     <input id="mine-f-date-to" type="date" class="form-control form-control-sm" onchange="filterMine()" />
                   </div>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-sm-3">
                   <label class="form-label mb-1 small text-muted fw-semibold">Prix (FCFA)</label>
                   <div class="d-flex gap-2 align-items-center">
                     <input id="mine-f-prix-min" type="number" min="0" class="form-control form-control-sm" placeholder="Min" oninput="filterMine()" />
@@ -192,7 +243,7 @@
                     <input id="mine-f-prix-max" type="number" min="0" class="form-control form-control-sm" placeholder="Max" oninput="filterMine()" />
                   </div>
                 </div>
-                <div class="col-sm-10 d-flex align-items-end">
+                <div class="col-sm-4 d-flex align-items-end">
                   <span class="text-muted small" id="mine-f-results"></span>
                 </div>
                 <div class="col-sm-2 d-flex align-items-end justify-content-end">
@@ -212,12 +263,15 @@
               <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th>Réf.</th><th>Chauffeur</th><th>Véhicule</th><th>Trajet</th><th>Marchandise</th>
+                    <th>Réf.</th><th>Chauffeur</th><th>Véhicule</th><th>Trajet</th>
+                    <th class="d-none d-lg-table-cell">Ville départ</th>
+                    <th class="d-none d-lg-table-cell">Ville arrivée</th>
+                    <th>Type</th><th>Marchandise</th>
                     <th class="d-none d-md-table-cell">Date</th><th>Statut</th><th class="text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-mine">
-                  <tr><td colspan="8" class="text-center py-4 text-muted">
+                  <tr><td colspan="12" class="text-center py-4 text-muted">
                     <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
                   </td></tr>
                 </tbody>
@@ -226,39 +280,7 @@
           </div>
         </div>
 
-        <!-- Tab: Mes camions -->
-        <div id="tab-trucks" class="d-none">
-          <!-- Bandeau mission cible (visible si shipmentId dans l'URL) -->
-          <div id="mission-context-banner" class="d-none alert alert-primary border-0 mb-3 d-flex align-items-start gap-3" style="border-radius:10px">
-            <i data-feather="package" style="width:20px;min-width:20px;margin-top:2px"></i>
-            <div class="flex-grow-1">
-              <div class="fw-semibold mb-1" id="mission-context-title">Mission cible</div>
-              <div id="mission-context-details" class="small"></div>
-            </div>
-            <button class="btn btn-sm btn-outline-primary" id="btn-context-interest">
-              <i class="align-middle me-1" data-feather="check-circle" style="width:13px"></i>Manifester mon intérêt
-            </button>
-          </div>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex gap-2 flex-wrap">
-              <select id="truck-f-statut" class="form-select form-select-sm" style="width:auto" onchange="filterTrucks()">
-                <option value="">Tous les statuts</option>
-                <option value="AVAILABLE">Disponible</option>
-                <option value="BUSY">En mission</option>
-                <option value="MAINTENANCE">Maintenance</option>
-              </select>
-              <input id="truck-f-search" class="form-control form-control-sm" placeholder="Immatriculation, marque…" style="width:220px" oninput="filterTrucks()">
-            </div>
-            <span class="text-muted small" id="truck-f-results"></span>
-          </div>
-          <div id="truck-grid" class="row g-3">
-            <div class="col-12 text-center py-5 text-muted">
-              <div class="spinner-border spinner-border-sm me-2"></div>Chargement…
-            </div>
-          </div>
         </div>
-
-      </div>
     </main>
 
     <footer class="footer">
@@ -518,90 +540,13 @@ function renderProposedRows(proposed) {
   if (typeof feather !== 'undefined') feather.replace();
 }
 
-function renderProposed(list) {
-  const tbody = document.getElementById('tbody-proposed');
-  allProposed = list.filter(s => s.statut === 'PROPOSED');
-  const badgeEl = document.getElementById('tab-badge-proposed');
-  if (badgeEl) {
-    badgeEl.textContent = allProposed.length;
-    badgeEl.className = allProposed.length > 0 ? 'badge bg-danger ms-1' : 'badge bg-secondary ms-1';
-  }
-  renderProposedRows(allProposed);
-}
-
-let allMine = [];
-
-function filterMine() {
-  const statut      = document.getElementById('mine-f-statut').value;
-  const paysDepart  = document.getElementById('mine-f-pays-depart').value;
-  const paysArrivee = document.getElementById('mine-f-pays-arrivee').value;
-  const marc        = document.getElementById('mine-f-marchandise').value.trim().toLowerCase();
-  const dateMin     = document.getElementById('mine-f-date-from').value;
-  const dateMax     = document.getElementById('mine-f-date-to').value;
-  const prixMin     = Number(document.getElementById('mine-f-prix-min').value) || 0;
-  const prixMax     = Number(document.getElementById('mine-f-prix-max').value) || Infinity;
-  const filtered = allMine.filter(s => {
-    if (statut      && s.statut !== statut) return false;
-    if (paysDepart  && s.paysDepart !== paysDepart) return false;
-    if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
-    if (marc        && !s.marchandise?.toLowerCase().includes(marc)) return false;
-    if (dateMin     && s.dateAnnonce < dateMin) return false;
-    if (dateMax     && s.dateAnnonce > dateMax) return false;
-    const prix = s.prixTransport ?? 0;
-    if (prix < prixMin || prix > prixMax) return false;
-    return true;
-  });
-  document.getElementById('mine-f-results').textContent = `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allMine.length}`;
-  renderMineRows(filtered);
-}
-
-function resetMineFilters() {
-  ['mine-f-statut','mine-f-pays-depart','mine-f-pays-arrivee','mine-f-marchandise','mine-f-date-from','mine-f-date-to','mine-f-prix-min','mine-f-prix-max']
-    .forEach(id => document.getElementById(id).value = '');
-  document.getElementById('mine-f-results').textContent = '';
-  renderMineRows(allMine);
-}
-
 function renderMine(list) {
   allMine = list.filter(s => ['ACCEPTED','IN_PROGRESS','DELIVERED','CANCELLED'].includes(s.statut));
+  totalFiltered = allMine;
+  currentPage = 1;
   const badgeEl = document.getElementById('tab-badge-mine');
   if (badgeEl) badgeEl.textContent = allMine.length;
   renderMineRows(allMine);
-}
-
-function renderMineRows(mine) {
-  const tbody = document.getElementById('tbody-mine');
-  if (mine.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Aucune mission correspondante.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = mine.map(s => {
-    const driver = drivers.find(d => d.id === s.driverId);
-    const truck = trucks.find(t => t.id === s.truckId);
-    const driverName = driver ? `${driver.prenom ?? ''} ${driver.nom ?? ''}`.trim() : '—';
-    const truckImmat = truck ? truck.immatriculation : '—';
-    
-    return `
-    <tr onclick="window.location.href='transporteur-mission-detail.html?id=${s.id}'" style="cursor:pointer">
-      <td><strong>#${s.id.slice(0,8)}</strong></td>
-      <td>${driver 
-        ? `<a href="transporteur-chauffeur-detail.html?id=${driver.id}" onclick="event.stopPropagation()" class="text-decoration-none fw-semibold">${driverName}</a>` 
-        : '<span class="text-muted">—</span>'}</td>
-      <td>${truck 
-        ? `<a href="transporteur-flotte.html" onclick="event.stopPropagation()" class="text-decoration-none fw-semibold">${truckImmat}</a>` 
-        : '<span class="text-muted">—</span>'}</td>
-      <td>${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</td>
-      <td class="text-muted small">${s.marchandise ?? '—'} — ${s.poids ?? '?'}T</td>
-      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
-      <td class="align-middle">${UI.shipmentBadge(s.statut)}</td>
-      <td class="align-middle text-end">
-        ${s.statut === 'ACCEPTED' ? '<span class="text-muted small">En attente du chauffeur</span>' : ''}
-        ${s.statut === 'IN_PROGRESS' ? `<button class="btn btn-sm btn-success" onclick="event.stopPropagation();deliverMission('${s.id}')"><i class="align-middle" data-feather="check" style="width:13px"></i> Livré</button>` : ''}
-        ${['DELIVERED','CANCELLED'].includes(s.statut) ? '<span class="text-muted small">—</span>' : ''}
-      </td>
-    </tr>
-  `}).join('');
-  if (typeof feather !== 'undefined') feather.replace();
 }
 
 let selectedTruckId = null, selectedDriverId = null;
@@ -953,7 +898,23 @@ function openAcceptModalForTruck(truckId) {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
   UI.fillNavbar();
-  await loadGeo(); fillCountrySelects(true);
+  await loadGeo(); fillCountrySelects(true); bindCitySelects();
+
+  // Charger les catégories de marchandise depuis categories.json
+  const catSelect = document.getElementById('mine-f-categorie');
+  if (catSelect) {
+    try {
+      const res = await fetch('data/categories.json');
+      const data = await res.json();
+      if (data.categories && data.categories.length > 0) {
+        catSelect.innerHTML = '<option value="">Tous types</option>' +
+          data.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+    } catch (e) {
+      console.warn('Categories non chargées:', e);
+      catSelect.innerHTML = '<option value="">Tous types</option>';
+    }
+  }
 
   // Tabs
   document.querySelectorAll('[data-tab]').forEach(btn => {
