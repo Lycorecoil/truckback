@@ -271,7 +271,7 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-mine">
-                  <tr><td colspan="12" class="text-center py-4 text-muted">
+                  <tr><td colspan="11" class="text-center py-4 text-muted">
                     <div class="spinner-border spinner-border-sm me-2"></div>Chargement...
                   </td></tr>
                 </tbody>
@@ -987,14 +987,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof feather !== 'undefined') feather.replace();
 
   // Charger données
-  const [trucksRes, driversRes, shipmentsRes] = await Promise.all([
-    api.get('/fleet/trucks'),
-    api.get('/fleet/drivers'),
-    api.get('/shipments'),
-  ]);
-  trucks  = Array.isArray(trucksRes)  ? trucksRes  : (trucksRes?.data  ?? []);
-  drivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
-  allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+  try {
+    const [trucksRes, driversRes, shipmentsRes] = await Promise.all([
+      api.get('/fleet/trucks'),
+      api.get('/fleet/drivers'),
+      api.get('/shipments'),
+    ]);
+    trucks       = Array.isArray(trucksRes)    ? trucksRes    : (trucksRes?.data    ?? []);
+    drivers      = Array.isArray(driversRes)   ? driversRes   : (driversRes?.data   ?? []);
+    allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+  } catch (err) {
+    document.getElementById('tbody-mine').innerHTML =
+      '<tr><td colspan="11" class="text-center py-4 text-danger">Erreur lors du chargement des données. Vérifiez votre connexion.</td></tr>';
+    return;
+  }
 
   renderProposed(allShipments);
   renderMine(allShipments);
