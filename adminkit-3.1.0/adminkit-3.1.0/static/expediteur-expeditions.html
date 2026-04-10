@@ -59,7 +59,6 @@
             <span class="fw-semibold">
               <i data-feather="filter" class="align-middle me-1" style="width:15px;height:15px"></i>
               Filtres avancés
-              <span id="filter-badge" class="badge bg-primary ms-1 d-none">0</span>
             </span>
             <i data-feather="chevron-down" id="filter-chevron" class="align-middle" style="width:16px;height:16px;transition:transform .2s"></i>
           </div>
@@ -71,7 +70,7 @@
                 <select id="f-statut" class="form-select form-select-sm" onchange="applyFilters()">
                   <option value="">Tous</option>
                   <option value="PENDING">En attente</option>
-                  <option value="ACCEPTED">Acceptée</option>
+                  <option value="ACCEPTED">En validation</option>
                   <option value="IN_PROGRESS">En cours</option>
                   <option value="DELIVERED">Livrée</option>
                   <option value="CANCELLED">Annulée</option>
@@ -89,6 +88,16 @@
               </div>
 
               <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville de départ</label>
+                <input id="f-ville-depart" class="form-control form-control-sm" placeholder="Douala, Ouaga..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Ville d'arrivée</label>
+                <input id="f-ville-arrivee" class="form-control form-control-sm" placeholder="Yaoundé, Abidjan..." oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
                 <label class="form-label small mb-1">Marchandise</label>
                 <input id="f-marchandise" class="form-control form-control-sm" placeholder="haricot, pneu..." oninput="applyFilters()" />
               </div>
@@ -101,6 +110,16 @@
               <div class="col-md-3 col-6">
                 <label class="form-label small mb-1">Au</label>
                 <input id="f-date-fin" type="date" class="form-control form-control-sm" onchange="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids min (T)</label>
+                <input id="f-poids-min" type="number" class="form-control form-control-sm" placeholder="0" min="0" step="0.01" oninput="applyFilters()" />
+              </div>
+
+              <div class="col-md-3 col-6">
+                <label class="form-label small mb-1">Poids max (T)</label>
+                <input id="f-poids-max" type="number" class="form-control form-control-sm" placeholder="∞" min="0" step="0.01" oninput="applyFilters()" />
               </div>
 
               <div class="col-md-3 col-6">
@@ -222,9 +241,13 @@ function applyFilters() {
   const statut     = document.getElementById('f-statut').value;
   const paysDepart = document.getElementById('f-pays-depart').value;
   const paysArrivee= document.getElementById('f-pays-arrivee').value;
-  const marchandise= document.getElementById('f-marchandise').value.trim().toLowerCase();
+  const villeDepart = document.getElementById('f-ville-depart').value.trim().toLowerCase();
+  const villeArrivee= document.getElementById('f-ville-arrivee').value.trim().toLowerCase();
+  const marchandise = document.getElementById('f-marchandise').value.trim().toLowerCase();
   const dateDebut  = document.getElementById('f-date-debut').value;
   const dateFin    = document.getElementById('f-date-fin').value;
+  const poidsMin   = document.getElementById('f-poids-min').value ? Number(document.getElementById('f-poids-min').value) : null;
+  const poidsMax   = document.getElementById('f-poids-max').value ? Number(document.getElementById('f-poids-max').value) : null;
   const prixMin    = document.getElementById('f-prix-min').value ? Number(document.getElementById('f-prix-min').value) : null;
   const prixMax    = document.getElementById('f-prix-max').value ? Number(document.getElementById('f-prix-max').value) : null;
 
@@ -232,33 +255,28 @@ function applyFilters() {
     if (statut      && s.statut !== statut) return false;
     if (paysDepart  && s.paysDepart !== paysDepart) return false;
     if (paysArrivee && s.paysArrivee !== paysArrivee) return false;
-    if (marchandise && !s.marchandise.toLowerCase().includes(marchandise)) return false;
+    if (villeDepart  && !s.villeDepart?.toLowerCase().includes(villeDepart)) return false;
+    if (villeArrivee && !s.villeArrivee?.toLowerCase().includes(villeArrivee)) return false;
+    if (marchandise  && !s.marchandise?.toLowerCase().includes(marchandise)) return false;
     if (dateDebut   && s.dateAnnonce < dateDebut) return false;
     if (dateFin     && s.dateAnnonce > dateFin) return false;
-    if (prixMin !== null && (s.prixTransport ?? 0) < prixMin) return false;
-    if (prixMax !== null && (s.prixTransport ?? 0) > prixMax) return false;
+    if (poidsMin !== null && (s.poids ?? 0) < poidsMin) return false;
+    if (poidsMax !== null && (s.poids ?? 0) > poidsMax) return false;
+    if (prixMin  !== null && (s.prixTransport ?? 0) < prixMin) return false;
+    if (prixMax  !== null && (s.prixTransport ?? 0) > prixMax) return false;
     return true;
   });
 
   renderTable(filtered);
 
   // Badge count
-  const activeCount = [statut, paysDepart, paysArrivee, marchandise, dateDebut, dateFin,
-    prixMin !== null ? '1' : '', prixMax !== null ? '1' : ''].filter(Boolean).length;
-  const badge = document.getElementById('filter-badge');
-  if (activeCount > 0) {
-    badge.textContent = activeCount;
-    badge.classList.remove('d-none');
-  } else {
-    badge.classList.add('d-none');
-  }
   document.getElementById('filter-result-count').textContent =
     `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''} sur ${allShipments.length}`;
 }
 
 function resetFilters() {
   ['f-statut','f-pays-depart','f-pays-arrivee'].forEach(id => document.getElementById(id).value = '');
-  ['f-marchandise','f-date-debut','f-date-fin','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
+  ['f-ville-depart','f-ville-arrivee','f-marchandise','f-date-debut','f-date-fin','f-poids-min','f-poids-max','f-prix-min','f-prix-max'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
@@ -325,6 +343,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const res = await api.get('/shipments');
   const raw = Array.isArray(res) ? res : (res?.data ?? []);
   allShipments = raw;
+
+  const urlStatut = new URLSearchParams(window.location.search).get('statut');
+  if (urlStatut) {
+    document.getElementById('f-statut').value = urlStatut;
+  }
   applyFilters();
 });
 </script>

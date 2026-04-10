@@ -165,6 +165,55 @@
   </div>
 </div>
 
+<!-- ── OVERLAY MODIFIER (EXPEDITEUR) ──────────────────────────────────── -->
+<div id="edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeEdit()">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:560px;width:92%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="mb-0 fw-bold">Modifier l'expédition</h5>
+      <button class="btn btn-sm btn-light" onclick="closeEdit()"><i data-feather="x" style="width:14px"></i></button>
+    </div>
+    <form id="edit-form">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Marchandise</label>
+          <input id="edit-marchandise" class="form-control" required />
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Poids (tonnes)</label>
+          <input id="edit-poids" type="number" class="form-control" step="0.01" min="0.01" required />
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Quantité</label>
+          <input id="edit-quantite" type="number" class="form-control" min="1" />
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Ville départ</label>
+          <input id="edit-villeDepart" class="form-control" required />
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Ville arrivée</label>
+          <input id="edit-villeArrivee" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Prix transport (FCFA)</label>
+          <input id="edit-prixTransport" type="number" class="form-control" min="0" placeholder="Optionnel" />
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Commentaire</label>
+          <textarea id="edit-commentaire" class="form-control" rows="2" placeholder="Optionnel"></textarea>
+        </div>
+      </div>
+      <div id="edit-error" class="alert alert-danger mt-3 d-none"></div>
+      <div class="d-flex gap-2 justify-content-end mt-4">
+        <button type="button" class="btn btn-outline-secondary" onclick="closeEdit()">Annuler</button>
+        <button type="submit" class="btn btn-primary" id="btn-edit-save">
+          <i class="align-middle me-1" data-feather="save" style="width:14px"></i> Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
@@ -271,8 +320,8 @@ function renderCards(list) {
     const isUrgent = s.commentaireGeneral?.toLowerCase().includes('urgent') || false;
     const isNew = i < 2; // first 2 are "new" visually — approximation
     const age = (() => {
-      if (!s.dateAnnonce) return '';
-      const diff = Date.now() - new Date(s.dateAnnonce).getTime();
+      if (!s.createdAt && !s.dateAnnonce) return '';
+      const diff = Date.now() - new Date(s.createdAt ?? s.dateAnnonce).getTime();
       const h = Math.floor(diff / 3600000);
       if (h < 1) return 'Il y a quelques min';
       if (h < 24) return `Il y a ${h}h`;
@@ -318,9 +367,9 @@ function renderCards(list) {
                      Je suis intéressé
                    </a>`
               }`;
-            })() : `
-              <a href="expediteur-expeditions.html" class="btn btn-sm btn-outline-primary">Gérer</a>
-            `}
+            })() : role === 'EXPEDITEUR' && s.companyId === currentUserId ? `
+              <button class="btn btn-sm btn-outline-primary" onclick="openEdit('${s.id}')"><i data-feather="edit-2" class="align-middle me-1" style="width:13px"></i>Modifier</button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -396,7 +445,68 @@ function openDetail(id) {
 }
 
 function closeDetail() { document.getElementById('detail-overlay').style.display = 'none'; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// ─── Overlay modification (EXPEDITEUR) ────────────────────────────────────────
+let editShipmentId = null;
+
+function openEdit(id) {
+  const s = allShipments.find(x => x.id === id);
+  if (!s) return;
+  editShipmentId = id;
+  document.getElementById('edit-marchandise').value   = s.marchandise ?? '';
+  document.getElementById('edit-poids').value         = s.poids ?? '';
+  document.getElementById('edit-quantite').value      = s.quantite ?? '';
+  document.getElementById('edit-villeDepart').value   = s.villeDepart ?? '';
+  document.getElementById('edit-villeArrivee').value  = s.villeArrivee ?? '';
+  document.getElementById('edit-prixTransport').value = s.prixTransport ?? '';
+  document.getElementById('edit-commentaire').value   = s.commentaireGeneral ?? '';
+  document.getElementById('edit-error').classList.add('d-none');
+  document.getElementById('edit-overlay').style.display = 'flex';
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function closeEdit() {
+  document.getElementById('edit-overlay').style.display = 'none';
+  editShipmentId = null;
+}
+
+document.getElementById('edit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!editShipmentId) return;
+  const btn = document.getElementById('btn-edit-save');
+  btn.disabled = true;
+  const errEl = document.getElementById('edit-error');
+  errEl.classList.add('d-none');
+  const payload = {
+    marchandise:        document.getElementById('edit-marchandise').value.trim(),
+    poids:              Number(document.getElementById('edit-poids').value),
+    villeDepart:        document.getElementById('edit-villeDepart').value.trim(),
+    villeArrivee:       document.getElementById('edit-villeArrivee').value.trim(),
+  };
+  const quantite = Number(document.getElementById('edit-quantite').value);
+  if (quantite > 0) payload.quantite = quantite;
+  const prix = Number(document.getElementById('edit-prixTransport').value);
+  if (prix > 0) payload.prixTransport = prix;
+  const commentaire = document.getElementById('edit-commentaire').value.trim();
+  if (commentaire) payload.commentaireGeneral = commentaire;
+  try {
+    await api.put(`/shipments/${editShipmentId}`, payload);
+    UI.toast('Expédition modifiée avec succès !', 'success');
+    closeEdit();
+    // Recharger les données
+    const res = await api.get('/shipments');
+    const raw = Array.isArray(res) ? res : (res?.data ?? []);
+    allShipments = raw.filter(s => s.statut === 'PENDING');
+    applyFilters();
+  } catch (err) {
+    errEl.textContent = err?.response?.data?.error ?? 'Erreur lors de la modification.';
+    errEl.classList.remove('d-none');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEdit(); } });
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -417,7 +527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await api.get('/shipments');
     const all = Array.isArray(res) ? res : (res?.data ?? []);
-    allShipments = role === 'TRANSPORTER' ? all.filter(s => s.statut === 'PENDING') : all;
+    allShipments = all.filter(s => s.statut === 'PENDING');
     applyFilters();
   } catch (err) {
     document.getElementById('alert-container').innerHTML =
