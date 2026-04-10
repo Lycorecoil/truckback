@@ -319,7 +319,7 @@ function renderPage() {
 
   // Pagination bar
   const bar = document.getElementById('pagination-bar');
-  bar.style.display = '';
+  bar.style.display = 'flex';
   document.getElementById('pagination-info').textContent =
     `${start + 1}–${Math.min(start + PAGE_SIZE, total)} sur ${total}`;
 
