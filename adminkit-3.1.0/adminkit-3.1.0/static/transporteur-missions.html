@@ -549,6 +549,64 @@ function renderMine(list) {
   renderMineRows(allMine);
 }
 
+function renderMineRows(mine) {
+  const tbody = document.getElementById('tbody-mine');
+  if (!tbody) return;
+  
+  if (!mine || mine.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted">Aucune mission trouvée.</td></tr>';
+    return;
+  }
+  
+  totalFiltered = mine;
+  
+  const select = document.getElementById('rows-per-page');
+  const value = select ? select.value : '10';
+  const isAll = value === 'all';
+  const perPage = isAll ? mine.length : parseInt(value);
+  const start = (currentPage - 1) * perPage;
+  const end = start + perPage;
+  const pagedData = isAll ? mine : mine.slice(start, end);
+  
+  if (pagedData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted">Aucune mission correspondante.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = pagedData.map(s => {
+    const driver = drivers.find(d => d.id === s.driverId);
+    const truck = trucks.find(t => t.id === s.truckId);
+    const driverName = driver ? `${driver.prenom ?? ''} ${driver.nom ?? ''}`.trim() : '—';
+    const truckImmat = truck ? truck.immatriculation : '—';
+    
+    return `
+    <tr onclick="window.location.href='transporteur-mission-detail.html?id=${s.id}'" style="cursor:pointer">
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${driver 
+        ? `<a href="transporteur-chauffeur-detail.html?id=${driver.id}" onclick="event.stopPropagation()" class="text-decoration-none fw-semibold">${driverName}</a>` 
+        : '<span class="text-muted">—</span>'}</td>
+      <td>${truck 
+        ? `<a href="transporteur-flotte.html" onclick="event.stopPropagation()" class="text-decoration-none fw-semibold">${truckImmat}</a>` 
+        : '<span class="text-muted">—</span>'}</td>
+      <td>${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</td>
+      <td class="d-none d-lg-table-cell text-muted small">${s.villeDepart ?? '—'}</td>
+      <td class="d-none d-lg-table-cell text-muted small">${s.villeArrivee ?? '—'}</td>
+      <td class="text-muted small">${s.categorie ?? '—'}</td>
+      <td class="text-muted small">${s.marchandise ?? '—'} — ${s.poids ?? '?'}T</td>
+      <td class="d-none d-md-table-cell">${UI.formatDate(s.dateAnnonce)}</td>
+      <td class="align-middle">${UI.shipmentBadge(s.statut)}</td>
+      <td class="align-middle text-end">
+        ${s.statut === 'ACCEPTED' ? '<span class="text-muted small">En validation</span>' : ''}
+        ${s.statut === 'IN_PROGRESS' ? `<button class="btn btn-sm btn-success" onclick="event.stopPropagation();deliverMission('${s.id}')"><i class="align-middle" data-feather="check" style="width:13px"></i> Livré</button>` : ''}
+        ${['DELIVERED','CANCELLED'].includes(s.statut) ? '<span class="text-muted small">—</span>' : ''}
+      </td>
+    </tr>
+  `}).join('');
+  
+  renderPagination();
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
 let selectedTruckId = null, selectedDriverId = null;
 
 async function expressInterest(id, btn) {
