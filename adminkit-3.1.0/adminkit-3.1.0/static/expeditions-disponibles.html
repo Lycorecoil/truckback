@@ -367,9 +367,9 @@ function renderCards(list) {
                      Je suis intéressé
                    </a>`
               }`;
-            })() : `
+            })() : role === 'EXPEDITEUR' && s.companyId === currentUserId ? `
               <button class="btn btn-sm btn-outline-primary" onclick="openEdit('${s.id}')"><i data-feather="edit-2" class="align-middle me-1" style="width:13px"></i>Modifier</button>
-            `}
+            ` : ''}
           </div>
         </div>
       </div>
@@ -527,7 +527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await api.get('/shipments');
     const all = Array.isArray(res) ? res : (res?.data ?? []);
-    allShipments = role === 'TRANSPORTER' ? all.filter(s => s.statut === 'PENDING') : all;
+    allShipments = all.filter(s => s.statut === 'PENDING');
     applyFilters();
   } catch (err) {
     document.getElementById('alert-container').innerHTML =
