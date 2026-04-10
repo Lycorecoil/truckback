@@ -463,15 +463,7 @@ async function loadTracking() {
     const last = points[points.length - 1];
     if (truckMarker) map.removeLayer(truckMarker);
     truckMarker = L.marker([last.latitude, last.longitude], { icon: truckIcon })
-      .addTo(map)
-      .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:.82rem;min-width:160px">
-        <div style="font-weight:700;margin-bottom:6px">🚛 Position actuelle</div>
-        <div>Lat : <strong>${last.latitude.toFixed(5)}</strong></div>
-        <div>Lng : <strong>${last.longitude.toFixed(5)}</strong></div>
-        ${last.vitesse != null ? `<div>Vitesse : <strong>${last.vitesse} km/h</strong></div>` : ''}
-        <div style="color:#9CA3AF;font-size:.72rem;margin-top:6px">${new Date(last.timestamp).toLocaleString('fr-FR')}</div>
-      </div>`)
-      .openPopup();
+      .addTo(map);
 
     // Centrer
     map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
