@@ -265,6 +265,7 @@
 <script src="js/app-elimmeka.js"></script>
 <script>
 let allShipments = [];
+let currentUserId = '';
 let filteredShipments = [];
 let currentPage = 1;
 const PAGE_SIZE = 10;
@@ -447,7 +448,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
     closeEdit();
     const res = await api.get('/shipments');
     const raw = Array.isArray(res) ? res : (res?.data ?? []);
-    allShipments = raw;
+    allShipments = raw.filter(s => s.companyId === currentUserId);
     applyFilters();
   } catch (err) {
     errEl.textContent = err?.response?.data?.error ?? err?.error ?? 'Erreur lors de la modification.';
@@ -509,9 +510,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   UI.fillNavbar();
   await loadGeo(); fillCountrySelects(true);
 
+  currentUserId = Auth.getUser()?.sub ?? Auth.getUser()?.id ?? '';
   const res = await api.get('/shipments');
   const raw = Array.isArray(res) ? res : (res?.data ?? []);
-  allShipments = raw;
+  allShipments = raw.filter(s => s.companyId === currentUserId);
 
   const urlStatut = new URLSearchParams(window.location.search).get('statut');
   if (urlStatut) {
