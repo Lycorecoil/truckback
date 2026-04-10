@@ -28,12 +28,14 @@
               <div class="m-sm-3">
                 <form id="form-register">
 
-                  <div class="mb-3">
-                    <label class="form-label" for="role">Type de compte</label>
-                    <select id="role" class="form-select form-select-lg" required>
+                  <input type="hidden" id="role" value="">
+
+                  <div class="mb-3" id="role-select-wrapper">
+                    <label class="form-label" for="role-select">Type de compte</label>
+                    <select id="role-select" class="form-select form-select-lg">
                       <option value="">-- Choisir --</option>
                       <option value="EXPEDITEUR">Expéditeur (entreprise)</option>
-                      <option value="TRANSPORTER">Transporteur (flotte)</option>
+                      <option value="TRANSPORTEUR">Transporteur (flotte)</option>
                     </select>
                   </div>
 
@@ -83,6 +85,19 @@
 document.addEventListener('DOMContentLoaded', () => {
   Auth.redirectIfLoggedIn();
 
+  // Gérer le type de compte depuis l'URL
+  const params = new URLSearchParams(window.location.search);
+  const typeParam = params.get('type');
+
+  if (typeParam && ['EXPEDITEUR', 'TRANSPORTEUR'].includes(typeParam)) {
+    document.getElementById('role').value = typeParam;
+    document.getElementById('role-select-wrapper').style.display = 'none';
+    document.querySelector('.lead').textContent = 
+      typeParam === 'TRANSPORTEUR' 
+        ? 'Créez votre compte transporteur' 
+        : 'Créez votre compte expéditeur';
+  }
+
   document.getElementById('form-register').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -109,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: data.id,
         email: data.email ?? email,
         role: data.role,
-        tenantId,          // généré localement, le backend ne le renvoie pas
+        tenantId,
       });
       window.location.href = 'onboarding.html';
     } catch (err) {

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Créer un compte | Camion Uber</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: #f8f9fa; }
+
+    .auth-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .auth-left {
+      width: 45%;
+      background: linear-gradient(135deg, #1a365d 0%, #2d4a7c 100%);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></svg>');
+      background-size: 200px;
+      opacity: 0.5;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+    }
+
+    .logo-text {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text small {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 500;
+      opacity: 0.7;
+      letter-spacing: 2px;
+    }
+
+    .auth-illustration {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .illustration-placeholder {
+      width: 280px;
+      height: 280px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      border-radius: 20px;
+      border: 2px dashed rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+    }
+
+    .auth-tagline {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+    }
+
+    .auth-tagline h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .auth-tags {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .auth-tags span {
+      background: rgba(255,255,255,0.15);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .auth-right {
+      width: 55%;
+      padding: 40px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-form {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #6c757d;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+
+    .back-link:hover { color: #f97316; }
+
+    .auth-form h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #293241;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+    }
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .type-card {
+      background: #fff;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .type-card:hover {
+      border-color: #f97316;
+      box-shadow: 0 4px 20px rgba(249,115,22,0.12);
+    }
+
+    .type-card.selected {
+      border-color: #f97316;
+      background: rgba(249,115,22,0.04);
+    }
+
+    .type-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .type-radio {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #ced4da;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .type-radio span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: transparent;
+      transition: all 0.2s;
+    }
+
+    .type-radio span.active {
+      background: #f97316;
+    }
+
+    .type-card.selected .type-radio {
+      border-color: #f97316;
+    }
+
+    .type-icon {
+      font-size: 1.8rem;
+    }
+
+    .type-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #293241;
+      margin: 0 0 6px 0;
+    }
+
+    .type-card > p {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin: 0 0 14px 0;
+      line-height: 1.5;
+    }
+
+    .type-card ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .type-card ul li {
+      font-size: 0.8rem;
+      color: #495057;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .type-card ul li::before {
+      content: '✓';
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .type-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      margin-top: 16px;
+      border: 2px solid #f97316;
+      border-radius: 8px;
+      background: transparent;
+      color: #f97316;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .type-btn:hover {
+      background: #f97316;
+      color: #fff;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .login-link a {
+      color: #f97316;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .type-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .auth-layout {
+        flex-direction: column;
+      }
+
+      .auth-left {
+        width: 100%;
+        padding: 24px;
+        min-height: auto;
+      }
+
+      .auth-illustration {
+        display: none;
+      }
+
+      .auth-tagline h2 {
+        font-size: 1.4rem;
+      }
+
+      .auth-right {
+        width: 100%;
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-layout">
+    <div class="auth-left">
+      <div class="auth-logo">
+        <span class="logo-icon">🚛</span>
+        <span class="logo-text">Camion Uber <small>BURKINA FASO</small></span>
+      </div>
+      <div class="auth-illustration">
+        <div class="illustration-placeholder">📦</div>
+      </div>
+      <div class="auth-tagline">
+        <h2>La logistique B2B, simplifiée.</h2>
+        <div class="auth-tags">
+          <span>⚡ Matching instantané</span>
+          <span>📍 Tracking temps réel</span>
+          <span>🌍 Burkina → Afrique</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-form">
+        <p class="back-link"><a href="index.html">← Retour à l'accueil</a></p>
+        <h1>Créer un compte</h1>
+        <p class="auth-subtitle">Choisissez votre type de compte pour commencer.</p>
+
+        <div class="type-grid">
+          <div class="type-card" onclick="window.location.href='pages-sign-up.html?type=EXPEDITEUR'">
+            <div class="type-card-header">
+              <div class="type-radio"><span></span></div>
+              <div class="type-icon">🏢</div>
+            </div>
+            <h3>Entreprise expéditrice</h3>
+            <p>Vous avez des marchandises à expédier et cherchez des transporteurs fiables.</p>
+            <ul>
+              <li>Créer des expéditions</li>
+              <li>Tracker vos livraisons</li>
+              <li>Comparer les tarifs</li>
+            </ul>
+            <button class="type-btn">Sélectionner</button>
+          </div>
+
+          <div class="type-card" onclick="window.location.href='pages-sign-up.html?type=TRANSPORTEUR'">
+            <div class="type-card-header">
+              <div class="type-radio"><span></span></div>
+              <div class="type-icon">🚛</div>
+            </div>
+            <h3>Opérateur de transport</h3>
+            <p>Vous opérez une flotte de camions et cherchez du fret régulier.</p>
+            <ul>
+              <li>Gérer votre flotte</li>
+              <li>Accepter des missions</li>
+              <li>Optimiser vos revenus</li>
+            </ul>
+            <button class="type-btn">Sélectionner</button>
+          </div>
+        </div>
+
+        <p class="login-link">
+          Déjà inscrit ? <a href="pages-sign-in.html">Se connecter</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

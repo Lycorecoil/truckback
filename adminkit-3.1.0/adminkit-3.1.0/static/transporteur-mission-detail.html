@@ -137,8 +137,8 @@
 
         <!-- Infos détaillées -->
         <div class="row mb-3">
-          <!-- Colonne gauche -->
-          <div class="col-lg-6">
+          <!-- Colonne unique - Informations générales -->
+          <div class="col-12">
             <div class="card mb-3">
               <div class="card-header"><h5 class="card-title mb-0">Informations générales</h5></div>
               <div class="card-body">
@@ -155,21 +155,6 @@
                   <div class="col-12" id="annulation-section" style="display:none">
                     <div class="text-muted small">Motif d'annulation</div><div class="fw-semibold text-danger" id="info-annulation">—</div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Colonne droite -->
-          <div class="col-lg-6">
-            <div class="card mb-3">
-              <div class="card-header"><h5 class="card-title mb-0">Expéditeur</h5></div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-12"><div class="text-muted small">Organisation</div><div class="fw-semibold" id="info-expediteur">—</div></div>
-                  <div class="col-12"><div class="text-muted small">Email</div><div class="fw-semibold" id="info-email">—</div></div>
-                  <div class="col-12"><div class="text-muted small">Téléphone</div><div class="fw-semibold" id="info-tel">—</div></div>
-                  <div class="col-12"><div class="text-muted small">Adresse</div><div class="fw-semibold" id="info-adresse">—</div></div>
                 </div>
               </div>
             </div>
@@ -232,7 +217,7 @@
 <script src="js/app.js"></script>
 <script src="js/app-elimmeka.js"></script>
 <script>
-let shipment = null, driver = null, truck = null, company = null;
+let shipment = null, driver = null, truck = null;
 let driversData = [], trucksData = [];
 
 async function loadMission() {
@@ -250,19 +235,14 @@ async function loadMission() {
 
     shipment = shipRes.data ?? shipRes;
 
-    // Charger les données fleet et company en parallèle
-    const [driversRes, trucksRes, shippersRes, transportersRes] = await Promise.all([
+    // Charger les données fleet en parallèle
+    const [driversRes, trucksRes] = await Promise.all([
       api.get('/fleet/drivers'),
-      api.get('/fleet/trucks'),
-      api.get('/company?page=1&limit=100'),  // Expéditeurs
-      api.get('/transporter?page=1&limit=100') // Transporteurs
+      api.get('/fleet/trucks')
     ]);
 
     const drivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
     const trucks = Array.isArray(trucksRes) ? trucksRes : (trucksRes?.data ?? []);
-    const shippers = Array.isArray(shippersRes) ? shippersRes : (shippersRes?.data ?? []);
-    const transporters = Array.isArray(transportersRes) ? transportersRes : (transportersRes?.data ?? []);
-    const allCompanies = [...shippers, ...transporters];
 
     // Stocker pour usage potentiel futur
     driversData = drivers;
@@ -271,15 +251,6 @@ async function loadMission() {
     // Chercher driver et truck par ID
     driver = shipment.driverId ? drivers.find(d => d.id === shipment.driverId) : null;
     truck = shipment.truckId ? trucks.find(t => t.id === shipment.truckId) : null;
-
-    // Chercher l'expéditeur par companyTenantId ou companyId
-    company = null;
-    if (shipment.companyTenantId) {
-      company = allCompanies.find(c => c.tenantId === shipment.companyTenantId);
-    }
-    if (!company && shipment.companyId) {
-      company = allCompanies.find(c => c.id === shipment.companyId);
-    }
 
     renderMission();
     renderTimeline();
@@ -319,21 +290,6 @@ function renderMission() {
   document.getElementById('info-arrivee').textContent = shipment.villeArrivee ?? '—';
   document.getElementById('info-depart-date').textContent = `${shipment.paysDepart ?? ''}`;
   document.getElementById('info-arrivee-date').textContent = `${shipment.paysArrivee ?? ''}`;
-
-  // Expéditeur - affiche les infos de l'organisation si trouvée
-  if (company) {
-    document.getElementById('info-expediteur').textContent = company.raisonSociale ?? company.nom ?? '—';
-    document.getElementById('info-email').textContent = company.email ?? '—';
-    document.getElementById('info-tel').textContent = company.telephone ?? '—';
-    document.getElementById('info-adresse').textContent = company.adresse 
-      ? `${company.adresse}, ${company.ville ?? ''}, ${company.pays ?? ''}` 
-      : `${company.ville ?? ''}, ${company.pays ?? ''}`;
-  } else {
-    document.getElementById('info-expediteur').textContent = '—';
-    document.getElementById('info-email').textContent = '—';
-    document.getElementById('info-tel').textContent = '—';
-    document.getElementById('info-adresse').textContent = '—';
-  }
 
   // Chauffeur cliquable
   const chauffeurEl = document.getElementById('info-chauffeur');
