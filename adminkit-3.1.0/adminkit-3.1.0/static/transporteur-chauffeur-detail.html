@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Détail Chauffeur | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .driver-header { background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%); color: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; }
+    .driver-avatar { width:64px;height:64px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;flex-shrink:0; }
+    .stat-card { border-left:4px solid; }
+    .stat-card.green { border-left-color:#28a745; }
+    .stat-card.orange { border-left-color:#f0ad4e; }
+    .stat-card.blue { border-left-color:#3b7ddd; }
+    .stat-card.purple { border-left-color:#6f42c1; }
+    .stat-icon { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .stat-icon.green { background:rgba(40,167,69,.12); color:#28a745; }
+    .stat-icon.orange { background:rgba(240,173,78,.12); color:#f0ad4e; }
+    .stat-icon.blue { background:rgba(59,125,221,.12); color:#3b7ddd; }
+    .stat-icon.purple { background:rgba(111,66,193,.12); color:#6f42c1; }
+    .table-hover tbody tr:hover { cursor:pointer; background-color:rgba(249,115,22,.05); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="transporteur-chauffeurs.html">Mes Chauffeurs</a></li>
+            <li class="breadcrumb-item active" id="breadcrumb-driver">—</li>
+          </ol>
+        </nav>
+
+        <div id="alert-container"></div>
+
+        <!-- Header chauffeur -->
+        <div class="driver-header" id="driver-header" style="display:none">
+          <div class="d-flex align-items-center gap-3">
+            <div id="driver-avatar" class="driver-avatar">—</div>
+            <div class="flex-grow-1">
+              <h4 class="mb-1 fw-bold" id="driver-name">—</h4>
+              <div id="driver-sub" class="small" style="opacity:.85">—</div>
+            </div>
+            <div id="driver-badge"></div>
+          </div>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="row mb-3" id="stats-row" style="display:none">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card blue"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon blue"><i data-feather="package" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Total missions</div><h4 class="mb-0 fw-bold" id="stat-total">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card orange"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon orange"><i data-feather="truck" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">En cours</div><h4 class="mb-0 fw-bold" id="stat-inprogress">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card green"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon green"><i data-feather="check-circle" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Livrées</div><h4 class="mb-0 fw-bold" id="stat-delivered">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card purple"><div class="card-body py-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon purple"><i data-feather="trending-up" style="width:20px"></i></div>
+                <div><div class="text-muted small mb-0">Taux accompl.</div><h4 class="mb-0 fw-bold" id="stat-rate">—</h4></div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+
+        <!-- Info chauffeur -->
+        <div class="row mb-3">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Informations personnelles</h5></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-6"><div class="text-muted small">Nom</div><div class="fw-semibold" id="info-nom">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Prénom</div><div class="fw-semibold" id="info-prenom">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Email</div><div class="fw-semibold" id="info-email">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Téléphone</div><div class="fw-semibold" id="info-tel">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Numéro permis</div><div class="fw-semibold"><code id="info-permis">—</code></div></div>
+                  <div class="col-6"><div class="text-muted small">Statut</div><div id="info-statut">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Créé le</div><div class="fw-semibold" id="info-created">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Dernière activité</div><div class="fw-semibold" id="info-last-activity">—</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-header"><h5 class="card-title mb-0">Véhicule assigné</h5></div>
+              <div class="card-body" id="truck-section">
+                <div class="text-muted text-center py-3" id="truck-none">Aucun véhicule assigné</div>
+                <div class="row g-3" id="truck-info" style="display:none">
+                  <div class="col-6"><div class="text-muted small">Immatriculation</div><div class="fw-semibold" id="truck-immat">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Marque/Modèle</div><div class="fw-semibold" id="truck-modele">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Type</div><div class="fw-semibold" id="truck-type">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Capacité</div><div class="fw-semibold" id="truck-capacite">—</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historique missions -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Historique des missions</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Référence</th><th>Trajet</th><th>Marchandise</th><th>Date</th><th>Statut</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-missions">
+                <tr><td colspan="5" class="text-center py-4 text-muted">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let driver = null, truck = null, allShipments = [];
+
+function driverBadge(statut) {
+  const map = { AVAILABLE: { cls: 'bg-success', label: 'Disponible' }, BUSY: { cls: 'primary', label: 'En mission' }, SUSPENDED: { cls: 'warning text-dark', label: 'Suspendu' }, DELETED: { cls: 'danger', label: 'Supprimé' } };
+  const s = map[statut] ?? { cls: 'secondary', label: statut };
+  return `<span class="badge bg-${s.cls}">${s.label}</span>`;
+}
+
+async function loadDriver() {
+  const params = new URLSearchParams(window.location.search);
+  const driverId = params.get('id');
+  if (!driverId) { UI.alert('ID chauffeur manquant'); return; }
+
+  try {
+    // Charger driver en premier
+    const driverRes = await api.get(`/fleet/drivers/${driverId}`);
+    if (!driverRes || driverRes.error) {
+      UI.alert(driverRes?.error ?? 'Chauffeur non trouvé');
+      return;
+    }
+
+    // Charger les autres données
+    const [trucksRes, shipmentsRes] = await Promise.all([
+      api.get('/fleet/trucks'),
+      api.get('/shipments')
+    ]);
+
+    // Gérer le format de réponse
+    driver = driverRes.data ?? driverRes;
+    allShipments = Array.isArray(shipmentsRes) ? shipmentsRes : (shipmentsRes?.data ?? []);
+    const trucks = Array.isArray(trucksRes) ? trucksRes : (trucksRes?.data ?? []);
+    
+    // Chercher le truck assigné à ce driver
+    truck = trucks.find(t => t.driverId === driverId);
+
+    renderDriver();
+    renderTruck();
+    renderMissions();
+  } catch (err) {
+    console.error('Erreur:', err);
+    UI.alert(err.error ?? 'Erreur chargement chauffeur');
+  }
+}
+
+function renderDriver() {
+  document.getElementById('driver-header').style.display = '';
+  document.getElementById('stats-row').style.display = '';
+  
+  const initials = `${driver.prenom?.[0] ?? ''}${driver.nom?.[0] ?? ''}`.toUpperCase();
+  document.getElementById('driver-avatar').textContent = initials || '?';
+  document.getElementById('driver-name').textContent = `${driver.prenom ?? ''} ${driver.nom ?? ''}`;
+  document.getElementById('driver-sub').textContent = driver.email ?? '';
+  document.getElementById('driver-badge').innerHTML = driverBadge(driver.statut);
+  document.getElementById('breadcrumb-driver').textContent = `${driver.prenom ?? ''} ${driver.nom ?? ''}`;
+
+  document.getElementById('info-nom').textContent = driver.nom ?? '—';
+  document.getElementById('info-prenom').textContent = driver.prenom ?? '—';
+  document.getElementById('info-email').textContent = driver.email ?? '—';
+  document.getElementById('info-tel').textContent = driver.telephone ?? '—';
+  document.getElementById('info-permis').textContent = driver.numeroPermis ?? '—';
+  document.getElementById('info-statut').innerHTML = driverBadge(driver.statut);
+  document.getElementById('info-created').textContent = UI.formatDate(driver.createdAt);
+
+  // Dernière activité = date de la dernière mission
+  const myMissions = allShipments.filter(s => s.driverId === driver.id).sort((a, b) => new Date(b.dateAnnonce) - new Date(a.dateAnnonce));
+  const lastMission = myMissions[0];
+  document.getElementById('info-last-activity').textContent = lastMission ? UI.formatDate(lastMission.dateAnnonce) : '—';
+
+  const total = myMissions.length;
+  const inProgress = myMissions.filter(s => s.statut === 'IN_PROGRESS').length;
+  const delivered = myMissions.filter(s => s.statut === 'DELIVERED').length;
+  const rate = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-inprogress').textContent = inProgress;
+  document.getElementById('stat-delivered').textContent = delivered;
+  document.getElementById('stat-rate').textContent = rate + '%';
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function renderTruck() {
+  const truckNone = document.getElementById('truck-none');
+  const truckInfo = document.getElementById('truck-info');
+  
+  if (!truck) {
+    truckNone.style.display = '';
+    truckInfo.style.display = 'none';
+  } else {
+    truckNone.style.display = 'none';
+    truckInfo.style.display = '';
+    document.getElementById('truck-immat').textContent = truck.immatriculation ?? '—';
+    document.getElementById('truck-modele').textContent = `${truck.marque ?? ''} ${truck.modele ?? ''}`.trim() || '—';
+    document.getElementById('truck-type').textContent = truck.typeVehicule ?? '—';
+    document.getElementById('truck-capacite').textContent = truck.capaciteMax ? `${truck.capaciteMax} T` : '—';
+  }
+}
+
+function renderMissions() {
+  const tbody = document.getElementById('tbody-missions');
+  const myMissions = allShipments
+    .filter(s => s.driverId === driver.id)
+    .sort((a, b) => new Date(b.dateAnnonce) - new Date(a.dateAnnonce));
+
+  if (myMissions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Aucune mission pour ce chauffeur.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = myMissions.map(s => `
+    <tr onclick="window.location.href='transporteur-mission-detail.html?id=${s.id}'" style="cursor:pointer">
+      <td><strong>#${s.id.slice(0,8)}</strong></td>
+      <td>${s.villeDepart ?? '—'} → ${s.villeArrivee ?? '—'}</td>
+      <td class="text-muted small">${s.marchandise ?? '—'} (${s.poids ?? '?'}T)</td>
+      <td class="text-muted small">${UI.formatDate(s.dateAnnonce)}</td>
+      <td>${UI.shipmentBadge(s.statut)}</td>
+    </tr>
+  `).join('');
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+  await loadDriver();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Détail Mission | Elimmekatruck</title>
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <link href="css/app.css" rel="stylesheet">
+  <link href="css/cu-theme.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .mission-header { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; }
+    .stat-card { border-left:4px solid; }
+    .stat-card.blue { border-left-color:#3b7ddd; }
+    .stat-card.green { border-left-color:#28a745; }
+    .stat-card.orange { border-left-color:#f0ad4e; }
+    .stat-card.purple { border-left-color:#6f42c1; }
+    .stat-icon { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .stat-icon.blue { background:rgba(59,125,221,.12); color:#3b7ddd; }
+    .stat-icon.green { background:rgba(40,167,69,.12); color:#28a745; }
+    .stat-icon.orange { background:rgba(240,173,78,.12); color:#f0ad4e; }
+    .stat-icon.purple { background:rgba(111,66,193,.12); color:#6f42c1; }
+    .timeline-item { position:relative; padding-left:32px; padding-bottom:20px; }
+    .timeline-item::before { content:''; position:absolute; left:8px; top:4px; bottom:0; width:2px; background:#e5e7eb; }
+    .timeline-item:last-child::before { display:none; }
+    .timeline-item::after { content:''; position:absolute; left:3px; top:4px; width:12px; height:12px; border-radius:50%; background:#3b7ddd; border:3px solid #fff; }
+    .timeline-item.done::after { background:#28a745; }
+    .timeline-item.current::after { background:#f97316; box-shadow:0 0 0 4px rgba(249,115,22,.2); }
+    @media print {
+      .no-print { display:none !important; }
+      .card { border:none !important; box-shadow:none !important; }
+      body { background:#fff !important; }
+      .mission-header { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content js-simplebar">
+      <a class="sidebar-brand" href="transporteur-dashboard.html"><span class="align-middle">🚛 Elimmekatruck</span></a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Portail Transporteur</li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-dashboard.html"><i class="align-middle" data-feather="home"></i> <span class="align-middle">Dashboard</span></a></li>
+        <li class="sidebar-item active"><a class="sidebar-link" href="transporteur-missions.html"><i class="align-middle" data-feather="clipboard"></i> <span class="align-middle">Missions</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-flotte.html"><i class="align-middle" data-feather="truck"></i> <span class="align-middle">Ma Flotte</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-chauffeurs.html"><i class="align-middle" data-feather="users"></i> <span class="align-middle">Mes Chauffeurs</span></a></li>
+        <li class="sidebar-item"><a class="sidebar-link" href="transporteur-historique.html"><i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Historique</span></a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle"><i class="hamburger align-self-center"></i></a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+              <i class="align-middle me-1" data-feather="user"></i> <span id="navbar-user-name" class="text-dark">—</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="profil.html"><i class="align-middle me-1" data-feather="settings"></i> Mon profil</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" id="btn-logout"><i class="align-middle me-1" data-feather="log-out"></i> Déconnexion</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+
+        <!-- Breadcrumb + Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+          <nav aria-label="breadcrumb" class="mb-0">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item"><a href="transporteur-missions.html">Missions</a></li>
+              <li class="breadcrumb-item active" id="breadcrumb-mission">—</li>
+            </ol>
+          </nav>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+              <i class="align-middle me-1" data-feather="printer" style="width:14px"></i> Imprimer
+            </button>
+          </div>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Header mission -->
+        <div class="mission-header" id="mission-header" style="display:none">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:56px;height:56px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">
+              <i data-feather="package" style="width:28px;height:28px"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h4 class="mb-1 fw-bold" id="mission-ref">—</h4>
+              <div class="small" id="mission-trajet" style="opacity:.9">—</div>
+            </div>
+            <div id="mission-badge"></div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card mb-3 no-print">
+          <div class="card-header"><h5 class="card-title mb-0">Statut de la mission</h5></div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="timeline-item" id="timeline-proposed">
+                <div class="fw-semibold small">Proposé</div>
+                <div class="text-muted small" id="timeline-proposed-date">—</div>
+              </div>
+              <div class="timeline-item" id="timeline-accepted">
+                <div class="fw-semibold small">Accepté</div>
+                <div class="text-muted small" id="timeline-accepted-date">—</div>
+              </div>
+              <div class="timeline-item" id="timeline-progress">
+                <div class="fw-semibold small">En cours</div>
+                <div class="text-muted small" id="timeline-progress-date">—</div>
+              </div>
+              <div class="timeline-item" id="timeline-delivered">
+                <div class="fw-semibold small">Livré</div>
+                <div class="text-muted small" id="timeline-delivered-date">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mb-3 no-print" id="action-card">
+          <div class="card-header"><h5 class="card-title mb-0">Actions</h5></div>
+          <div class="card-body" id="action-buttons"></div>
+        </div>
+
+        <!-- Infos détaillées -->
+        <div class="row mb-3">
+          <!-- Colonne gauche -->
+          <div class="col-lg-6">
+            <div class="card mb-3">
+              <div class="card-header"><h5 class="card-title mb-0">Informations générales</h5></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-6"><div class="text-muted small">ID Mission</div><div class="fw-semibold" style="font-size:.8rem"><code id="info-id">—</code></div></div>
+                  <div class="col-6"><div class="text-muted small">Date création</div><div class="fw-semibold" id="info-created">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Marchandise</div><div class="fw-semibold" id="info-marchandise">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Quantité</div><div class="fw-semibold" id="info-quantite">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Poids</div><div class="fw-semibold" id="info-poids">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Emballage</div><div class="fw-semibold" id="info-emballage">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Prix transport</div><div class="fw-semibold" id="info-prix">—</div></div>
+                  <div class="col-6"><div class="text-muted small">Dernière mise à jour</div><div class="fw-semibold" id="info-updated">—</div></div>
+                  <div class="col-12"><div class="text-muted small">Commentaire</div><div class="fw-semibold" id="info-commentaire">—</div></div>
+                  <div class="col-12" id="annulation-section" style="display:none">
+                    <div class="text-muted small">Motif d'annulation</div><div class="fw-semibold text-danger" id="info-annulation">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne droite -->
+          <div class="col-lg-6">
+            <div class="card mb-3">
+              <div class="card-header"><h5 class="card-title mb-0">Expéditeur</h5></div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-12"><div class="text-muted small">Organisation</div><div class="fw-semibold" id="info-expediteur">—</div></div>
+                  <div class="col-12"><div class="text-muted small">Email</div><div class="fw-semibold" id="info-email">—</div></div>
+                  <div class="col-12"><div class="text-muted small">Téléphone</div><div class="fw-semibold" id="info-tel">—</div></div>
+                  <div class="col-12"><div class="text-muted small">Adresse</div><div class="fw-semibold" id="info-adresse">—</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trajet -->
+        <div class="card mb-3">
+          <div class="card-header"><h5 class="card-title mb-0">Trajet</h5></div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background:#f8f9fa">
+                  <div class="text-muted small mb-1">Départ</div>
+                  <div class="fw-semibold" id="info-depart">—</div>
+                  <div class="text-muted small" id="info-depart-date">—</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background:#f8f9fa">
+                  <div class="text-muted small mb-1">Arrivée</div>
+                  <div class="fw-semibold" id="info-arrivee">—</div>
+                  <div class="text-muted small" id="info-arrivee-date">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Affectation -->
+        <div class="card mb-3">
+          <div class="card-header"><h5 class="card-title mb-0">Affectation</h5></div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="text-muted small mb-1">Chauffeur</div>
+                <div id="info-chauffeur">
+                  <span class="text-muted">—</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="text-muted small mb-1">Véhicule</div>
+                <div id="info-vehicule">
+                  <span class="text-muted">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-fluid"><div class="row text-muted"><div class="col-6 text-start"><p class="mb-0"><strong>Elimmekatruck</strong> &copy; 2026</p></div></div></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/app-elimmeka.js"></script>
+<script>
+let shipment = null, driver = null, truck = null, company = null;
+let driversData = [], trucksData = [];
+
+async function loadMission() {
+  const params = new URLSearchParams(window.location.search);
+  const missionId = params.get('id');
+  if (!missionId) { UI.alert('ID mission manquant'); return; }
+
+  try {
+    // Charger shipment en premier
+    const shipRes = await api.get(`/shipments/${missionId}`);
+    if (!shipRes || shipRes.error) {
+      UI.alert(shipRes?.error ?? 'Mission non trouvée');
+      return;
+    }
+
+    shipment = shipRes.data ?? shipRes;
+
+    // Charger les données fleet et company en parallèle
+    const [driversRes, trucksRes, shippersRes, transportersRes] = await Promise.all([
+      api.get('/fleet/drivers'),
+      api.get('/fleet/trucks'),
+      api.get('/company?page=1&limit=100'),  // Expéditeurs
+      api.get('/transporter?page=1&limit=100') // Transporteurs
+    ]);
+
+    const drivers = Array.isArray(driversRes) ? driversRes : (driversRes?.data ?? []);
+    const trucks = Array.isArray(trucksRes) ? trucksRes : (trucksRes?.data ?? []);
+    const shippers = Array.isArray(shippersRes) ? shippersRes : (shippersRes?.data ?? []);
+    const transporters = Array.isArray(transportersRes) ? transportersRes : (transportersRes?.data ?? []);
+    const allCompanies = [...shippers, ...transporters];
+
+    // Stocker pour usage potentiel futur
+    driversData = drivers;
+    trucksData = trucks;
+
+    // Chercher driver et truck par ID
+    driver = shipment.driverId ? drivers.find(d => d.id === shipment.driverId) : null;
+    truck = shipment.truckId ? trucks.find(t => t.id === shipment.truckId) : null;
+
+    // Chercher l'expéditeur par companyTenantId ou companyId
+    company = null;
+    if (shipment.companyTenantId) {
+      company = allCompanies.find(c => c.tenantId === shipment.companyTenantId);
+    }
+    if (!company && shipment.companyId) {
+      company = allCompanies.find(c => c.id === shipment.companyId);
+    }
+
+    renderMission();
+    renderTimeline();
+    renderActions();
+  } catch (err) {
+    console.error('Erreur:', err);
+    UI.alert(err.error ?? 'Erreur chargement mission');
+  }
+}
+
+function renderMission() {
+  document.getElementById('mission-header').style.display = '';
+  
+  document.getElementById('mission-ref').textContent = `#${shipment.id.slice(0,8)}`;
+  document.getElementById('breadcrumb-mission').textContent = `#${shipment.id.slice(0,8)}`;
+  document.getElementById('mission-trajet').textContent = `${shipment.villeDepart ?? ''} → ${shipment.villeArrivee ?? ''}`;
+  document.getElementById('mission-badge').innerHTML = UI.shipmentBadge(shipment.statut);
+
+  // Infos générales
+  document.getElementById('info-id').textContent = shipment.id;
+  document.getElementById('info-created').textContent = UI.formatDate(shipment.dateAnnonce);
+  document.getElementById('info-marchandise').textContent = shipment.marchandise ?? '—';
+  document.getElementById('info-quantite').textContent = shipment.quantite ?? '—';
+  document.getElementById('info-poids').textContent = shipment.poids ? `${shipment.poids} T` : '—';
+  document.getElementById('info-emballage').textContent = shipment.emballage ?? '—';
+  document.getElementById('info-prix').textContent = shipment.prixTransport ? `${shipment.prixTransport.toLocaleString()} XOF` : '—';
+  document.getElementById('info-updated').textContent = UI.formatDate(shipment.updatedAt);
+  document.getElementById('info-commentaire').textContent = shipment.commentaireGeneral ?? '—';
+  
+  // Annulation
+  if (shipment.statut === 'CANCELLED' && shipment.commentaireAnnulation) {
+    document.getElementById('annulation-section').style.display = '';
+    document.getElementById('info-annulation').textContent = shipment.commentaireAnnulation;
+  }
+
+  document.getElementById('info-depart').textContent = shipment.villeDepart ?? '—';
+  document.getElementById('info-arrivee').textContent = shipment.villeArrivee ?? '—';
+  document.getElementById('info-depart-date').textContent = `${shipment.paysDepart ?? ''}`;
+  document.getElementById('info-arrivee-date').textContent = `${shipment.paysArrivee ?? ''}`;
+
+  // Expéditeur - affiche les infos de l'organisation si trouvée
+  if (company) {
+    document.getElementById('info-expediteur').textContent = company.raisonSociale ?? company.nom ?? '—';
+    document.getElementById('info-email').textContent = company.email ?? '—';
+    document.getElementById('info-tel').textContent = company.telephone ?? '—';
+    document.getElementById('info-adresse').textContent = company.adresse 
+      ? `${company.adresse}, ${company.ville ?? ''}, ${company.pays ?? ''}` 
+      : `${company.ville ?? ''}, ${company.pays ?? ''}`;
+  } else {
+    document.getElementById('info-expediteur').textContent = '—';
+    document.getElementById('info-email').textContent = '—';
+    document.getElementById('info-tel').textContent = '—';
+    document.getElementById('info-adresse').textContent = '—';
+  }
+
+  // Chauffeur cliquable
+  const chauffeurEl = document.getElementById('info-chauffeur');
+  if (driver) {
+    chauffeurEl.innerHTML = `<a href="transporteur-chauffeur-detail.html?id=${driver.id}" class="text-decoration-none fw-semibold">${driver.prenom ?? ''} ${driver.nom ?? ''}</a>`;
+  } else {
+    chauffeurEl.innerHTML = `<span class="text-muted">Non assigné</span>`;
+  }
+
+  // Véhicule cliquable
+  const vehiculeEl = document.getElementById('info-vehicule');
+  if (truck) {
+    vehiculeEl.innerHTML = `<a href="transporteur-flotte.html" class="text-decoration-none fw-semibold">${truck.immatriculation}</a> - ${truck.marque ?? ''} ${truck.modele ?? ''}`;
+  } else {
+    vehiculeEl.innerHTML = `<span class="text-muted">Non assigné</span>`;
+  }
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+function renderTimeline() {
+  const map = {
+    PROPOSED: { el: 'timeline-proposed', date: shipment.dateAnnonce },
+    ACCEPTED: { el: 'timeline-accepted', date: shipment.dateAcceptation },
+    IN_PROGRESS: { el: 'timeline-progress', date: shipment.dateDebut },
+    DELIVERED: { el: 'timeline-delivered', date: shipment.dateLivraison }
+  };
+
+  ['PROPOSED', 'ACCEPTED', 'IN_PROGRESS', 'DELIVERED'].forEach((statut, idx) => {
+    const item = document.getElementById('timeline-' + statut.toLowerCase());
+    const dateEl = document.getElementById('timeline-' + statut.toLowerCase() + '-date');
+    const info = map[statut];
+    
+    if (shipment.statut === 'CANCELLED') {
+      if (statut === 'PROPOSED') {
+        item.classList.add('done');
+        dateEl.textContent = UI.formatDate(info.date);
+      }
+      return;
+    }
+
+    if (shipment.statut === 'DELIVERED') {
+      item.classList.add('done');
+    } else if (statut === shipment.statut) {
+      item.classList.add('current');
+    } else if (['PROPOSED', 'ACCEPTED', 'IN_PROGRESS'].indexOf(shipment.statut) > idx) {
+      item.classList.add('done');
+    }
+
+    if (info.date) {
+      dateEl.textContent = UI.formatDate(info.date);
+    }
+  });
+}
+
+function renderActions() {
+  const container = document.getElementById('action-buttons');
+  const actionsCard = document.getElementById('action-card');
+  
+  if (shipment.statut === 'ACCEPTED') {
+    container.innerHTML = `
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-success" onclick="startMission()">
+          <i class="align-middle me-1" data-feather="play" style="width:14px"></i> Démarrer la mission
+        </button>
+        <button class="btn btn-outline-danger" onclick="cancelMission()">
+          <i class="align-middle me-1" data-feather="x-circle" style="width:14px"></i> Annuler la mission
+        </button>
+      </div>
+    `;
+  } else if (shipment.statut === 'IN_PROGRESS') {
+    container.innerHTML = `
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-success btn-lg" onclick="deliverMission()">
+          <i class="align-middle me-1" data-feather="check-circle" style="width:18px"></i> Marquer comme livré
+        </button>
+      </div>
+    `;
+  } else if (['DELIVERED', 'CANCELLED'].includes(shipment.statut)) {
+    actionsCard.style.display = 'none';
+    return;
+  }
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+async function startMission() {
+  if (!shipment.driverId || !shipment.truckId) {
+    UI.alert('Veuillez assigner un chauffeur et un véhicule avant de démarrer.', 'warning');
+    return;
+  }
+  try {
+    await api.post(`/shipments/${shipment.id}/start`, {});
+    UI.toast('Mission démarrée !', 'success');
+    setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    UI.alert(err.error ?? 'Erreur');
+  }
+}
+
+async function deliverMission() {
+  try {
+    await api.post(`/shipments/${shipment.id}/deliver`, {});
+    UI.toast('Mission marquée comme livrée !', 'success');
+    setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    UI.alert(err.error ?? 'Erreur');
+  }
+}
+
+async function cancelMission() {
+  const motif = prompt('Veuillez indiquer le motif de l\'annulation:');
+  if (!motif || !motif.trim()) {
+    UI.toast('Motif requis', 'warning');
+    return;
+  }
+  try {
+    await api.post(`/shipments/${shipment.id}/cancel`, { commentaireAnnulation: motif.trim() });
+    UI.toast('Mission annulée !', 'success');
+    setTimeout(() => window.location.href = 'transporteur-missions.html', 800);
+  } catch (err) {
+    UI.alert(err.error ?? 'Erreur');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.requireAuth()) return;
+  UI.fillNavbar();
+  await loadMission();
+});
+</script>
+</body>
+</html>

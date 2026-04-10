@@ -214,20 +214,15 @@
                 <div class="card-body">
                   <div class="row g-3">
                     <div class="col-md-6">
-                      <label class="form-label" for="t-ville">Ville <span class="text-danger">*</span></label>
-                      <input id="t-ville" class="form-control" placeholder="Ouagadougou" />
+                      <label class="form-label" for="t-pays">Pays <span class="text-danger">*</span></label>
+                      <select id="t-pays" class="form-select country-select">
+                        <option value="">-- Choisir --</option>
+                      </select>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label" for="t-pays">Pays <span class="text-danger">*</span></label>
-                      <select id="t-pays" class="form-select">
-                        <option>Burkina Faso</option>
-                        <option>Côte d'Ivoire</option>
-                        <option>Mali</option>
-                        <option>Niger</option>
-                        <option>Ghana</option>
-                        <option>Togo</option>
-                        <option>Bénin</option>
-                        <option>Sénégal</option>
+                      <label class="form-label" for="t-ville">Ville <span class="text-danger">*</span></label>
+                      <select id="t-ville" class="form-select city-select">
+                        <option value="">-- Choisir un pays d'abord --</option>
                       </select>
                     </div>
                   </div>
@@ -382,8 +377,17 @@ function clearPhoto(side) {
   document.getElementById('input-' + side).value = '';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAuth()) return;
+
+  // Charger la geo et remplir les selects pays/ville
+  await loadGeo();
+  fillCountrySelects();
+
+  // Quand le pays change → mettre à jour les villes
+  document.getElementById('t-pays').addEventListener('change', function() {
+    fillCitySelect('t-pays', 't-ville');
+  });
 
   // Live recap
   const fields = [
@@ -401,12 +405,12 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 't-type',     recap: 'recap-type',     fn: v => v || '—' },
     { id: 't-capacite', recap: 'recap-capacite', fn: v => v ? v + ' T' : '—' },
     { id: 't-ville',    recap: 'recap-base',     fn: _ => {
-      const v = document.getElementById('t-ville').value.trim();
+      const v = document.getElementById('t-ville').value;
       const p = document.getElementById('t-pays').value;
       return [v, p].filter(Boolean).join(', ') || '—';
     }},
     { id: 't-pays',     recap: 'recap-base',     fn: _ => {
-      const v = document.getElementById('t-ville').value.trim();
+      const v = document.getElementById('t-ville').value;
       const p = document.getElementById('t-pays').value;
       return [v, p].filter(Boolean).join(', ') || '—';
     }},
@@ -430,11 +434,11 @@ document.addEventListener('DOMContentLoaded', () => {
       modele:          document.getElementById('t-modele').value.trim(),
       typeVehicule:    document.getElementById('t-type').value,
       capaciteMax:     Number(document.getElementById('t-capacite').value),
-      villeBase:       document.getElementById('t-ville').value.trim(),
+      villeBase:       document.getElementById('t-ville').value,
       paysBase:        document.getElementById('t-pays').value,
     };
 
-    if (!payload.immatriculation || !payload.chassis || !payload.marque || !payload.modele || !payload.typeVehicule || !payload.capaciteMax || !payload.villeBase) {
+    if (!payload.immatriculation || !payload.chassis || !payload.marque || !payload.modele || !payload.typeVehicule || !payload.capaciteMax || !payload.villeBase || !payload.paysBase) {
       UI.alert('Veuillez remplir tous les champs obligatoires.', 'warning');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
