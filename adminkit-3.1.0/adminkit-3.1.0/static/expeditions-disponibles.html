@@ -271,8 +271,8 @@ function renderCards(list) {
     const isUrgent = s.commentaireGeneral?.toLowerCase().includes('urgent') || false;
     const isNew = i < 2; // first 2 are "new" visually — approximation
     const age = (() => {
-      if (!s.dateAnnonce) return '';
-      const diff = Date.now() - new Date(s.dateAnnonce).getTime();
+      if (!s.createdAt && !s.dateAnnonce) return '';
+      const diff = Date.now() - new Date(s.createdAt ?? s.dateAnnonce).getTime();
       const h = Math.floor(diff / 3600000);
       if (h < 1) return 'Il y a quelques min';
       if (h < 24) return `Il y a ${h}h`;
